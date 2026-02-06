@@ -29,7 +29,7 @@
 
         <!-- Time Toggle -->
         <div class="sc-time-toggle">
-            <button class="sc-time-btn active" data-time="morning">아침</button>
+            <button class="sc-time-btn" data-time="morning">아침</button>
             <button class="sc-time-btn" data-time="evening">저녁</button>
         </div>
 
@@ -38,12 +38,15 @@
             <!-- populated by JS -->
         </section>
 
+        <!-- Edit Routine Button -->
+        <div class="sc-edit-bar">
+            <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
+        </div>
+
         <!-- Weekly Calendar -->
         <section class="sc-section">
             <h3 class="sc-section-title">주간 캘린더</h3>
-            <div class="sc-calendar" id="weeklyCalendar">
-                <!-- populated by JS -->
-            </div>
+            <div class="sc-calendar" id="weeklyCalendar"></div>
             <div class="sc-pattern-tip">
                 <span class="sc-tip-icon">💡</span>
                 <span>월목 = 레티노이드 · 수 = AHA · 토 = 나이아신아마이드 · 나머지 = 쉬는 날</span>
@@ -83,15 +86,80 @@
 
         <!-- Product List -->
         <section class="sc-section">
-            <h3 class="sc-section-title">전체 제품 목록</h3>
-            <div class="sc-products" id="productList">
-                <!-- populated by JS -->
+            <div class="sc-section-header">
+                <h3 class="sc-section-title" style="border:none;margin:0;padding:0;">전체 제품 목록</h3>
+                <button class="sc-add-product-btn" id="addProductBtn">+ 추가</button>
             </div>
+            <div class="sc-products" id="productList"></div>
         </section>
-
     </div>
 
-    <script src="skincare.js"></script>
+    <!-- Edit Routine Modal -->
+    <div id="editRoutineModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="editRoutineTitle">루틴 편집</h2>
+                <button class="modal-close" id="closeEditRoutine">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sc-edit-routine-list" id="editRoutineList">
+                    <!-- populated by JS -->
+                </div>
+                <div class="sc-edit-add-step">
+                    <select id="addStepSelect" class="sc-edit-select">
+                        <option value="">제품 선택하여 추가...</option>
+                    </select>
+                    <button class="btn btn-add-category" id="addStepBtn">추가</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>제품 추가</h2>
+                <button class="modal-close" id="closeAddProduct">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>제품명</label>
+                    <input type="text" id="newProductName" placeholder="제품명 입력">
+                </div>
+                <div class="form-group">
+                    <label>역할</label>
+                    <input type="text" id="newProductRole" placeholder="예: 수분 충전">
+                </div>
+                <div class="form-group">
+                    <label>사용 시점</label>
+                    <input type="text" id="newProductWhen" placeholder="예: 아침·저녁">
+                </div>
+                <button class="btn btn-primary" id="saveProductBtn" style="margin-top:0.5rem;">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxymXMFAEFStn2p3dHz3ItHbxYnjlQN9w",
+            authDomain: "fixed-expense-management.firebaseapp.com",
+            databaseURL: "https://fixed-expense-management-default-rtdb.firebaseio.com",
+            projectId: "fixed-expense-management",
+            storageBucket: "fixed-expense-management.firebasestorage.app",
+            messagingSenderId: "524213396258",
+            appId: "1:524213396258:web:9e37696ba06c84a2b6bb7b"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        window.db = firebase.database();
+    </script>
+    <script src="skincare.js?v=2"></script>
 </body>
 
 </html>

@@ -371,6 +371,197 @@
   white-space: nowrap;
 }
 
+/* Edit Bar */
+.sc-edit-bar {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.sc-edit-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sc-edit-btn:hover {
+  background: rgba(102, 126, 234, 0.15);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Section Header */
+.sc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sc-add-product-btn {
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.25);
+  color: var(--accent-primary);
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sc-add-product-btn:hover {
+  background: rgba(102, 126, 234, 0.25);
+}
+
+/* Product Delete */
+.sc-product-del {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sc-product-del:hover {
+  color: var(--danger);
+  background: rgba(245, 101, 101, 0.1);
+}
+
+/* Edit Routine Modal */
+.sc-edit-routine-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.sc-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.sc-edit-grip {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.sc-edit-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-edit-product {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.sc-edit-usage {
+  width: 100%;
+  padding: 0.25rem 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.7rem;
+}
+
+.sc-edit-usage:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.sc-edit-badge-sel {
+  padding: 0.2rem 0.3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.sc-edit-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.sc-edit-actions button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  padding: 0;
+  font-family: inherit;
+}
+
+.sc-edit-actions button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.sc-edit-remove:hover {
+  color: var(--danger) !important;
+  background: rgba(245, 101, 101, 0.1) !important;
+}
+
+.sc-edit-add-step {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sc-edit-select {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+.sc-edit-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .sc-calendar {
