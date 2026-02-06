@@ -300,7 +300,7 @@
             <div class="sc-spot-card">
                 <div class="sc-spot-icon">${s.icon}</div>
                 <div class="sc-spot-label">${s.label}</div>
-                <div class="sc-spot-product">${s.product}</div>
+                <div class="sc-spot-product">${s.product.replace(/\s*\+\s*/g, '<br>')}</div>
                 <div class="sc-spot-how">${s.how}</div>
             </div>
         `).join('');
