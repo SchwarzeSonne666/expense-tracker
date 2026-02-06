@@ -255,7 +255,7 @@
             html += `<div class="sc-product-group-header">`;
             html += `<span class="sc-group-icon">${cat.icon}</span>`;
             html += `<span class="sc-group-label">${cat.label}</span>`;
-            html += `<span class="sc-group-count">${items.length}</span>`;
+            // html += `<span class="sc-group-count">${items.length}</span>`;
             html += `</div>`;
             items.forEach(p => {
                 html += `<div class="sc-product-item" data-idx="${p._idx}">`;
