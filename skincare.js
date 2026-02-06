@@ -104,6 +104,13 @@
     let currentTime = 'morning';
     let editingRoutineKey = '';
     let editingProductIdx = -1;
+    // Deep copy of steps currently being edited in the modal
+    let editingStepsCopy = [];
+
+    // Deep copy helper
+    function deepCopy(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
 
     // ===== Firebase =====
     const fbProducts = window.db ? window.db.ref('skincare/products') : null;
@@ -115,7 +122,6 @@
         fbProducts.on('value', snap => {
             const d = snap.val();
             products = d ? (Array.isArray(d) ? d : Object.values(d)) : [];
-            // Migrate: add category if missing
             let migrated = false;
             products.forEach(p => {
                 if (!p.category) {
@@ -124,7 +130,7 @@
                 }
             });
             if (products.length === 0) {
-                products = [...DEFAULT_PRODUCTS];
+                products = deepCopy(DEFAULT_PRODUCTS);
                 fbProducts.set(products);
             } else if (migrated) {
                 fbProducts.set(products);
@@ -138,7 +144,7 @@
             routines = d || {};
             let needsUpdate = false;
             Object.keys(DEFAULT_ROUTINES).forEach(k => {
-                if (!routines[k]) { routines[k] = DEFAULT_ROUTINES[k]; needsUpdate = true; }
+                if (!routines[k]) { routines[k] = deepCopy(DEFAULT_ROUTINES[k]); needsUpdate = true; }
             });
             if (needsUpdate) fbRoutines.set(routines);
             renderToday();
@@ -147,7 +153,6 @@
         });
     }
 
-    // Guess category from product data for migration
     function guessCategory(p) {
         const n = (p.name + p.role).toLowerCase();
         if (n.includes('클렌') || n.includes('세안') || n.includes('오일')) return 'cleansing';
@@ -160,13 +165,8 @@
         return 'serum';
     }
 
-    function saveProducts() {
-        if (fbProducts) fbProducts.set(products);
-    }
-
-    function saveRoutines() {
-        if (fbRoutines) fbRoutines.set(routines);
-    }
+    function saveProducts() { if (fbProducts) fbProducts.set(products); }
+    function saveRoutines() { if (fbRoutines) fbRoutines.set(routines); }
 
     // ===== Helpers =====
     function getTodayDayKo() { return DAYS_KO[new Date().getDay()]; }
@@ -176,10 +176,6 @@
     function getEveningInfo(day) {
         const key = 'evening_' + day;
         return routines[key] || DEFAULT_ROUTINES[key] || { label: '기본', tagClass: 'rest', steps: [] };
-    }
-
-    function getCategoryInfo(key) {
-        return CATEGORIES.find(c => c.key === key) || { key: 'etc', label: '기타', icon: '📦', color: '#a0aec0' };
     }
 
     function showToast(msg, type = 'success') {
@@ -242,8 +238,6 @@
 
     function renderProducts() {
         const container = document.getElementById('productList');
-
-        // Group by category
         const grouped = {};
         CATEGORIES.forEach(c => { grouped[c.key] = []; });
         grouped['etc'] = [];
@@ -255,65 +249,28 @@
         });
 
         let html = '';
-        CATEGORIES.forEach(cat => {
-            const items = grouped[cat.key];
+        const renderGroup = (cat, items) => {
             if (items.length === 0) return;
-
             html += `<div class="sc-product-group">`;
             html += `<div class="sc-product-group-header">`;
             html += `<span class="sc-group-icon">${cat.icon}</span>`;
             html += `<span class="sc-group-label">${cat.label}</span>`;
             html += `<span class="sc-group-count">${items.length}</span>`;
             html += `</div>`;
-
             items.forEach(p => {
                 html += `<div class="sc-product-item" data-idx="${p._idx}">`;
-                html += `<div class="sc-product-info">`;
-                html += `<span class="sc-product-name">${p.name}</span>`;
-                html += `<span class="sc-product-role">${p.role}</span>`;
-                html += `</div>`;
+                html += `<div class="sc-product-info"><span class="sc-product-name">${p.name}</span><span class="sc-product-role">${p.role}</span></div>`;
                 html += `<span class="sc-product-when">${p.when}</span>`;
                 html += `<div class="sc-product-actions">`;
-                html += `<button class="sc-product-action sc-product-edit-btn" data-idx="${p._idx}" title="편집">`;
-                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-                html += `</button>`;
-                html += `<button class="sc-product-action sc-product-del-btn" data-idx="${p._idx}" title="삭제">`;
-                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-                html += `</button>`;
-                html += `</div>`;
-                html += `</div>`;
-            });
-
-            html += `</div>`;
-        });
-
-        // Show 'etc' group if any
-        if (grouped['etc'].length > 0) {
-            html += `<div class="sc-product-group">`;
-            html += `<div class="sc-product-group-header">`;
-            html += `<span class="sc-group-icon">📦</span>`;
-            html += `<span class="sc-group-label">기타</span>`;
-            html += `<span class="sc-group-count">${grouped['etc'].length}</span>`;
-            html += `</div>`;
-            grouped['etc'].forEach(p => {
-                html += `<div class="sc-product-item" data-idx="${p._idx}">`;
-                html += `<div class="sc-product-info">`;
-                html += `<span class="sc-product-name">${p.name}</span>`;
-                html += `<span class="sc-product-role">${p.role}</span>`;
-                html += `</div>`;
-                html += `<span class="sc-product-when">${p.when}</span>`;
-                html += `<div class="sc-product-actions">`;
-                html += `<button class="sc-product-action sc-product-edit-btn" data-idx="${p._idx}" title="편집">`;
-                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-                html += `</button>`;
-                html += `<button class="sc-product-action sc-product-del-btn" data-idx="${p._idx}" title="삭제">`;
-                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
-                html += `</button>`;
-                html += `</div>`;
-                html += `</div>`;
+                html += `<button class="sc-product-action sc-product-edit-btn" data-idx="${p._idx}" title="편집"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
+                html += `<button class="sc-product-action sc-product-del-btn" data-idx="${p._idx}" title="삭제"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+                html += `</div></div>`;
             });
             html += `</div>`;
-        }
+        };
+
+        CATEGORIES.forEach(cat => renderGroup(cat, grouped[cat.key]));
+        if (grouped['etc'].length > 0) renderGroup({ icon: '📦', label: '기타' }, grouped['etc']);
 
         container.innerHTML = html;
     }
@@ -348,7 +305,6 @@
             title.textContent = '제품 추가';
             saveBtn.textContent = '추가';
         }
-
         modal.style.display = 'flex';
     }
 
@@ -360,72 +316,77 @@
         if (!name) { showToast('제품명을 입력하세요', 'error'); return; }
 
         if (editingProductIdx >= 0) {
-            // Edit mode
             const oldName = products[editingProductIdx].name;
             products[editingProductIdx] = { name, role, when, category };
-            // If name changed, update routines that reference old name
-            if (oldName !== name) {
-                updateRoutineProductName(oldName, name);
-            }
+            if (oldName !== name) updateRoutineProductName(oldName, name);
             saveProducts();
             showToast('제품 수정됨');
         } else {
-            // Add mode
             products.push({ name, role, when, category });
             saveProducts();
             showToast('제품 추가됨');
         }
-
         document.getElementById('addProductModal').style.display = 'none';
         editingProductIdx = -1;
     }
 
-    // Update product name in all routines when renamed
     function updateRoutineProductName(oldName, newName) {
         let changed = false;
         Object.keys(routines).forEach(key => {
             const val = routines[key];
             if (Array.isArray(val)) {
-                val.forEach(step => {
-                    if (step.product === oldName) { step.product = newName; changed = true; }
-                });
+                val.forEach(step => { if (step.product === oldName) { step.product = newName; changed = true; } });
             } else if (val && val.steps) {
-                val.steps.forEach(step => {
-                    if (step.product === oldName) { step.product = newName; changed = true; }
-                });
+                val.steps.forEach(step => { if (step.product === oldName) { step.product = newName; changed = true; } });
             }
         });
         if (changed) saveRoutines();
     }
 
     // ===== Edit Routine Modal =====
+    // The key insight: we work on a local deep copy (editingStepsCopy).
+    // On each action we update the copy, re-render, and save to Firebase.
+
     function openEditRoutine() {
         const day = getTodayDayKo();
+        let title = '';
+
         if (currentTime === 'morning') {
             editingRoutineKey = 'morning';
+            const src = routines.morning || DEFAULT_ROUTINES.morning;
+            editingStepsCopy = deepCopy(src);
+            title = '아침 루틴 편집';
         } else {
+            // For evening: editing the day-specific steps only (common is shared)
             editingRoutineKey = 'evening_' + day;
+            const info = routines[editingRoutineKey] || DEFAULT_ROUTINES[editingRoutineKey];
+            editingStepsCopy = deepCopy(info.steps || []);
+            title = `저녁 (${day}) 루틴 편집`;
         }
 
-        const key = editingRoutineKey;
-        let data;
-        if (key === 'morning') {
-            data = routines.morning || DEFAULT_ROUTINES.morning;
-            document.getElementById('editRoutineTitle').textContent = '아침 루틴 편집';
+        document.getElementById('editRoutineTitle').textContent = title;
+
+        // Show info about what's being edited
+        const infoEl = document.getElementById('editRoutineInfo');
+        if (currentTime === 'evening') {
+            infoEl.textContent = '공통 세안 3단계 이후의 요일별 루틴을 편집합니다';
+            infoEl.style.display = 'block';
         } else {
-            const info = routines[key] || DEFAULT_ROUTINES[key];
-            data = info.steps || [];
-            document.getElementById('editRoutineTitle').textContent = `저녁 (${day}) 루틴 편집`;
+            infoEl.style.display = 'none';
         }
 
-        renderEditList(data);
+        renderEditList();
         renderProductSelect();
         document.getElementById('editRoutineModal').style.display = 'flex';
     }
 
-    function renderEditList(steps) {
+    function renderEditList() {
         const list = document.getElementById('editRoutineList');
-        list.innerHTML = steps.map((s, i) => `
+        if (editingStepsCopy.length === 0) {
+            list.innerHTML = '<div class="sc-edit-empty">단계가 없습니다. 아래에서 제품을 추가하세요.</div>';
+            return;
+        }
+        list.innerHTML = editingStepsCopy.map((s, i) => `
             <div class="sc-edit-item" data-idx="${i}">
                 <div class="sc-edit-row1">
                     <span class="sc-edit-num">${i + 1}</span>
@@ -435,7 +396,7 @@
                     </select>
                 </div>
                 <div class="sc-edit-row2">
-                    <input class="sc-edit-usage" value="${s.usage}" data-field="usage" data-idx="${i}" placeholder="사용법 입력">
+                    <input class="sc-edit-usage" value="${s.usage || ''}" data-idx="${i}" placeholder="사용법 입력">
                     <div class="sc-edit-actions">
                         <button class="sc-edit-move-up" data-idx="${i}" title="위로">▲</button>
                         <button class="sc-edit-move-down" data-idx="${i}" title="아래로">▼</button>
@@ -446,45 +407,34 @@
         `).join('');
     }
 
-    function getEditingSteps() {
+    function commitEditingSteps() {
+        // Write editingStepsCopy back to routines and save
         if (editingRoutineKey === 'morning') {
-            return routines.morning || DEFAULT_ROUTINES.morning;
-        } else {
-            const info = routines[editingRoutineKey] || {};
-            return info.steps || [];
-        }
-    }
-
-    function setEditingSteps(steps) {
-        if (editingRoutineKey === 'morning') {
-            routines.morning = steps;
+            routines.morning = deepCopy(editingStepsCopy);
         } else {
             if (!routines[editingRoutineKey]) {
                 const def = DEFAULT_ROUTINES[editingRoutineKey] || { label: '기본', tagClass: 'rest', steps: [] };
-                routines[editingRoutineKey] = { ...def };
+                routines[editingRoutineKey] = deepCopy(def);
             }
-            routines[editingRoutineKey].steps = steps;
+            routines[editingRoutineKey].steps = deepCopy(editingStepsCopy);
         }
         saveRoutines();
     }
 
     // ===== Events =====
     function init() {
-        // Auto time
         currentTime = getAutoTime();
         document.querySelectorAll('.sc-time-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.time === currentTime);
         });
 
-        // Load defaults first (before Firebase kicks in)
-        products = [...DEFAULT_PRODUCTS];
-        routines = { ...DEFAULT_ROUTINES };
+        products = deepCopy(DEFAULT_PRODUCTS);
+        routines = deepCopy(DEFAULT_ROUTINES);
         renderToday();
         renderRoutine(currentTime);
         renderCalendar();
         renderProducts();
 
-        // Firebase
         initFirebase();
 
         // Time toggle
@@ -497,17 +447,17 @@
             });
         });
 
-        // Edit routine
+        // Edit routine modal
         document.getElementById('editRoutineBtn').addEventListener('click', openEditRoutine);
         document.getElementById('closeEditRoutine').addEventListener('click', () => {
             document.getElementById('editRoutineModal').style.display = 'none';
         });
         document.getElementById('editRoutineModal').addEventListener('click', e => {
-            if (e.target === document.getElementById('editRoutineModal'))
+            if (e.target.id === 'editRoutineModal')
                 document.getElementById('editRoutineModal').style.display = 'none';
         });
 
-        // Edit routine list interactions (use closest() for reliable delegation)
+        // Routine edit: move/remove (delegated with closest)
         document.getElementById('editRoutineList').addEventListener('click', e => {
             const upBtn = e.target.closest('.sc-edit-move-up');
             const downBtn = e.target.closest('.sc-edit-move-down');
@@ -516,38 +466,35 @@
             if (!btn) return;
 
             const idx = parseInt(btn.dataset.idx);
-            if (isNaN(idx)) return;
-            const steps = [...getEditingSteps()];
+            if (isNaN(idx) || idx < 0 || idx >= editingStepsCopy.length) return;
 
             if (upBtn && idx > 0) {
-                [steps[idx - 1], steps[idx]] = [steps[idx], steps[idx - 1]];
-                setEditingSteps(steps);
-                renderEditList(steps);
-            } else if (downBtn && idx < steps.length - 1) {
-                [steps[idx], steps[idx + 1]] = [steps[idx + 1], steps[idx]];
-                setEditingSteps(steps);
-                renderEditList(steps);
+                [editingStepsCopy[idx - 1], editingStepsCopy[idx]] = [editingStepsCopy[idx], editingStepsCopy[idx - 1]];
+            } else if (downBtn && idx < editingStepsCopy.length - 1) {
+                [editingStepsCopy[idx], editingStepsCopy[idx + 1]] = [editingStepsCopy[idx + 1], editingStepsCopy[idx]];
             } else if (removeBtn) {
-                steps.splice(idx, 1);
-                setEditingSteps(steps);
-                renderEditList(steps);
+                editingStepsCopy.splice(idx, 1);
+            } else {
+                return; // no action matched
             }
+
+            commitEditingSteps();
+            renderEditList();
         });
 
-        // Edit usage inline + badge change
+        // Routine edit: usage text & badge change
         document.getElementById('editRoutineList').addEventListener('change', e => {
             const idx = parseInt(e.target.dataset.idx);
-            if (isNaN(idx)) return;
-            const steps = [...getEditingSteps()];
-            if (idx >= steps.length) return;
+            if (isNaN(idx) || idx < 0 || idx >= editingStepsCopy.length) return;
 
             if (e.target.classList.contains('sc-edit-usage')) {
-                steps[idx] = { ...steps[idx], usage: e.target.value };
-                setEditingSteps(steps);
+                editingStepsCopy[idx].usage = e.target.value;
+                commitEditingSteps();
             } else if (e.target.classList.contains('sc-edit-badge-sel')) {
                 const opt = BADGE_OPTIONS.find(b => b.value === e.target.value);
-                steps[idx] = { ...steps[idx], badgeClass: e.target.value, badge: opt ? opt.label : e.target.value };
-                setEditingSteps(steps);
+                editingStepsCopy[idx].badgeClass = e.target.value;
+                editingStepsCopy[idx].badge = opt ? opt.label : e.target.value;
+                commitEditingSteps();
             }
         });
 
@@ -556,39 +503,33 @@
             const sel = document.getElementById('addStepSelect');
             const productName = sel.value;
             if (!productName) return;
-            const steps = [...getEditingSteps()];
-            steps.push({ product: productName, usage: '', badge: '세럼', badgeClass: 'serum' });
-            setEditingSteps(steps);
-            renderEditList(steps);
+            editingStepsCopy.push({ product: productName, usage: '', badge: '세럼', badgeClass: 'serum' });
+            commitEditingSteps();
+            renderEditList();
             sel.value = '';
             showToast('단계 추가됨');
         });
 
-        // Product modal: add button (in section header)
-        document.getElementById('addProductBtn').addEventListener('click', () => {
-            openProductModal('add');
-        });
+        // Product modal
+        document.getElementById('addProductBtn').addEventListener('click', () => openProductModal('add'));
         document.getElementById('closeAddProduct').addEventListener('click', () => {
             document.getElementById('addProductModal').style.display = 'none';
             editingProductIdx = -1;
         });
         document.getElementById('addProductModal').addEventListener('click', e => {
-            if (e.target === document.getElementById('addProductModal')) {
+            if (e.target.id === 'addProductModal') {
                 document.getElementById('addProductModal').style.display = 'none';
                 editingProductIdx = -1;
             }
         });
-
-        // Save product (add or edit)
         document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
 
-        // Product list: edit & delete (delegated)
+        // Product list: edit & delete
         document.getElementById('productList').addEventListener('click', e => {
             const editBtn = e.target.closest('.sc-product-edit-btn');
             const delBtn = e.target.closest('.sc-product-del-btn');
             if (editBtn) {
-                const idx = parseInt(editBtn.dataset.idx);
-                openProductModal('edit', idx);
+                openProductModal('edit', parseInt(editBtn.dataset.idx));
             } else if (delBtn) {
                 const idx = parseInt(delBtn.dataset.idx);
                 products.splice(idx, 1);

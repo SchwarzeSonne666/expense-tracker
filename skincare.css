@@ -540,6 +540,25 @@
   color: var(--text-primary);
 }
 
+/* Edit Routine: Info Text & Empty State */
+.sc-edit-info-text {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: rgba(102, 126, 234, 0.08);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.sc-edit-empty {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
 /* Edit Routine Modal */
 .sc-edit-routine-list {
   display: flex;
