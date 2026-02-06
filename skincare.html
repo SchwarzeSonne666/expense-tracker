@@ -88,7 +88,10 @@
         <section class="sc-section">
             <div class="sc-section-header">
                 <h3 class="sc-section-title" style="border:none;margin:0;padding:0;">전체 제품 목록</h3>
-                <button class="sc-add-product-btn" id="addProductBtn">+ 추가</button>
+                <button class="sc-add-product-btn" id="addProductBtn">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    추가
+                </button>
             </div>
             <div class="sc-products" id="productList"></div>
         </section>
@@ -115,14 +118,26 @@
         </div>
     </div>
 
-    <!-- Add Product Modal -->
+    <!-- Add/Edit Product Modal -->
     <div id="addProductModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>제품 추가</h2>
+                <h2 id="productModalTitle">제품 추가</h2>
                 <button class="modal-close" id="closeAddProduct">&times;</button>
             </div>
             <div class="modal-body">
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select id="newProductCategory" class="sc-modal-select">
+                        <option value="cleansing">🧴 클렌징</option>
+                        <option value="toner">💧 토너/패드</option>
+                        <option value="serum" selected>✨ 세럼/에센스</option>
+                        <option value="cream">🧈 크림/보습</option>
+                        <option value="suncare">☀️ 선케어</option>
+                        <option value="active">⚡ 액티브</option>
+                        <option value="spot">🎯 스팟케어</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label>제품명</label>
                     <input type="text" id="newProductName" placeholder="제품명 입력">
@@ -135,7 +150,7 @@
                     <label>사용 시점</label>
                     <input type="text" id="newProductWhen" placeholder="예: 아침·저녁">
                 </div>
-                <button class="btn btn-primary" id="saveProductBtn" style="margin-top:0.5rem;">저장</button>
+                <button class="btn btn-primary" id="saveProductBtn" style="margin-top:0.5rem;">추가</button>
             </div>
         </div>
     </div>
@@ -159,7 +174,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=2"></script>
+    <script src="skincare.js?v=3"></script>
 </body>
 
 </html>

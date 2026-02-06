@@ -7,25 +7,35 @@
         { value: 'sun', label: '선크림' }, { value: 'active', label: '액티브' },
     ];
 
+    const CATEGORIES = [
+        { key: 'cleansing', label: '클렌징', icon: '🧴', color: '#4299e1' },
+        { key: 'toner', label: '토너/패드', icon: '💧', color: '#48bb78' },
+        { key: 'serum', label: '세럼/에센스', icon: '✨', color: '#ed64a6' },
+        { key: 'cream', label: '크림/보습', icon: '🧈', color: '#f6ad55' },
+        { key: 'suncare', label: '선케어', icon: '☀️', color: '#f56565' },
+        { key: 'active', label: '액티브', icon: '⚡', color: '#9f7aea' },
+        { key: 'spot', label: '스팟케어', icon: '🎯', color: '#fc8181' },
+    ];
+
     // ===== Default Data =====
     const DEFAULT_PRODUCTS = [
-        { name: '일리윤 세라마이드 클렌저', role: '저자극 세안', when: '아침+저녁' },
-        { name: '라운드랩 독도 클렌징 오일', role: '선크림·피지 제거', when: '저녁 1차' },
-        { name: '라운드랩 독도 토너', role: '수분 + pH 정리', when: '아침·저녁' },
-        { name: '스킨푸드 캐롯 카밍 패드', role: '긴급 진정', when: '홍조 시' },
-        { name: '이니스프리 비타민C 세럼', role: '항산화 + 미백', when: '아침 매일' },
-        { name: 'VT PDRN 에센스', role: '피부 재생', when: '저녁 매일' },
-        { name: '토리든 히알루론산 세럼', role: '수분 충전', when: '아침·저녁' },
-        { name: '아누아 PDRN 수분크림', role: '보습 + 재생', when: '아침·저녁' },
-        { name: '알엑스 더마 시카 리젠 크림', role: '진정 + 장벽 강화', when: '저녁 2차' },
-        { name: '닥터지 선크림 SPF50+', role: '자외선 차단', when: '아침+점심' },
-        { name: '코스알엑스 AHA 7', role: '각질 + 모공', when: '수 저녁' },
-        { name: '디오디너리 레티노이드 2%', role: '턴오버 + 안티에이징', when: '월·목 저녁' },
-        { name: '더마팩토리 나이아신아마이드 20%', role: '미백 + 모공', when: '토 저녁' },
-        { name: '라로슈포제 시카플라스트 밤', role: '강력 진정', when: '홍조·면도 후' },
-        { name: '아젤리아크림', role: '색소침착 케어', when: '스팟 주3~4' },
-        { name: '파티온 트러블 세럼', role: '여드름 스팟', when: '저녁 국소' },
-        { name: '노스카나겔', role: '상처 재생', when: '취침 전' },
+        { name: '일리윤 세라마이드 클렌저', role: '저자극 세안', when: '아침+저녁', category: 'cleansing' },
+        { name: '라운드랩 독도 클렌징 오일', role: '선크림·피지 제거', when: '저녁 1차', category: 'cleansing' },
+        { name: '라운드랩 독도 토너', role: '수분 + pH 정리', when: '아침·저녁', category: 'toner' },
+        { name: '스킨푸드 캐롯 카밍 패드', role: '긴급 진정', when: '홍조 시', category: 'toner' },
+        { name: '이니스프리 비타민C 세럼', role: '항산화 + 미백', when: '아침 매일', category: 'serum' },
+        { name: 'VT PDRN 에센스', role: '피부 재생', when: '저녁 매일', category: 'serum' },
+        { name: '토리든 히알루론산 세럼', role: '수분 충전', when: '아침·저녁', category: 'serum' },
+        { name: '아누아 PDRN 수분크림', role: '보습 + 재생', when: '아침·저녁', category: 'cream' },
+        { name: '알엑스 더마 시카 리젠 크림', role: '진정 + 장벽 강화', when: '저녁 2차', category: 'cream' },
+        { name: '라로슈포제 시카플라스트 밤', role: '강력 진정', when: '홍조·면도 후', category: 'cream' },
+        { name: '닥터지 선크림 SPF50+', role: '자외선 차단', when: '아침+점심', category: 'suncare' },
+        { name: '코스알엑스 AHA 7', role: '각질 + 모공', when: '수 저녁', category: 'active' },
+        { name: '디오디너리 레티노이드 2%', role: '턴오버 + 안티에이징', when: '월·목 저녁', category: 'active' },
+        { name: '더마팩토리 나이아신아마이드 20%', role: '미백 + 모공', when: '토 저녁', category: 'active' },
+        { name: '아젤리아크림', role: '색소침착 케어', when: '스팟 주3~4', category: 'spot' },
+        { name: '파티온 트러블 세럼', role: '여드름 스팟', when: '저녁 국소', category: 'spot' },
+        { name: '노스카나겔', role: '상처 재생', when: '취침 전', category: 'spot' },
     ];
 
     const DEFAULT_ROUTINES = {
@@ -93,6 +103,7 @@
     let routines = {};
     let currentTime = 'morning';
     let editingRoutineKey = '';
+    let editingProductIdx = -1;
 
     // ===== Firebase =====
     const fbProducts = window.db ? window.db.ref('skincare/products') : null;
@@ -104,8 +115,18 @@
         fbProducts.on('value', snap => {
             const d = snap.val();
             products = d ? (Array.isArray(d) ? d : Object.values(d)) : [];
+            // Migrate: add category if missing
+            let migrated = false;
+            products.forEach(p => {
+                if (!p.category) {
+                    p.category = guessCategory(p);
+                    migrated = true;
+                }
+            });
             if (products.length === 0) {
                 products = [...DEFAULT_PRODUCTS];
+                fbProducts.set(products);
+            } else if (migrated) {
                 fbProducts.set(products);
             }
             renderProducts();
@@ -115,7 +136,6 @@
         fbRoutines.on('value', snap => {
             const d = snap.val();
             routines = d || {};
-            // Fill missing keys with defaults
             let needsUpdate = false;
             Object.keys(DEFAULT_ROUTINES).forEach(k => {
                 if (!routines[k]) { routines[k] = DEFAULT_ROUTINES[k]; needsUpdate = true; }
@@ -125,6 +145,19 @@
             renderRoutine(currentTime);
             renderCalendar();
         });
+    }
+
+    // Guess category from product data for migration
+    function guessCategory(p) {
+        const n = (p.name + p.role).toLowerCase();
+        if (n.includes('클렌') || n.includes('세안') || n.includes('오일')) return 'cleansing';
+        if (n.includes('토너') || n.includes('패드')) return 'toner';
+        if (n.includes('세럼') || n.includes('에센스') || n.includes('히알루') || n.includes('비타민') || n.includes('pdrn')) return 'serum';
+        if (n.includes('크림') || n.includes('보습') || n.includes('밤') || n.includes('시카')) return 'cream';
+        if (n.includes('선크림') || n.includes('spf') || n.includes('자외선')) return 'suncare';
+        if (n.includes('aha') || n.includes('레티노') || n.includes('나이아신')) return 'active';
+        if (n.includes('스팟') || n.includes('여드름') || n.includes('트러블') || n.includes('색소') || n.includes('노스카나')) return 'spot';
+        return 'serum';
     }
 
     function saveProducts() {
@@ -143,6 +176,10 @@
     function getEveningInfo(day) {
         const key = 'evening_' + day;
         return routines[key] || DEFAULT_ROUTINES[key] || { label: '기본', tagClass: 'rest', steps: [] };
+    }
+
+    function getCategoryInfo(key) {
+        return CATEGORIES.find(c => c.key === key) || { key: 'etc', label: '기타', icon: '📦', color: '#a0aec0' };
     }
 
     function showToast(msg, type = 'success') {
@@ -205,20 +242,160 @@
 
     function renderProducts() {
         const container = document.getElementById('productList');
-        container.innerHTML = products.map((p, i) => `
-            <div class="sc-product-item">
-                <span class="sc-product-name">${p.name}</span>
-                <span class="sc-product-role">${p.role}</span>
-                <span class="sc-product-when">${p.when}</span>
-                <button class="sc-product-del" data-idx="${i}" title="삭제">&times;</button>
-            </div>
-        `).join('');
+
+        // Group by category
+        const grouped = {};
+        CATEGORIES.forEach(c => { grouped[c.key] = []; });
+        grouped['etc'] = [];
+
+        products.forEach((p, idx) => {
+            const cat = p.category || 'etc';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push({ ...p, _idx: idx });
+        });
+
+        let html = '';
+        CATEGORIES.forEach(cat => {
+            const items = grouped[cat.key];
+            if (items.length === 0) return;
+
+            html += `<div class="sc-product-group">`;
+            html += `<div class="sc-product-group-header">`;
+            html += `<span class="sc-group-icon">${cat.icon}</span>`;
+            html += `<span class="sc-group-label">${cat.label}</span>`;
+            html += `<span class="sc-group-count">${items.length}</span>`;
+            html += `</div>`;
+
+            items.forEach(p => {
+                html += `<div class="sc-product-item" data-idx="${p._idx}">`;
+                html += `<div class="sc-product-info">`;
+                html += `<span class="sc-product-name">${p.name}</span>`;
+                html += `<span class="sc-product-role">${p.role}</span>`;
+                html += `</div>`;
+                html += `<span class="sc-product-when">${p.when}</span>`;
+                html += `<div class="sc-product-actions">`;
+                html += `<button class="sc-product-action sc-product-edit-btn" data-idx="${p._idx}" title="편집">`;
+                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+                html += `</button>`;
+                html += `<button class="sc-product-action sc-product-del-btn" data-idx="${p._idx}" title="삭제">`;
+                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                html += `</button>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+
+            html += `</div>`;
+        });
+
+        // Show 'etc' group if any
+        if (grouped['etc'].length > 0) {
+            html += `<div class="sc-product-group">`;
+            html += `<div class="sc-product-group-header">`;
+            html += `<span class="sc-group-icon">📦</span>`;
+            html += `<span class="sc-group-label">기타</span>`;
+            html += `<span class="sc-group-count">${grouped['etc'].length}</span>`;
+            html += `</div>`;
+            grouped['etc'].forEach(p => {
+                html += `<div class="sc-product-item" data-idx="${p._idx}">`;
+                html += `<div class="sc-product-info">`;
+                html += `<span class="sc-product-name">${p.name}</span>`;
+                html += `<span class="sc-product-role">${p.role}</span>`;
+                html += `</div>`;
+                html += `<span class="sc-product-when">${p.when}</span>`;
+                html += `<div class="sc-product-actions">`;
+                html += `<button class="sc-product-action sc-product-edit-btn" data-idx="${p._idx}" title="편집">`;
+                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+                html += `</button>`;
+                html += `<button class="sc-product-action sc-product-del-btn" data-idx="${p._idx}" title="삭제">`;
+                html += `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                html += `</button>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+            html += `</div>`;
+        }
+
+        container.innerHTML = html;
     }
 
     function renderProductSelect() {
         const sel = document.getElementById('addStepSelect');
         sel.innerHTML = '<option value="">제품 선택하여 추가...</option>' +
             products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    }
+
+    // ===== Product Modal (Add/Edit) =====
+    function openProductModal(mode, idx) {
+        const modal = document.getElementById('addProductModal');
+        const title = document.getElementById('productModalTitle');
+        const saveBtn = document.getElementById('saveProductBtn');
+
+        if (mode === 'edit' && idx >= 0 && idx < products.length) {
+            editingProductIdx = idx;
+            const p = products[idx];
+            document.getElementById('newProductName').value = p.name;
+            document.getElementById('newProductRole').value = p.role;
+            document.getElementById('newProductWhen').value = p.when;
+            document.getElementById('newProductCategory').value = p.category || 'serum';
+            title.textContent = '제품 편집';
+            saveBtn.textContent = '수정 완료';
+        } else {
+            editingProductIdx = -1;
+            document.getElementById('newProductName').value = '';
+            document.getElementById('newProductRole').value = '';
+            document.getElementById('newProductWhen').value = '';
+            document.getElementById('newProductCategory').value = 'serum';
+            title.textContent = '제품 추가';
+            saveBtn.textContent = '추가';
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function saveProduct() {
+        const name = document.getElementById('newProductName').value.trim();
+        const role = document.getElementById('newProductRole').value.trim();
+        const when = document.getElementById('newProductWhen').value.trim();
+        const category = document.getElementById('newProductCategory').value;
+        if (!name) { showToast('제품명을 입력하세요', 'error'); return; }
+
+        if (editingProductIdx >= 0) {
+            // Edit mode
+            const oldName = products[editingProductIdx].name;
+            products[editingProductIdx] = { name, role, when, category };
+            // If name changed, update routines that reference old name
+            if (oldName !== name) {
+                updateRoutineProductName(oldName, name);
+            }
+            saveProducts();
+            showToast('제품 수정됨');
+        } else {
+            // Add mode
+            products.push({ name, role, when, category });
+            saveProducts();
+            showToast('제품 추가됨');
+        }
+
+        document.getElementById('addProductModal').style.display = 'none';
+        editingProductIdx = -1;
+    }
+
+    // Update product name in all routines when renamed
+    function updateRoutineProductName(oldName, newName) {
+        let changed = false;
+        Object.keys(routines).forEach(key => {
+            const val = routines[key];
+            if (Array.isArray(val)) {
+                val.forEach(step => {
+                    if (step.product === oldName) { step.product = newName; changed = true; }
+                });
+            } else if (val && val.steps) {
+                val.steps.forEach(step => {
+                    if (step.product === oldName) { step.product = newName; changed = true; }
+                });
+            }
+        });
+        if (changed) saveRoutines();
     }
 
     // ===== Edit Routine Modal =====
@@ -375,36 +552,33 @@
             showToast('단계 추가됨');
         });
 
-        // Add product modal
+        // Product modal: add button (in section header)
         document.getElementById('addProductBtn').addEventListener('click', () => {
-            document.getElementById('addProductModal').style.display = 'flex';
+            openProductModal('add');
         });
         document.getElementById('closeAddProduct').addEventListener('click', () => {
             document.getElementById('addProductModal').style.display = 'none';
+            editingProductIdx = -1;
         });
         document.getElementById('addProductModal').addEventListener('click', e => {
-            if (e.target === document.getElementById('addProductModal'))
+            if (e.target === document.getElementById('addProductModal')) {
                 document.getElementById('addProductModal').style.display = 'none';
+                editingProductIdx = -1;
+            }
         });
 
-        document.getElementById('saveProductBtn').addEventListener('click', () => {
-            const name = document.getElementById('newProductName').value.trim();
-            const role = document.getElementById('newProductRole').value.trim();
-            const when = document.getElementById('newProductWhen').value.trim();
-            if (!name) { showToast('제품명을 입력하세요', 'error'); return; }
-            products.push({ name, role, when });
-            saveProducts();
-            document.getElementById('newProductName').value = '';
-            document.getElementById('newProductRole').value = '';
-            document.getElementById('newProductWhen').value = '';
-            document.getElementById('addProductModal').style.display = 'none';
-            showToast('제품 추가됨');
-        });
+        // Save product (add or edit)
+        document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
 
-        // Delete product
+        // Product list: edit & delete (delegated)
         document.getElementById('productList').addEventListener('click', e => {
-            if (e.target.classList.contains('sc-product-del')) {
-                const idx = parseInt(e.target.dataset.idx);
+            const editBtn = e.target.closest('.sc-product-edit-btn');
+            const delBtn = e.target.closest('.sc-product-del-btn');
+            if (editBtn) {
+                const idx = parseInt(editBtn.dataset.idx);
+                openProductModal('edit', idx);
+            } else if (delBtn) {
+                const idx = parseInt(delBtn.dataset.idx);
                 products.splice(idx, 1);
                 saveProducts();
                 showToast('제품 삭제됨');
@@ -416,6 +590,7 @@
             if (e.key === 'Escape') {
                 document.getElementById('editRoutineModal').style.display = 'none';
                 document.getElementById('addProductModal').style.display = 'none';
+                editingProductIdx = -1;
             }
         });
     }
