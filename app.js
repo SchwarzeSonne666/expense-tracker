@@ -138,7 +138,12 @@ class ExpenseTracker {
         const hidden = document.getElementById('expenseDate');
         const list = document.getElementById('dateDropdownList');
 
-        display.addEventListener('click', () => {
+        display.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other dropdowns first
+            document.querySelectorAll('.dropdown-list.show').forEach(el => {
+                if (el !== list) el.classList.remove('show');
+            });
             // Highlight current selection
             list.querySelectorAll('.dropdown-item').forEach(item => {
                 item.classList.toggle('active-date', item.dataset.value === hidden.value);
@@ -146,7 +151,8 @@ class ExpenseTracker {
             list.classList.toggle('show');
         });
 
-        list.addEventListener('click', (e) => {
+        list.addEventListener('mousedown', (e) => {
+            e.preventDefault();
             const item = e.target.closest('.dropdown-item');
             if (item) {
                 const day = item.dataset.value;
@@ -570,12 +576,12 @@ class ExpenseTracker {
         input.addEventListener('focus', showFiltered);
         input.addEventListener('input', showFiltered);
 
-        listEl.addEventListener('click', (e) => {
+        listEl.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // Prevent blur before click registers
             const item = e.target.closest('.dropdown-item');
             if (item) {
                 input.value = item.dataset.value;
                 listEl.classList.remove('show');
-                // Trigger change for any listeners
                 input.dispatchEvent(new Event('change'));
             }
         });
@@ -607,6 +613,11 @@ class ExpenseTracker {
             } else if (e.key === 'Escape') {
                 listEl.classList.remove('show');
             }
+        });
+
+        // Close on blur (delayed to allow mousedown on list)
+        input.addEventListener('blur', () => {
+            setTimeout(() => listEl.classList.remove('show'), 150);
         });
     }
 
@@ -766,7 +777,7 @@ class ExpenseTracker {
         );
 
         // Close all dropdowns on outside click
-        document.addEventListener('click', (e) => {
+        document.addEventListener('mousedown', (e) => {
             if (!e.target.closest('.custom-dropdown')) {
                 document.querySelectorAll('.dropdown-list.show').forEach(el => el.classList.remove('show'));
             }
