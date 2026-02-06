@@ -596,28 +596,52 @@
 
 .sc-edit-day-tab {
   flex: 1;
-  padding: 0.4rem 0;
+  padding: 0.35rem 0.15rem;
   background: transparent;
   border: none;
   border-radius: 7px;
   font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .sc-edit-day-tab:hover {
-  color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
 }
 
 .sc-edit-day-tab.active {
   background: rgba(102, 126, 234, 0.18);
+}
+
+.sc-edit-day-tab-day {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.sc-edit-day-tab.active .sc-edit-day-tab-day {
   color: var(--accent-primary);
 }
+
+.sc-edit-day-tab-theme {
+  font-size: 0.5rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.sc-edit-day-tab-theme.retinoid { color: #ed64a6; }
+.sc-edit-day-tab-theme.aha { color: #48bb78; }
+.sc-edit-day-tab-theme.niacin { color: #f6ad55; }
+.sc-edit-day-tab-theme.rest { color: var(--text-muted); }
 
 /* Day tag label (shows e.g. 레티노이드) */
 .sc-edit-day-label {

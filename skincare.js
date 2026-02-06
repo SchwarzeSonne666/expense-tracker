@@ -369,6 +369,30 @@
         { value: 'rest', label: '쉬는 날 / 보습' },
     ];
 
+    const DAY_ORDER = ['월', '화', '수', '목', '금', '토', '일'];
+
+    function renderDayTabs() {
+        const container = document.getElementById('editDayTabs');
+        container.innerHTML = DAY_ORDER.map(day => {
+            const key = 'evening_' + day;
+            const info = routines[key] || DEFAULT_ROUTINES[key] || { label: '기본', tagClass: 'rest', steps: [] };
+            const isActive = day === editDay;
+            return `<button class="sc-edit-day-tab${isActive ? ' active' : ''}" data-day="${day}">
+                <span class="sc-edit-day-tab-day">${day}</span>
+                <span class="sc-edit-day-tab-theme ${info.tagClass}">${info.label}</span>
+            </button>`;
+        }).join('');
+
+        // Re-attach click listeners for dynamically created tabs
+        container.querySelectorAll('.sc-edit-day-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editDay = btn.dataset.day;
+                container.querySelectorAll('.sc-edit-day-tab').forEach(b => b.classList.toggle('active', b.dataset.day === editDay));
+                loadEditScope();
+            });
+        });
+    }
+
     function openEditRoutine() {
         const day = getTodayDayKo();
         editDay = day;
@@ -382,15 +406,11 @@
 
         loadEditScope();
         renderProductSelect();
+        renderDayTabs();
 
         // Activate scope button
         document.querySelectorAll('.sc-edit-scope-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.scope === editScope);
-        });
-
-        // Activate day tab
-        document.querySelectorAll('.sc-edit-day-tab').forEach(b => {
-            b.classList.toggle('active', b.dataset.day === editDay);
         });
 
         // Show/hide day tabs
@@ -549,19 +569,18 @@
                 editScope = btn.dataset.scope;
                 document.querySelectorAll('.sc-edit-scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === editScope));
                 // Show/hide day tabs
-                document.getElementById('editDayTabs').style.display = editScope === 'evening_day' ? 'flex' : 'none';
+                const dayTabsEl = document.getElementById('editDayTabs');
+                if (editScope === 'evening_day') {
+                    renderDayTabs();
+                    dayTabsEl.style.display = 'flex';
+                } else {
+                    dayTabsEl.style.display = 'none';
+                }
                 loadEditScope();
             });
         });
 
-        // Day tab buttons
-        document.querySelectorAll('.sc-edit-day-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                editDay = btn.dataset.day;
-                document.querySelectorAll('.sc-edit-day-tab').forEach(b => b.classList.toggle('active', b.dataset.day === editDay));
-                loadEditScope();
-            });
-        });
+        // Day tab buttons — no static listeners needed, renderDayTabs() attaches them dynamically
 
         // Routine edit: move/remove (delegated with closest)
         document.getElementById('editRoutineList').addEventListener('click', e => {

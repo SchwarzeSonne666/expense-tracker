@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=6">
+    <link rel="stylesheet" href="skincare.css?v=7">
 </head>
 
 <body>
@@ -107,16 +107,8 @@
                     <button class="sc-edit-scope-btn" data-scope="evening_common">🌙 저녁 공통</button>
                     <button class="sc-edit-scope-btn" data-scope="evening_day">📅 저녁 요일별</button>
                 </div>
-                <!-- Day Tabs (only visible for evening_day) -->
-                <div class="sc-edit-day-tabs" id="editDayTabs" style="display:none">
-                    <button class="sc-edit-day-tab" data-day="월">월</button>
-                    <button class="sc-edit-day-tab" data-day="화">화</button>
-                    <button class="sc-edit-day-tab" data-day="수">수</button>
-                    <button class="sc-edit-day-tab" data-day="목">목</button>
-                    <button class="sc-edit-day-tab" data-day="금">금</button>
-                    <button class="sc-edit-day-tab" data-day="토">토</button>
-                    <button class="sc-edit-day-tab" data-day="일">일</button>
-                </div>
+                <!-- Day Tabs (only visible for evening_day, populated by JS) -->
+                <div class="sc-edit-day-tabs" id="editDayTabs" style="display:none"></div>
                 <!-- Info Banner -->
                 <div id="editRoutineInfo" class="sc-edit-info-text" style="display:none"></div>
                 <!-- Step List -->
@@ -190,7 +182,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=7"></script>
+    <script src="skincare.js?v=8"></script>
 </body>
 
 </html>
