@@ -864,6 +864,48 @@
             }
         });
 
+        // Copy products list for Claude
+        document.getElementById('copyProductsBtn').addEventListener('click', () => {
+            if (products.length === 0) { showToast('복사할 제품이 없습니다', 'error'); return; }
+            const grouped = {};
+            CATEGORIES.forEach(c => { grouped[c.key] = []; });
+            grouped['etc'] = [];
+            products.forEach(p => {
+                const cat = p.category || 'etc';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(p);
+            });
+            let text = '';
+            CATEGORIES.forEach(cat => {
+                const items = grouped[cat.key];
+                if (items.length === 0) return;
+                text += `[${cat.label}]\n`;
+                items.forEach(p => {
+                    text += `- ${p.name} | ${p.role} | ${p.when}\n`;
+                });
+                text += '\n';
+            });
+            if (grouped['etc'].length > 0) {
+                text += `[기타]\n`;
+                grouped['etc'].forEach(p => {
+                    text += `- ${p.name} | ${p.role} | ${p.when}\n`;
+                });
+                text += '\n';
+            }
+            navigator.clipboard.writeText(text.trim()).then(() => {
+                const btn = document.getElementById('copyProductsBtn');
+                btn.classList.add('copied');
+                btn.querySelector('svg').style.display = 'none';
+                const origText = btn.textContent;
+                btn.textContent = '✓ 복사됨';
+                showToast('제품 목록이 클립보드에 복사되었습니다');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 복사`;
+                }, 1500);
+            });
+        });
+
         // Product modal
         document.getElementById('addProductBtn').addEventListener('click', () => openProductModal('add'));
         document.getElementById('closeAddProduct').addEventListener('click', () => {

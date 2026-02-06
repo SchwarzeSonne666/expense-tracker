@@ -502,13 +502,17 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sc-add-product-btn {
+.sc-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sc-add-product-btn,
+.sc-copy-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  color: var(--accent-primary);
   padding: 0.3rem 0.65rem;
   border-radius: 20px;
   font-family: inherit;
@@ -516,6 +520,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  border: 1px solid;
+}
+
+.sc-add-product-btn {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.2);
+  color: var(--accent-primary);
 }
 
 .sc-add-product-btn:hover {
@@ -524,7 +535,26 @@
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
 }
 
-.sc-add-product-btn svg {
+.sc-copy-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
+.sc-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+}
+
+.sc-copy-btn.copied {
+  background: rgba(72, 187, 120, 0.12);
+  border-color: rgba(72, 187, 120, 0.3);
+  color: var(--sc-tone);
+}
+
+.sc-add-product-btn svg,
+.sc-copy-btn svg {
   flex-shrink: 0;
 }
 
