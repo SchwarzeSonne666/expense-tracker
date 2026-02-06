@@ -191,7 +191,15 @@
     function saveSpotCare() { if (fbSpotCare) fbSpotCare.set(spotCare); }
 
     // ===== Helpers =====
-    function getTodayDayKo() { return DAYS_KO[new Date().getDay()]; }
+    // 06시 기준 날짜: 자정~05:59는 전날로 취급
+    function getEffectiveDate() {
+        const now = new Date();
+        if (now.getHours() < 6) {
+            return new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        }
+        return now;
+    }
+    function getTodayDayKo() { return DAYS_KO[getEffectiveDate().getDay()]; }
     function getDayFullName(d) { return { '일':'일요일','월':'월요일','화':'화요일','수':'수요일','목':'목요일','금':'금요일','토':'토요일' }[d]; }
     function getAutoTime() { const h = new Date().getHours(); return (h >= 6 && h < 15) ? 'morning' : 'evening'; }
 
@@ -258,7 +266,7 @@
 
     function renderCalendar() {
         const container = document.getElementById('weeklyCalendar');
-        const todayIdx = new Date().getDay();
+        const todayIdx = getEffectiveDate().getDay();
         const order = ['월','화','수','목','금','토','일'];
         const orderIdx = [1,2,3,4,5,6,0];
         const amKeywords = getMorningKeyProducts();
