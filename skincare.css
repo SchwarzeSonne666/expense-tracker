@@ -516,10 +516,12 @@
   flex-shrink: 0;
 }
 
-/* Modal Select */
-.sc-modal-select {
+/* Skincare Dark Select — unified style for all selects */
+.sc-modal-select,
+.sc-edit-select,
+.sc-edit-day-tag-sel {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
@@ -528,16 +530,50 @@
   font-size: 0.85rem;
   cursor: pointer;
   transition: all var(--transition-fast);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  background-size: 12px;
 }
 
-.sc-modal-select:focus {
+.sc-modal-select:focus,
+.sc-edit-select:focus,
+.sc-edit-day-tag-sel:focus {
   outline: none;
   border-color: var(--accent-primary);
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.sc-modal-select option {
-  background: var(--bg-secondary);
+.sc-modal-select:hover,
+.sc-edit-select:hover,
+.sc-edit-day-tag-sel:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.sc-modal-select option,
+.sc-edit-select option,
+.sc-edit-day-tag-sel option {
+  background: #1a1f3a;
   color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+}
+
+/* Size overrides */
+.sc-edit-select {
+  flex: 1;
+  font-size: 0.8rem;
+  padding: 0.45rem 2rem 0.45rem 0.65rem;
+}
+
+.sc-edit-day-tag-sel {
+  width: auto;
+  font-size: 0.72rem;
+  padding: 0.25rem 1.8rem 0.25rem 0.45rem;
 }
 
 /* ===== Edit Routine Modal — Upgraded ===== */
@@ -944,26 +980,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.sc-edit-select {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 0.8rem;
-}
-
-.sc-edit-select:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-}
-
-.sc-edit-select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
+/* .sc-edit-select styles moved to unified select block above */
 
 /* Responsive */
 @media (max-width: 640px) {
