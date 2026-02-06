@@ -27,10 +27,10 @@
 
     // ===== Default Data =====
     const DEFAULT_SPOT_CARE = [
-        { icon: '🔴', label: '새 여드름', product: '파티온 트러블 세럼', how: '저녁 마지막, 해당 부위만' },
-        { icon: '🟤', label: '자국/색소침착', product: '아젤리아크림', how: '저녁 크림 후, 주 3~4회' },
-        { icon: '🔥', label: '염증 심할 때', product: '노스카나겔', how: '취침 전, 얇게 도포' },
-        { icon: '😳', label: '홍조/열감', product: '냉장 캐롯 카밍 패드', how: '토너 대신 사용 + 시카 밤 교체' },
+        { icon: '🔴', label: '새 여드름', steps: ['파티온 트러블 세럼', '아젤리아크림'], how: '저녁 마지막, 해당 부위만' },
+        { icon: '🟤', label: '자국/색소침착', steps: ['아젤리아크림'], how: '저녁 크림 후, 주 3~4회' },
+        { icon: '🔥', label: '염증 심할 때', steps: ['노스카나겔'], how: '취침 전, 얇게 도포' },
+        { icon: '😳', label: '홍조/열감', steps: ['냉장 캐롯 카밍 패드'], how: '토너 대신 사용, 시카 밤 교체' },
     ];
 
     const DEFAULT_PRODUCTS = [
@@ -118,6 +118,7 @@
     let routines = {};
     let spotCare = [];
     let currentTime = 'morning';
+    let collapsedCategories = {}; // product accordion state
 
     // Deep copy helper
     function deepCopy(obj) {
@@ -128,6 +129,23 @@
     const fbProducts = window.db ? window.db.ref('skincare/products') : null;
     const fbRoutines = window.db ? window.db.ref('skincare/routines') : null;
     const fbSpotCare = window.db ? window.db.ref('skincare/spotCare') : null;
+
+    function migrateSpotCare(items) {
+        // Migrate old format: product (string) → steps (array)
+        let migrated = false;
+        items.forEach(item => {
+            if (typeof item.product === 'string' && !item.steps) {
+                // Split by → or + into steps array
+                const parts = item.product.split(/\s*[\u2192→+]\s*/)
+                    .map(s => s.replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d]+\.?\s*/, '').trim())
+                    .filter(Boolean);
+                item.steps = parts.length > 0 ? parts : [item.product];
+                delete item.product;
+                migrated = true;
+            }
+        });
+        return migrated;
+    }
 
     function initFirebase() {
         if (!fbProducts) return;
@@ -170,6 +188,8 @@
                 spotCare = d ? (Array.isArray(d) ? d : Object.values(d)) : [];
                 if (spotCare.length === 0) {
                     spotCare = deepCopy(DEFAULT_SPOT_CARE);
+                    fbSpotCare.set(spotCare);
+                } else if (migrateSpotCare(spotCare)) {
                     fbSpotCare.set(spotCare);
                 }
                 renderSpotCare();
@@ -240,24 +260,52 @@
         const container = document.getElementById('routineSteps');
         const day = getTodayDayKo();
         let steps = [];
+        let commonCount = 0;
 
         if (time === 'morning') {
             steps = routines.morning || DEFAULT_ROUTINES.morning;
         } else {
             const common = routines.evening_common || DEFAULT_ROUTINES.evening_common;
             const info = getEveningInfo(day);
+            commonCount = common.length;
             steps = [...common, ...(info.steps || [])];
         }
 
+        // Collapsible routine: show first 3, then toggle
+        const COLLAPSE_THRESHOLD = 5;
+        const shouldCollapse = steps.length > COLLAPSE_THRESHOLD;
+        const isExpanded = container.dataset.expanded === 'true';
+
         let html = '';
         steps.forEach((s, i) => {
-            html += `<div class="sc-step" style="animation-delay:${i * 0.04}s">`;
+            const hidden = shouldCollapse && !isExpanded && i >= 3;
+            // Add divider between common and day-specific steps
+            if (time === 'evening' && commonCount > 0 && i === commonCount) {
+                const info = getEveningInfo(day);
+                html += `<div class="sc-routine-divider"><span class="sc-active-tag ${info.tagClass}" style="font-size:0.6rem;padding:0.15rem 0.5rem;">${info.label}</span></div>`;
+            }
+            html += `<div class="sc-step${hidden ? ' sc-step-hidden' : ''}" style="animation-delay:${i * 0.04}s">`;
             html += `<div class="sc-step-num">${i + 1}</div>`;
             html += `<div class="sc-step-body"><div class="sc-step-product">${s.product}</div><div class="sc-step-usage">${s.usage}</div></div>`;
             html += `<span class="sc-step-badge ${s.badgeClass}">${s.badge}</span></div>`;
-            if (s.wait) html += `<div class="sc-step-note">⏱ ${s.wait}</div>`;
+            if (s.wait) html += `<div class="sc-step-note${hidden ? ' sc-step-hidden' : ''}" style="animation-delay:${i * 0.04}s">⏱ ${s.wait}</div>`;
         });
+
+        if (shouldCollapse) {
+            const remaining = steps.length - 3;
+            html += `<button class="sc-routine-toggle" id="routineToggle">${isExpanded ? '접기 ▲' : `+${remaining}개 더 보기 ▼`}</button>`;
+        }
+
         container.innerHTML = html;
+
+        // Attach toggle handler
+        const toggleBtn = document.getElementById('routineToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                container.dataset.expanded = isExpanded ? 'false' : 'true';
+                renderRoutine(currentTime);
+            });
+        }
     }
 
     function getMorningKeyProducts() {
@@ -296,14 +344,20 @@
         const container = document.getElementById('spotCareGrid');
         if (!container) return;
         const items = spotCare.length > 0 ? spotCare : DEFAULT_SPOT_CARE;
-        container.innerHTML = items.map(s => `
+        container.innerHTML = items.map(s => {
+            const stepsArr = s.steps || (s.product ? s.product.split(/\s*[\u2192→+]\s*/).map(p => p.replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d]+\.?\s*/, '').trim()).filter(Boolean) : []);
+            const stepsHtml = stepsArr.map((p, i) => {
+                if (stepsArr.length > 1) return `<div>① ${i === 0 ? '' : ''}${p}</div>`.replace('①', `${String.fromCodePoint(0x2460 + i)}`);
+                return `<div>${p}</div>`;
+            }).join('');
+            return `
             <div class="sc-spot-card">
                 <div class="sc-spot-icon">${s.icon}</div>
                 <div class="sc-spot-label">${s.label}</div>
-                <div class="sc-spot-product">${s.product.replace(/\s*[\u2192→]\s*/g, '<br>').replace(/\s*\+\s*/g, '<br>')}</div>
+                <div class="sc-spot-product">${stepsHtml}</div>
                 <div class="sc-spot-how">${s.how}</div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     function renderProducts() {
@@ -321,24 +375,84 @@
         let html = '';
         const renderGroup = (cat, items) => {
             if (items.length === 0) return;
+            const isCollapsed = collapsedCategories[cat.key] === true;
             html += `<div class="sc-product-group">`;
-            html += `<div class="sc-product-group-header">`;
+            html += `<div class="sc-product-group-header sc-accordion-header" data-cat="${cat.key}">`;
             html += `<span class="sc-group-icon">${cat.icon}</span>`;
             html += `<span class="sc-group-label">${cat.label}</span>`;
+            html += `<span class="sc-group-count">${items.length}</span>`;
+            html += `<span class="sc-accordion-arrow${isCollapsed ? '' : ' open'}">${isCollapsed ? '▸' : '▾'}</span>`;
             html += `</div>`;
+            html += `<div class="sc-product-group-items${isCollapsed ? ' collapsed' : ''}">`;
             items.forEach(p => {
                 html += `<div class="sc-product-item">`;
                 html += `<div class="sc-product-info"><span class="sc-product-name">${p.name}</span><span class="sc-product-role">${p.role}</span></div>`;
                 html += `<span class="sc-product-when">${p.when}</span>`;
                 html += `</div>`;
             });
-            html += `</div>`;
+            html += `</div></div>`;
         };
 
         CATEGORIES.forEach(cat => renderGroup(cat, grouped[cat.key]));
-        if (grouped['etc'].length > 0) renderGroup({ icon: '📦', label: '기타' }, grouped['etc']);
+        if (grouped['etc'].length > 0) renderGroup({ icon: '📦', label: '기타', key: 'etc' }, grouped['etc']);
 
         container.innerHTML = html;
+
+        // Attach accordion click handlers
+        container.querySelectorAll('.sc-accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const catKey = header.dataset.cat;
+                collapsedCategories[catKey] = !collapsedCategories[catKey];
+                renderProducts();
+            });
+        });
+    }
+
+    // ===== Import Preview Helpers =====
+    function renderPreviewRoutine(sections) {
+        let html = '<div class="sc-preview-content">';
+        Object.entries(sections).forEach(([name, steps]) => {
+            html += `<div class="sc-preview-section">`;
+            html += `<div class="sc-preview-section-title">[${name}] — ${steps.length}개 스텝</div>`;
+            steps.forEach((s, i) => {
+                html += `<div class="sc-preview-step">${i + 1}. ${s.product}${s.usage ? ' | ' + s.usage : ''}${s.wait ? ' ⏱' + s.wait : ''}</div>`;
+            });
+            html += `</div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function renderPreviewProducts(items) {
+        const grouped = {};
+        items.forEach(p => {
+            const cat = p.category || 'etc';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(p);
+        });
+        let html = '<div class="sc-preview-content">';
+        Object.entries(grouped).forEach(([catKey, list]) => {
+            const cat = CATEGORIES.find(c => c.key === catKey);
+            const label = cat ? `${cat.icon} ${cat.label}` : '📦 기타';
+            html += `<div class="sc-preview-section">`;
+            html += `<div class="sc-preview-section-title">${label} (${list.length})</div>`;
+            list.forEach(p => {
+                html += `<div class="sc-preview-step">${p.name} | ${p.role} | ${p.when}</div>`;
+            });
+            html += `</div>`;
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function renderPreviewSpot(items) {
+        let html = '<div class="sc-preview-content">';
+        items.forEach(s => {
+            const stepsText = s.steps ? s.steps.join(' → ') : s.product || '';
+            html += `<div class="sc-preview-step">${s.icon} ${s.label} — ${stepsText} (${s.how})</div>`;
+        });
+        html += '</div>';
+        return html;
     }
 
     // ===== Events =====
@@ -365,6 +479,8 @@
                 currentTime = btn.dataset.time;
                 document.querySelectorAll('.sc-time-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                // Reset expand state on time switch
+                document.getElementById('routineSteps').dataset.expanded = 'false';
                 renderRoutine(currentTime);
             });
         });
@@ -439,34 +555,47 @@
             copyWithFeedback('copyProductsBtn', text.trim(), '제품 목록이 클립보드에 복사되었습니다');
         });
 
-        // ===== Copy Spot Care =====
+        // ===== Copy Spot Care (updated for steps array) =====
         document.getElementById('copySpotBtn').addEventListener('click', () => {
             const items = spotCare.length > 0 ? spotCare : DEFAULT_SPOT_CARE;
             if (items.length === 0) { showToast('복사할 스팟 케어가 없습니다', 'error'); return; }
             let text = '=== 스팟 케어 ===\n\n';
             items.forEach(s => {
-                text += `${s.icon} | ${s.label} | ${s.product} | ${s.how}\n`;
+                const stepsText = s.steps ? s.steps.join(', ') : (s.product || '');
+                text += `${s.icon} | ${s.label} | ${stepsText} | ${s.how}\n`;
             });
             copyWithFeedback('copySpotBtn', text.trim(), '스팟 케어가 클립보드에 복사되었습니다');
         });
 
-        // ===== Import Routine =====
+        // ===== Import Routine (with preview) =====
         const importModal = document.getElementById('importRoutineModal');
+        const previewRoutineArea = document.getElementById('previewRoutineArea');
+        const applyImportRoutineBtn = document.getElementById('applyImportRoutine');
+        const previewRoutineBtn = document.getElementById('previewImportRoutine');
+        let parsedRoutineSections = null;
+
         document.getElementById('importRoutineBtn').addEventListener('click', () => {
             document.getElementById('importRoutineText').value = '';
+            previewRoutineArea.innerHTML = '';
+            previewRoutineArea.style.display = 'none';
+            applyImportRoutineBtn.style.display = 'none';
+            previewRoutineBtn.style.display = '';
+            parsedRoutineSections = null;
             importModal.style.display = 'flex';
         });
         document.getElementById('closeImportRoutine').addEventListener('click', () => { importModal.style.display = 'none'; });
         document.getElementById('cancelImportRoutine').addEventListener('click', () => { importModal.style.display = 'none'; });
         importModal.addEventListener('click', e => { if (e.target === importModal) importModal.style.display = 'none'; });
 
-        document.getElementById('applyImportRoutine').addEventListener('click', () => {
-            const raw = document.getElementById('importRoutineText').value.trim();
-            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+        function parseRoutineText(raw) {
+            const errors = [];
+            if (!raw) { errors.push('텍스트를 붙여넣으세요'); return { errors }; }
 
             const sections = {};
             let currentSection = null;
+            let lineNum = 0;
             raw.split('\n').forEach(line => {
+                lineNum++;
                 const trimmed = line.trim();
                 if (!trimmed || trimmed.startsWith('===')) return;
                 const sectionMatch = trimmed.match(/^\[(.+)\]$/);
@@ -477,14 +606,22 @@
                 }
                 if (currentSection) {
                     const stepMatch = trimmed.match(/^(?:\d+\.\s*|-\s*)(.+)$/);
-                    if (stepMatch) sections[currentSection].push(stepMatch[1]);
+                    if (stepMatch) {
+                        sections[currentSection].push(stepMatch[1]);
+                    } else if (trimmed.length > 0) {
+                        errors.push(`${lineNum}번째 줄: "${trimmed.substring(0, 20)}..." — 형식 불일치 (번호. 또는 - 로 시작해야 합니다)`);
+                    }
                 }
             });
 
             if (Object.keys(sections).length === 0) {
-                showToast('파싱할 수 있는 섹션이 없습니다', 'error');
-                return;
+                errors.push('[섹션명] 형식의 헤더를 찾을 수 없습니다');
+                return { errors };
             }
+
+            // Parse steps
+            const parsedSections = {};
+            let matchedCount = 0;
 
             function parseStep(str) {
                 let wait = '';
@@ -502,16 +639,13 @@
                 return step;
             }
 
-            let updatedCount = 0;
-
             if (sections['아침']) {
-                routines.morning = sections['아침'].map(parseStep);
-                updatedCount++;
+                parsedSections['아침'] = sections['아침'].map(parseStep);
+                matchedCount++;
             }
-
             if (sections['저녁 공통']) {
-                routines.evening_common = sections['저녁 공통'].map(parseStep);
-                updatedCount++;
+                parsedSections['저녁 공통'] = sections['저녁 공통'].map(parseStep);
+                matchedCount++;
             }
 
             const dayMap = { '월': '월', '화': '화', '수': '수', '목': '목', '금': '금', '토': '토', '일': '일' };
@@ -528,45 +662,103 @@
                     else if (!dayMatch[2]) tagClass = existing.tagClass || 'rest';
                     else tagClass = 'rest';
 
-                    routines['evening_' + day] = {
-                        label,
-                        tagClass,
-                        steps: sections[key].map(parseStep)
-                    };
-                    updatedCount++;
+                    parsedSections[`저녁 ${day}요일 — ${label}`] = sections[key].map(parseStep);
+                    parsedSections[`저녁 ${day}요일 — ${label}`]._meta = { day, label, tagClass };
+                    matchedCount++;
                 }
             });
 
-            if (updatedCount === 0) {
-                showToast('매칭되는 섹션이 없습니다', 'error');
+            if (matchedCount === 0) {
+                errors.push('아침/저녁 공통/저녁 요일별 섹션을 찾을 수 없습니다');
+            }
+
+            return { sections: parsedSections, matchedCount, errors };
+        }
+
+        previewRoutineBtn.addEventListener('click', () => {
+            const raw = document.getElementById('importRoutineText').value.trim();
+            const result = parseRoutineText(raw);
+
+            if (result.errors.length > 0 && !result.sections) {
+                previewRoutineArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewRoutineArea.style.display = 'block';
                 return;
             }
 
+            let html = '';
+            if (result.errors.length > 0) {
+                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+            }
+            html += `<div class="sc-preview-title">✅ ${result.matchedCount}개 섹션 미리보기</div>`;
+            html += renderPreviewRoutine(result.sections);
+
+            previewRoutineArea.innerHTML = html;
+            previewRoutineArea.style.display = 'block';
+            parsedRoutineSections = result.sections;
+            previewRoutineBtn.style.display = 'none';
+            applyImportRoutineBtn.style.display = '';
+        });
+
+        applyImportRoutineBtn.addEventListener('click', () => {
+            if (!parsedRoutineSections) return;
+
+            if (parsedRoutineSections['아침']) {
+                routines.morning = parsedRoutineSections['아침'];
+            }
+            if (parsedRoutineSections['저녁 공통']) {
+                routines.evening_common = parsedRoutineSections['저녁 공통'];
+            }
+
+            let updatedCount = 0;
+            Object.entries(parsedRoutineSections).forEach(([key, steps]) => {
+                if (steps._meta) {
+                    const { day, label, tagClass } = steps._meta;
+                    const cleanSteps = steps.filter(s => typeof s === 'object' && s.product);
+                    routines['evening_' + day] = { label, tagClass, steps: cleanSteps };
+                    updatedCount++;
+                }
+            });
+            if (parsedRoutineSections['아침']) updatedCount++;
+            if (parsedRoutineSections['저녁 공통']) updatedCount++;
+
             saveRoutines();
             importModal.style.display = 'none';
+            parsedRoutineSections = null;
             showToast(`${updatedCount}개 섹션 업데이트 완료`);
         });
 
-        // ===== Import Products =====
+        // ===== Import Products (with preview) =====
         const importProductsModal = document.getElementById('importProductsModal');
+        const previewProductsArea = document.getElementById('previewProductsArea');
+        const applyImportProductsBtn = document.getElementById('applyImportProducts');
+        const previewProductsBtn = document.getElementById('previewImportProducts');
+        let parsedProducts = null;
+
         document.getElementById('importProductsBtn').addEventListener('click', () => {
             document.getElementById('importProductsText').value = '';
+            previewProductsArea.innerHTML = '';
+            previewProductsArea.style.display = 'none';
+            applyImportProductsBtn.style.display = 'none';
+            previewProductsBtn.style.display = '';
+            parsedProducts = null;
             importProductsModal.style.display = 'flex';
         });
         document.getElementById('closeImportProducts').addEventListener('click', () => { importProductsModal.style.display = 'none'; });
         document.getElementById('cancelImportProducts').addEventListener('click', () => { importProductsModal.style.display = 'none'; });
         importProductsModal.addEventListener('click', e => { if (e.target === importProductsModal) importProductsModal.style.display = 'none'; });
 
-        document.getElementById('applyImportProducts').addEventListener('click', () => {
-            const raw = document.getElementById('importProductsText').value.trim();
-            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+        function parseProductsText(raw) {
+            const errors = [];
+            if (!raw) { errors.push('텍스트를 붙여넣으세요'); return { errors }; }
 
             const categoryLabelToKey = {};
             CATEGORIES.forEach(c => { categoryLabelToKey[c.label] = c.key; });
 
             const newProducts = [];
             let currentCatKey = 'serum';
+            let lineNum = 0;
             raw.split('\n').forEach(line => {
+                lineNum++;
                 const trimmed = line.trim();
                 if (!trimmed) return;
                 const sectionMatch = trimmed.match(/^\[(.+)\]$/);
@@ -585,59 +777,140 @@
                             when: parts[2] || '',
                             category: currentCatKey,
                         });
+                    } else {
+                        errors.push(`${lineNum}번째 줄: 제품명이 비어있습니다`);
                     }
+                } else if (!trimmed.match(/^\[/) && !trimmed.startsWith('===')) {
+                    errors.push(`${lineNum}번째 줄: "${trimmed.substring(0, 20)}..." — 형식 불일치 (- 또는 번호. 로 시작해야 합니다)`);
                 }
             });
 
             if (newProducts.length === 0) {
-                showToast('파싱할 수 있는 제품이 없습니다', 'error');
+                errors.push('파싱할 수 있는 제품이 없습니다');
+                return { errors };
+            }
+
+            return { products: newProducts, errors };
+        }
+
+        previewProductsBtn.addEventListener('click', () => {
+            const raw = document.getElementById('importProductsText').value.trim();
+            const result = parseProductsText(raw);
+
+            if (result.errors.length > 0 && !result.products) {
+                previewProductsArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewProductsArea.style.display = 'block';
                 return;
             }
 
-            products = newProducts;
-            saveProducts();
-            importProductsModal.style.display = 'none';
-            showToast(`${newProducts.length}개 제품 업데이트 완료`);
+            let html = '';
+            if (result.errors.length > 0) {
+                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+            }
+            html += `<div class="sc-preview-title">✅ ${result.products.length}개 제품 미리보기</div>`;
+            html += renderPreviewProducts(result.products);
+
+            previewProductsArea.innerHTML = html;
+            previewProductsArea.style.display = 'block';
+            parsedProducts = result.products;
+            previewProductsBtn.style.display = 'none';
+            applyImportProductsBtn.style.display = '';
         });
 
-        // ===== Import Spot Care =====
+        applyImportProductsBtn.addEventListener('click', () => {
+            if (!parsedProducts) return;
+            products = parsedProducts;
+            saveProducts();
+            importProductsModal.style.display = 'none';
+            parsedProducts = null;
+            showToast(`${products.length}개 제품 업데이트 완료`);
+        });
+
+        // ===== Import Spot Care (with preview, steps array format) =====
         const importSpotModal = document.getElementById('importSpotModal');
+        const previewSpotArea = document.getElementById('previewSpotArea');
+        const applyImportSpotBtn = document.getElementById('applyImportSpot');
+        const previewSpotBtn = document.getElementById('previewImportSpot');
+        let parsedSpots = null;
+
         document.getElementById('importSpotBtn').addEventListener('click', () => {
             document.getElementById('importSpotText').value = '';
+            previewSpotArea.innerHTML = '';
+            previewSpotArea.style.display = 'none';
+            applyImportSpotBtn.style.display = 'none';
+            previewSpotBtn.style.display = '';
+            parsedSpots = null;
             importSpotModal.style.display = 'flex';
         });
         document.getElementById('closeImportSpot').addEventListener('click', () => { importSpotModal.style.display = 'none'; });
         document.getElementById('cancelImportSpot').addEventListener('click', () => { importSpotModal.style.display = 'none'; });
         importSpotModal.addEventListener('click', e => { if (e.target === importSpotModal) importSpotModal.style.display = 'none'; });
 
-        document.getElementById('applyImportSpot').addEventListener('click', () => {
-            const raw = document.getElementById('importSpotText').value.trim();
-            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+        function parseSpotText(raw) {
+            const errors = [];
+            if (!raw) { errors.push('텍스트를 붙여넣으세요'); return { errors }; }
 
             const newSpots = [];
+            let lineNum = 0;
             raw.split('\n').forEach(line => {
+                lineNum++;
                 const trimmed = line.trim();
                 if (!trimmed || trimmed.startsWith('===')) return;
                 const parts = trimmed.split('|').map(s => s.trim());
                 if (parts.length >= 3) {
+                    // Product field: split by comma into steps array
+                    const productRaw = parts[2] || '';
+                    const steps = productRaw.split(/\s*,\s*/).filter(Boolean);
                     newSpots.push({
                         icon: parts[0] || '🔴',
                         label: parts[1] || '',
-                        product: parts[2] || '',
+                        steps: steps.length > 0 ? steps : [''],
                         how: parts[3] || '',
                     });
+                } else if (parts.length > 0 && parts.length < 3) {
+                    errors.push(`${lineNum}번째 줄: | 구분자가 부족합니다 (최소 3개 필요: 아이콘 | 증상 | 제품명)`);
                 }
             });
 
             if (newSpots.length === 0) {
-                showToast('파싱할 수 있는 항목이 없습니다', 'error');
+                errors.push('파싱할 수 있는 항목이 없습니다');
+                return { errors };
+            }
+
+            return { spots: newSpots, errors };
+        }
+
+        previewSpotBtn.addEventListener('click', () => {
+            const raw = document.getElementById('importSpotText').value.trim();
+            const result = parseSpotText(raw);
+
+            if (result.errors.length > 0 && !result.spots) {
+                previewSpotArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewSpotArea.style.display = 'block';
                 return;
             }
 
-            spotCare = newSpots;
+            let html = '';
+            if (result.errors.length > 0) {
+                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+            }
+            html += `<div class="sc-preview-title">✅ ${result.spots.length}개 항목 미리보기</div>`;
+            html += renderPreviewSpot(result.spots);
+
+            previewSpotArea.innerHTML = html;
+            previewSpotArea.style.display = 'block';
+            parsedSpots = result.spots;
+            previewSpotBtn.style.display = 'none';
+            applyImportSpotBtn.style.display = '';
+        });
+
+        applyImportSpotBtn.addEventListener('click', () => {
+            if (!parsedSpots) return;
+            spotCare = parsedSpots;
             saveSpotCare();
             importSpotModal.style.display = 'none';
-            showToast(`${newSpots.length}개 스팟 케어 업데이트 완료`);
+            parsedSpots = null;
+            showToast(`${spotCare.length}개 스팟 케어 업데이트 완료`);
         });
 
         // ESC close all modals

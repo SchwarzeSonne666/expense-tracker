@@ -140,6 +140,10 @@
   animation: slideIn 0.3s ease both;
 }
 
+.sc-step.sc-step-hidden {
+  display: none;
+}
+
 .sc-step:hover {
   background: var(--bg-card-hover);
   transform: translateX(3px);
@@ -201,6 +205,39 @@
   font-size: 0.72rem;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.sc-step-note.sc-step-hidden {
+  display: none;
+}
+
+/* Routine Divider (between common & day-specific) */
+.sc-routine-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0;
+}
+
+/* Routine Collapse Toggle */
+.sc-routine-toggle {
+  width: 100%;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sc-routine-toggle:hover {
+  background: rgba(102, 126, 234, 0.08);
+  border-color: rgba(102, 126, 234, 0.2);
+  color: var(--accent-primary);
 }
 
 /* Section */
@@ -323,6 +360,7 @@
   font-weight: 600;
   color: var(--accent-primary);
   margin-bottom: 0.2rem;
+  line-height: 1.5;
 }
 
 .sc-spot-how {
@@ -330,7 +368,7 @@
   color: var(--text-muted);
 }
 
-/* ===== Product List — Category Groups ===== */
+/* ===== Product List — Category Groups with Accordion ===== */
 .sc-products {
   display: flex;
   flex-direction: column;
@@ -351,6 +389,34 @@
   padding: 0.55rem 0.85rem;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sc-accordion-header {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  user-select: none;
+}
+
+.sc-accordion-header:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sc-accordion-arrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.sc-product-group-items {
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+}
+
+.sc-product-group-items.collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+  border-top: none;
 }
 
 .sc-group-icon {
@@ -543,6 +609,75 @@
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+
+/* ===== Import Preview Area ===== */
+.sc-preview-area {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.sc-preview-area::-webkit-scrollbar {
+  width: 4px;
+}
+.sc-preview-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sc-preview-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.sc-preview-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--sc-tone);
+  margin-bottom: 0.5rem;
+}
+
+.sc-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sc-preview-section {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sc-preview-section:last-child {
+  border-bottom: none;
+}
+
+.sc-preview-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  margin-bottom: 0.3rem;
+}
+
+.sc-preview-step {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  padding: 0.15rem 0 0.15rem 0.75rem;
+  line-height: 1.5;
+}
+
+.sc-preview-errors {
+  margin-bottom: 0.5rem;
+}
+
+.sc-preview-error {
+  font-size: 0.68rem;
+  color: var(--sc-sun);
+  padding: 0.2rem 0;
+  line-height: 1.4;
 }
 
 /* Responsive */
