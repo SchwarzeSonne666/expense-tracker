@@ -1,11 +1,13 @@
-// Expense Tracker Application
+// Expense Tracker Application with Firebase Sync
 class ExpenseTracker {
     constructor() {
         this.expenses = this.loadExpenses();
         this.categories = this.loadCategories();
         this.memos = this.loadMemos();
         this.editingId = null; // Track which expense is being edited
+        this.firebaseReady = false;
         this.init();
+        this.initFirebase();
     }
 
     init() {
@@ -15,6 +17,83 @@ class ExpenseTracker {
         this.renderMemoOptions();
         this.renderDateGrid();
         this.attachEventListeners();
+    }
+
+    // ===== Firebase Integration =====
+    initFirebase() {
+        if (typeof window.db === 'undefined') {
+            console.warn('Firebase not available, using localStorage only');
+            return;
+        }
+
+        this.firebaseReady = true;
+        this.expensesRef = window.db.ref('expenses');
+        this.categoriesRef = window.db.ref('categories');
+        this.memosRef = window.db.ref('memos');
+
+        // Listen for real-time changes
+        this.expensesRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                this.expenses = Object.values(data);
+            } else {
+                this.expenses = [];
+            }
+            // Update localStorage cache
+            localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
+            this.renderExpenses();
+            this.updateStats();
+        });
+
+        this.categoriesRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                this.categories = data;
+            } else {
+                this.categories = ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
+            }
+            localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
+            this.renderCategoryOptions();
+        });
+
+        this.memosRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                this.memos = data;
+            } else {
+                this.memos = ['카드 자동결제', '계좌이체', '현금납부'];
+            }
+            localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
+            this.renderMemoOptions();
+        });
+
+        // Upload existing localStorage data to Firebase if Firebase is empty
+        this.syncLocalToFirebase();
+    }
+
+    // One-time sync: push localStorage data to Firebase if Firebase is empty
+    syncLocalToFirebase() {
+        this.expensesRef.once('value', (snapshot) => {
+            if (!snapshot.val() && this.expenses.length > 0) {
+                const expenseMap = {};
+                this.expenses.forEach(exp => {
+                    expenseMap[exp.id] = exp;
+                });
+                this.expensesRef.set(expenseMap);
+            }
+        });
+
+        this.categoriesRef.once('value', (snapshot) => {
+            if (!snapshot.val() && this.categories.length > 0) {
+                this.categoriesRef.set(this.categories);
+            }
+        });
+
+        this.memosRef.once('value', (snapshot) => {
+            if (!snapshot.val() && this.memos.length > 0) {
+                this.memosRef.set(this.memos);
+            }
+        });
     }
 
     // Render 1~31 date grid buttons
@@ -46,9 +125,16 @@ class ExpenseTracker {
         return stored ? JSON.parse(stored) : [];
     }
 
-    // Save expenses to localStorage
+    // Save expenses to localStorage + Firebase
     saveExpenses() {
         localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
+        if (this.firebaseReady) {
+            const expenseMap = {};
+            this.expenses.forEach(exp => {
+                expenseMap[exp.id] = exp;
+            });
+            this.expensesRef.set(expenseMap);
+        }
     }
 
     // Load categories from localStorage
@@ -57,9 +143,12 @@ class ExpenseTracker {
         return stored ? JSON.parse(stored) : ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
     }
 
-    // Save categories to localStorage
+    // Save categories to localStorage + Firebase
     saveCategories() {
         localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
+        if (this.firebaseReady) {
+            this.categoriesRef.set(this.categories);
+        }
     }
 
     // Add new category
@@ -137,9 +226,12 @@ class ExpenseTracker {
         return stored ? JSON.parse(stored) : ['카드 자동결제', '계좌이체', '현금납부'];
     }
 
-    // Save memos to localStorage
+    // Save memos to localStorage + Firebase
     saveMemos() {
         localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
+        if (this.firebaseReady) {
+            this.memosRef.set(this.memos);
+        }
     }
 
     // Add new memo

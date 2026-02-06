@@ -172,6 +172,25 @@
     </div>
 
     <!-- Edit Mode Banner (hidden by default) -->
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxymXMFAEFStn2p3dHz3ItHbxYnjlQN9w",
+            authDomain: "fixed-expense-management.firebaseapp.com",
+            databaseURL: "https://fixed-expense-management-default-rtdb.firebaseio.com",
+            projectId: "fixed-expense-management",
+            storageBucket: "fixed-expense-management.firebasestorage.app",
+            messagingSenderId: "524213396258",
+            appId: "1:524213396258:web:9e37696ba06c84a2b6bb7b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        window.db = firebase.database();
+    </script>
+
     <script src="app.js"></script>
 </body>
 
