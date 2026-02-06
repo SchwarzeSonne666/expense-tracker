@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=17">
+    <link rel="stylesheet" href="skincare.css?v=18">
 </head>
 
 <body>
@@ -59,32 +59,21 @@
 
         <!-- Spot Care -->
         <section class="sc-section">
-            <h3 class="sc-section-title">스팟 케어</h3>
-            <div class="sc-spot-grid">
-                <div class="sc-spot-card">
-                    <div class="sc-spot-icon">🔴</div>
-                    <div class="sc-spot-label">새 여드름</div>
-                    <div class="sc-spot-product">파티온 트러블 세럼</div>
-                    <div class="sc-spot-how">저녁 마지막, 해당 부위만</div>
+            <div class="sc-section-header">
+                <h3 class="sc-section-title" style="border:none;margin:0;padding:0;">스팟 케어</h3>
+                <div class="sc-section-actions">
+                    <button class="sc-copy-btn" id="copySpotBtn" title="스팟 케어 복사">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        복사
+                    </button>
+                    <button class="sc-copy-btn" id="importSpotBtn" title="스팟 케어 가져오기">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        가져오기
+                    </button>
                 </div>
-                <div class="sc-spot-card">
-                    <div class="sc-spot-icon">🟤</div>
-                    <div class="sc-spot-label">자국/색소침착</div>
-                    <div class="sc-spot-product">아젤리아크림</div>
-                    <div class="sc-spot-how">저녁 크림 후, 주 3~4회</div>
-                </div>
-                <div class="sc-spot-card">
-                    <div class="sc-spot-icon">🔥</div>
-                    <div class="sc-spot-label">염증 심할 때</div>
-                    <div class="sc-spot-product">노스카나겔</div>
-                    <div class="sc-spot-how">취침 전, 얇게 도포</div>
-                </div>
-                <div class="sc-spot-card">
-                    <div class="sc-spot-icon">😳</div>
-                    <div class="sc-spot-label">홍조/열감</div>
-                    <div class="sc-spot-product">냉장 캐롯 카밍 패드</div>
-                    <div class="sc-spot-how">토너 대신 사용 + 시카 밤 교체</div>
-                </div>
+            </div>
+            <div class="sc-spot-grid" id="spotCareGrid">
+                <!-- populated by JS -->
             </div>
         </section>
 
@@ -96,6 +85,10 @@
                     <button class="sc-copy-btn" id="copyProductsBtn" title="제품 목록 복사">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         복사
+                    </button>
+                    <button class="sc-copy-btn" id="importProductsBtn" title="제품 목록 가져오기">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        가져오기
                     </button>
                     <button class="sc-add-product-btn" id="addProductBtn">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -202,6 +195,51 @@
         </div>
     </div>
 
+    <!-- Import Products Modal -->
+    <div id="importProductsModal" class="modal">
+        <div class="modal-content sc-import-modal">
+            <div class="modal-header">
+                <h2>제품 목록 가져오기</h2>
+                <button class="modal-close" id="closeImportProducts">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="sc-import-desc">복사한 제품 목록을 붙여넣으세요. 형식: <code>[카테고리]</code> 아래에 <code>- 제품명 | 역할 | 시점</code></p>
+                <textarea id="importProductsText" class="sc-import-textarea" rows="12" placeholder="[클렌징]
+- 일리윤 세라마이드 클렌저 | 저자극 세안 | 아침+저녁
+- 라운드랩 독도 클렌징 오일 | 선크림·피지 제거 | 저녁 1차
+
+[토너/패드]
+- 라운드랩 독도 토너 | 수분 + pH 정리 | 아침·저녁
+..."></textarea>
+                <div class="sc-import-actions">
+                    <button class="btn btn-cancel" id="cancelImportProducts">취소</button>
+                    <button class="btn btn-primary" id="applyImportProducts">적용</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Spot Care Modal -->
+    <div id="importSpotModal" class="modal">
+        <div class="modal-content sc-import-modal">
+            <div class="modal-header">
+                <h2>스팟 케어 가져오기</h2>
+                <button class="modal-close" id="closeImportSpot">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="sc-import-desc">복사한 스팟 케어 목록을 붙여넣으세요. 형식: <code>아이콘 | 증상 | 제품명 | 사용법</code></p>
+                <textarea id="importSpotText" class="sc-import-textarea" rows="10" placeholder="🔴 | 새 여드름 | 파티온 트러블 세럼 | 저녁 마지막, 해당 부위만
+🟤 | 자국/색소침착 | 아젤리아크림 | 저녁 크림 후, 주 3~4회
+🔥 | 염증 심할 때 | 노스카나겔 | 취침 전, 얇게 도포
+😳 | 홍조/열감 | 냉장 캐롯 카밍 패드 | 토너 대신 사용 + 시카 밤 교체"></textarea>
+                <div class="sc-import-actions">
+                    <button class="btn btn-cancel" id="cancelImportSpot">취소</button>
+                    <button class="btn btn-primary" id="applyImportSpot">적용</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toastContainer" class="toast-container"></div>
 
@@ -221,7 +259,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=15"></script>
+    <script src="skincare.js?v=16"></script>
 </body>
 
 </html>

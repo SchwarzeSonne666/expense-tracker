@@ -18,6 +18,13 @@
     ];
 
     // ===== Default Data =====
+    const DEFAULT_SPOT_CARE = [
+        { icon: '🔴', label: '새 여드름', product: '파티온 트러블 세럼', how: '저녁 마지막, 해당 부위만' },
+        { icon: '🟤', label: '자국/색소침착', product: '아젤리아크림', how: '저녁 크림 후, 주 3~4회' },
+        { icon: '🔥', label: '염증 심할 때', product: '노스카나겔', how: '취침 전, 얇게 도포' },
+        { icon: '😳', label: '홍조/열감', product: '냉장 캐롯 카밍 패드', how: '토너 대신 사용 + 시카 밤 교체' },
+    ];
+
     const DEFAULT_PRODUCTS = [
         { name: '일리윤 세라마이드 클렌저', role: '저자극 세안', when: '아침+저녁', category: 'cleansing' },
         { name: '라운드랩 독도 클렌징 오일', role: '선크림·피지 제거', when: '저녁 1차', category: 'cleansing' },
@@ -101,6 +108,7 @@
     // ===== State =====
     let products = [];
     let routines = {};
+    let spotCare = [];
     let currentTime = 'morning';
     let editingRoutineKey = '';
     let editingProductIdx = -1;
@@ -115,6 +123,7 @@
     // ===== Firebase =====
     const fbProducts = window.db ? window.db.ref('skincare/products') : null;
     const fbRoutines = window.db ? window.db.ref('skincare/routines') : null;
+    const fbSpotCare = window.db ? window.db.ref('skincare/spotCare') : null;
 
     function initFirebase() {
         if (!fbProducts) return;
@@ -151,6 +160,18 @@
             renderRoutine(currentTime);
             renderCalendar();
         });
+
+        if (fbSpotCare) {
+            fbSpotCare.on('value', snap => {
+                const d = snap.val();
+                spotCare = d ? (Array.isArray(d) ? d : Object.values(d)) : [];
+                if (spotCare.length === 0) {
+                    spotCare = deepCopy(DEFAULT_SPOT_CARE);
+                    fbSpotCare.set(spotCare);
+                }
+                renderSpotCare();
+            });
+        }
     }
 
     function guessCategory(p) {
@@ -167,6 +188,7 @@
 
     function saveProducts() { if (fbProducts) fbProducts.set(products); }
     function saveRoutines() { if (fbRoutines) fbRoutines.set(routines); }
+    function saveSpotCare() { if (fbSpotCare) fbSpotCare.set(spotCare); }
 
     // ===== Helpers =====
     function getTodayDayKo() { return DAYS_KO[new Date().getDay()]; }
@@ -219,21 +241,52 @@
         container.innerHTML = html;
     }
 
+    function getMorningKeyProducts() {
+        const morningSteps = routines.morning || DEFAULT_ROUTINES.morning;
+        // Extract short product names for calendar AM display
+        const keywords = [];
+        morningSteps.forEach(s => {
+            const name = s.product;
+            if (name.includes('비타민C') || name.includes('비타C')) keywords.push('비타C');
+            else if (name.includes('선크림') || name.includes('SPF')) keywords.push('선크림');
+            else if (name.includes('히알루론') || name.includes('토리든')) keywords.push('수분');
+            else if (name.includes('PDRN') || name.includes('pdrn')) keywords.push('PDRN');
+        });
+        // Return unique, max 3
+        return [...new Set(keywords)].slice(0, 3);
+    }
+
     function renderCalendar() {
         const container = document.getElementById('weeklyCalendar');
         const todayIdx = new Date().getDay();
         const order = ['월','화','수','목','금','토','일'];
         const orderIdx = [1,2,3,4,5,6,0];
+        const amKeywords = getMorningKeyProducts();
+        const amText = amKeywords.length > 0 ? amKeywords.join('<br>') : '아침';
 
         container.innerHTML = order.map((day, i) => {
             const info = getEveningInfo(day);
             const isToday = orderIdx[i] === todayIdx;
             return `<div class="sc-cal-day${isToday ? ' today' : ''}">
                 <div class="sc-cal-label">${day}</div>
-                <div class="sc-cal-am">비타C<br>선크림</div>
+                <div class="sc-cal-am">${amText}</div>
                 <div class="sc-cal-pm ${info.tagClass}">${info.label}</div>
             </div>`;
         }).join('');
+    }
+
+    function renderSpotCare() {
+        const container = document.getElementById('spotCareGrid');
+        if (!container) return;
+        const items = spotCare.length > 0 ? spotCare : DEFAULT_SPOT_CARE;
+        container.innerHTML = items.map(s => `
+            <div class="sc-spot-card">
+                <div class="sc-spot-icon">${s.icon}</div>
+                <div class="sc-spot-label">${s.label}</div>
+                <div class="sc-spot-product">${s.product}</div>
+                <div class="sc-spot-how">${s.how}</div>
+            </div>
+        `).join('');
     }
 
     function renderProducts() {
@@ -652,10 +705,12 @@
 
         products = deepCopy(DEFAULT_PRODUCTS);
         routines = deepCopy(DEFAULT_ROUTINES);
+        spotCare = deepCopy(DEFAULT_SPOT_CARE);
         renderToday();
         renderRoutine(currentTime);
         renderCalendar();
         renderProducts();
+        renderSpotCare();
 
         initFirebase();
 
@@ -1038,6 +1093,112 @@
             showToast(`${updatedCount}개 섹션 업데이트 완료`);
         });
 
+        // ===== Import Products =====
+        const importProductsModal = document.getElementById('importProductsModal');
+        document.getElementById('importProductsBtn').addEventListener('click', () => {
+            document.getElementById('importProductsText').value = '';
+            importProductsModal.style.display = 'flex';
+        });
+        document.getElementById('closeImportProducts').addEventListener('click', () => { importProductsModal.style.display = 'none'; });
+        document.getElementById('cancelImportProducts').addEventListener('click', () => { importProductsModal.style.display = 'none'; });
+        importProductsModal.addEventListener('click', e => { if (e.target === importProductsModal) importProductsModal.style.display = 'none'; });
+
+        document.getElementById('applyImportProducts').addEventListener('click', () => {
+            const raw = document.getElementById('importProductsText').value.trim();
+            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+
+            // Parse: [카테고리]\n- 제품명 | 역할 | 시점
+            const categoryLabelToKey = {};
+            CATEGORIES.forEach(c => { categoryLabelToKey[c.label] = c.key; });
+
+            const newProducts = [];
+            let currentCatKey = 'serum';
+            raw.split('\n').forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                const sectionMatch = trimmed.match(/^\[(.+)\]$/);
+                if (sectionMatch) {
+                    const label = sectionMatch[1].trim();
+                    currentCatKey = categoryLabelToKey[label] || guessCategory({ name: label, role: '' });
+                    return;
+                }
+                const itemMatch = trimmed.match(/^(?:-\s*|\d+\.\s*)(.+)$/);
+                if (itemMatch) {
+                    const parts = itemMatch[1].split('|').map(s => s.trim());
+                    if (parts[0]) {
+                        newProducts.push({
+                            name: parts[0],
+                            role: parts[1] || '',
+                            when: parts[2] || '',
+                            category: currentCatKey,
+                        });
+                    }
+                }
+            });
+
+            if (newProducts.length === 0) {
+                showToast('파싱할 수 있는 제품이 없습니다', 'error');
+                return;
+            }
+
+            products = newProducts;
+            saveProducts();
+            importProductsModal.style.display = 'none';
+            showToast(`${newProducts.length}개 제품 업데이트 완료`);
+        });
+
+        // ===== Spot Care Copy / Import =====
+        // Copy spot care
+        document.getElementById('copySpotBtn').addEventListener('click', () => {
+            const items = spotCare.length > 0 ? spotCare : DEFAULT_SPOT_CARE;
+            if (items.length === 0) { showToast('복사할 스팟 케어가 없습니다', 'error'); return; }
+            let text = '=== 스팟 케어 ===\n\n';
+            items.forEach(s => {
+                text += `${s.icon} | ${s.label} | ${s.product} | ${s.how}\n`;
+            });
+            copyWithFeedback('copySpotBtn', text.trim(), '스팟 케어가 클립보드에 복사되었습니다');
+        });
+
+        // Import spot care
+        const importSpotModal = document.getElementById('importSpotModal');
+        document.getElementById('importSpotBtn').addEventListener('click', () => {
+            document.getElementById('importSpotText').value = '';
+            importSpotModal.style.display = 'flex';
+        });
+        document.getElementById('closeImportSpot').addEventListener('click', () => { importSpotModal.style.display = 'none'; });
+        document.getElementById('cancelImportSpot').addEventListener('click', () => { importSpotModal.style.display = 'none'; });
+        importSpotModal.addEventListener('click', e => { if (e.target === importSpotModal) importSpotModal.style.display = 'none'; });
+
+        document.getElementById('applyImportSpot').addEventListener('click', () => {
+            const raw = document.getElementById('importSpotText').value.trim();
+            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+
+            const newSpots = [];
+            raw.split('\n').forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith('===')) return;
+                const parts = trimmed.split('|').map(s => s.trim());
+                if (parts.length >= 3) {
+                    newSpots.push({
+                        icon: parts[0] || '🔴',
+                        label: parts[1] || '',
+                        product: parts[2] || '',
+                        how: parts[3] || '',
+                    });
+                }
+            });
+
+            if (newSpots.length === 0) {
+                showToast('파싱할 수 있는 항목이 없습니다', 'error');
+                return;
+            }
+
+            spotCare = newSpots;
+            saveSpotCare();
+            importSpotModal.style.display = 'none';
+            showToast(`${newSpots.length}개 스팟 케어 업데이트 완료`);
+        });
+
         // Product modal
         document.getElementById('addProductBtn').addEventListener('click', () => openProductModal('add'));
         document.getElementById('closeAddProduct').addEventListener('click', () => {
@@ -1069,8 +1230,7 @@
         // ESC close modals
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
-                document.getElementById('editRoutineModal').style.display = 'none';
-                document.getElementById('addProductModal').style.display = 'none';
+                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
                 editingProductIdx = -1;
             }
         });
