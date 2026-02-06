@@ -391,34 +391,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.sc-accordion-header {
-  cursor: pointer;
-  transition: background var(--transition-fast);
-  user-select: none;
-}
-
-.sc-accordion-header:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.sc-accordion-arrow {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  transition: transform var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.sc-product-group-items {
-  transition: max-height 0.3s ease, opacity 0.2s ease;
-  overflow: hidden;
-}
-
-.sc-product-group-items.collapsed {
-  max-height: 0 !important;
-  opacity: 0;
-  border-top: none;
-}
-
 .sc-group-icon {
   font-size: 0.85rem;
   flex-shrink: 0;

@@ -118,7 +118,6 @@
     let routines = {};
     let spotCare = [];
     let currentTime = 'morning';
-    let collapsedCategories = {}; // product accordion state
 
     // Deep copy helper
     function deepCopy(obj) {
@@ -375,37 +374,25 @@
         let html = '';
         const renderGroup = (cat, items) => {
             if (items.length === 0) return;
-            const isCollapsed = collapsedCategories[cat.key] === true;
             html += `<div class="sc-product-group">`;
-            html += `<div class="sc-product-group-header sc-accordion-header" data-cat="${cat.key}">`;
+            html += `<div class="sc-product-group-header">`;
             html += `<span class="sc-group-icon">${cat.icon}</span>`;
             html += `<span class="sc-group-label">${cat.label}</span>`;
             html += `<span class="sc-group-count">${items.length}</span>`;
-            html += `<span class="sc-accordion-arrow${isCollapsed ? '' : ' open'}">${isCollapsed ? '▸' : '▾'}</span>`;
             html += `</div>`;
-            html += `<div class="sc-product-group-items${isCollapsed ? ' collapsed' : ''}">`;
             items.forEach(p => {
                 html += `<div class="sc-product-item">`;
                 html += `<div class="sc-product-info"><span class="sc-product-name">${p.name}</span><span class="sc-product-role">${p.role}</span></div>`;
                 html += `<span class="sc-product-when">${p.when}</span>`;
                 html += `</div>`;
             });
-            html += `</div></div>`;
+            html += `</div>`;
         };
 
         CATEGORIES.forEach(cat => renderGroup(cat, grouped[cat.key]));
         if (grouped['etc'].length > 0) renderGroup({ icon: '📦', label: '기타', key: 'etc' }, grouped['etc']);
 
         container.innerHTML = html;
-
-        // Attach accordion click handlers
-        container.querySelectorAll('.sc-accordion-header').forEach(header => {
-            header.addEventListener('click', () => {
-                const catKey = header.dataset.cat;
-                collapsedCategories[catKey] = !collapsedCategories[catKey];
-                renderProducts();
-            });
-        });
     }
 
     // ===== Import Preview Helpers =====
