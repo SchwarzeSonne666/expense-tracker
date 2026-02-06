@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=18">
+    <link rel="stylesheet" href="skincare.css?v=20">
 </head>
 
 <body>
@@ -42,7 +42,6 @@
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     가져오기
                 </button>
-                <button class="sc-edit-btn" id="editRoutineBtn">편집</button>
             </div>
         </div>
 
@@ -90,80 +89,10 @@
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         가져오기
                     </button>
-                    <button class="sc-add-product-btn" id="addProductBtn">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        추가
-                    </button>
                 </div>
             </div>
             <div class="sc-products" id="productList"></div>
         </section>
-    </div>
-
-    <!-- Edit Routine Modal -->
-    <div id="editRoutineModal" class="modal">
-        <div class="modal-content sc-edit-modal">
-            <div class="modal-header">
-                <h2 id="editRoutineTitle">루틴 편집</h2>
-                <button class="modal-close" id="closeEditRoutine">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Time Scope Selector -->
-                <div class="sc-edit-scope">
-                    <button class="sc-edit-scope-btn active" data-scope="morning">☀️ 아침</button>
-                    <button class="sc-edit-scope-btn" data-scope="evening_common">🌙 저녁 공통</button>
-                    <button class="sc-edit-scope-btn" data-scope="evening_day">📅 저녁 요일별</button>
-                </div>
-                <!-- Day Tabs (only visible for evening_day, populated by JS) -->
-                <div class="sc-edit-day-tabs" id="editDayTabs" style="display:none"></div>
-                <!-- Info Banner -->
-                <div id="editRoutineInfo" class="sc-edit-info-text" style="display:none"></div>
-                <!-- Step List -->
-                <div class="sc-edit-routine-list" id="editRoutineList">
-                    <!-- populated by JS -->
-                </div>
-                <!-- Add Step -->
-                <div class="sc-edit-add-step">
-                    <div class="custom-dropdown" id="addStepDropdown">
-                        <input type="text" id="addStepInput" placeholder="제품 검색하여 추가..." autocomplete="off">
-                        <div class="dropdown-list" id="addStepDropdownList"></div>
-                    </div>
-                    <button class="btn btn-add-category" id="addStepBtn">추가</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add/Edit Product Modal -->
-    <div id="addProductModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="productModalTitle">제품 추가</h2>
-                <button class="modal-close" id="closeAddProduct">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>카테고리</label>
-                    <div class="custom-dropdown" id="categoryDropdownSC">
-                        <input type="text" id="newProductCategory" placeholder="카테고리 선택" autocomplete="off" readonly data-value="serum">
-                        <div class="dropdown-list" id="categoryDropdownListSC"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>제품명</label>
-                    <input type="text" id="newProductName" placeholder="제품명 입력">
-                </div>
-                <div class="form-group">
-                    <label>역할</label>
-                    <input type="text" id="newProductRole" placeholder="예: 수분 충전">
-                </div>
-                <div class="form-group">
-                    <label>사용 시점</label>
-                    <input type="text" id="newProductWhen" placeholder="예: 아침·저녁">
-                </div>
-                <button class="btn btn-primary" id="saveProductBtn" style="margin-top:0.5rem;">추가</button>
-            </div>
-        </div>
     </div>
 
     <!-- Import Routine Modal -->
@@ -259,7 +188,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=16"></script>
+    <script src="skincare.js?v=17"></script>
 </body>
 
 </html>
