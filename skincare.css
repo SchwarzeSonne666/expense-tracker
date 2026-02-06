@@ -523,28 +523,18 @@
   border: 1px solid;
 }
 
-.sc-add-product-btn {
+.sc-add-product-btn,
+.sc-copy-btn {
   background: rgba(102, 126, 234, 0.1);
   border-color: rgba(102, 126, 234, 0.2);
   color: var(--accent-primary);
 }
 
-.sc-add-product-btn:hover {
+.sc-add-product-btn:hover,
+.sc-copy-btn:hover {
   background: rgba(102, 126, 234, 0.2);
   border-color: var(--accent-primary);
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-}
-
-.sc-copy-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-}
-
-.sc-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-secondary);
 }
 
 .sc-copy-btn.copied {
