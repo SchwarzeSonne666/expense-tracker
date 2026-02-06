@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=12">
+    <link rel="stylesheet" href="skincare.css?v=13">
 </head>
 
 <body>
@@ -27,21 +27,19 @@
             <div class="sc-today-active" id="todayActive"></div>
         </section>
 
-        <!-- Time Toggle -->
-        <div class="sc-time-toggle">
-            <button class="sc-time-btn" data-time="morning">아침</button>
-            <button class="sc-time-btn" data-time="evening">저녁</button>
+        <!-- Time Toggle + Edit Button -->
+        <div class="sc-time-row">
+            <div class="sc-time-toggle">
+                <button class="sc-time-btn" data-time="morning">아침</button>
+                <button class="sc-time-btn" data-time="evening">저녁</button>
+            </div>
+            <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
         </div>
 
         <!-- Routine Steps -->
         <section class="sc-routine" id="routineSteps">
             <!-- populated by JS -->
         </section>
-
-        <!-- Edit Routine Button -->
-        <div class="sc-edit-bar">
-            <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
-        </div>
 
         <!-- Weekly Calendar -->
         <section class="sc-section">

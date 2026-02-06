@@ -78,6 +78,15 @@
   border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
+/* Time Row (toggle + edit button) */
+.sc-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
 /* Time Toggle */
 .sc-time-toggle {
   display: flex;
@@ -85,10 +94,7 @@
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--radius-sm);
   padding: 3px;
-  margin-bottom: 0.75rem;
   max-width: 240px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .sc-time-btn {
@@ -465,23 +471,20 @@
   color: var(--accent-primary) !important;
 }
 
-/* Edit Bar */
-.sc-edit-bar {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
+/* Edit Button (inline with time toggle) */
 .sc-edit-btn {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
-  padding: 0.4rem 1.2rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 20px;
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sc-edit-btn:hover {
