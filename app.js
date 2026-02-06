@@ -550,7 +550,7 @@ class ExpenseTracker {
             expenseList.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">—</div>
-          <p class="empty-state-text">아직 등록된 고정지출이 없습니다.<br>왼쪽 폼에서 새로운 지출을 추가해보세요!</p>
+          <p class="empty-state-text">아직 등록된 월간 고정지출이 없습니다.<br>왼쪽 폼에서 새로운 지출을 추가해보세요!</p>
         </div>
       `;
             return;
