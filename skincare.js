@@ -476,21 +476,18 @@
                 <div class="sc-edit-row1">
                     <span class="sc-edit-num">${i + 1}</span>
                     <span class="sc-edit-product">${s.product}</span>
-                    <select class="sc-edit-badge-sel" data-idx="${i}">
-                        ${BADGE_OPTIONS.map(b => `<option value="${b.value}" ${s.badgeClass === b.value ? 'selected' : ''}>${b.label}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="sc-edit-row2">
-                    <input class="sc-edit-usage" value="${escHtml(s.usage || '')}" data-idx="${i}" placeholder="사용법 입력">
                     <div class="sc-edit-actions">
                         <button class="sc-edit-move-up" data-idx="${i}" title="위로">▲</button>
                         <button class="sc-edit-move-down" data-idx="${i}" title="아래로">▼</button>
                         <button class="sc-edit-remove" data-idx="${i}" title="삭제">✕</button>
                     </div>
                 </div>
-                <div class="sc-edit-row3">
-                    <span class="sc-edit-wait-label">⏱ 대기</span>
-                    <input class="sc-edit-wait-input" value="${escHtml(s.wait || '')}" data-idx="${i}" placeholder="예: 10분 대기">
+                <div class="sc-edit-row2">
+                    <select class="sc-edit-badge-sel" data-idx="${i}">
+                        ${BADGE_OPTIONS.map(b => `<option value="${b.value}" ${s.badgeClass === b.value ? 'selected' : ''}>${b.label}</option>`).join('')}
+                    </select>
+                    <input class="sc-edit-usage" value="${escHtml(s.usage || '')}" data-idx="${i}" placeholder="사용법 입력">
+                    ${s.wait ? `<input class="sc-edit-wait-input" value="${escHtml(s.wait)}" data-idx="${i}" placeholder="대기시간">` : ''}
                 </div>
             </div>
         `).join('');
