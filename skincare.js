@@ -272,11 +272,6 @@
 
         let html = '';
         steps.forEach((s, i) => {
-            // Add divider between common and day-specific steps
-            if (time === 'evening' && commonCount > 0 && i === commonCount) {
-                const info = getEveningInfo(day);
-                html += `<div class="sc-routine-divider"><span class="sc-active-tag ${info.tagClass}" style="font-size:0.6rem;padding:0.15rem 0.5rem;">${info.label}</span></div>`;
-            }
             html += `<div class="sc-step" style="animation-delay:${i * 0.04}s">`;
             html += `<div class="sc-step-num">${i + 1}</div>`;
             html += `<div class="sc-step-body"><div class="sc-step-product">${s.product}</div><div class="sc-step-usage">${s.usage}</div></div>`;

@@ -203,14 +203,6 @@
   line-height: 1.5;
 }
 
-/* Routine Divider (between common & day-specific) */
-.sc-routine-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0;
-}
-
 /* Section */
 .sc-section {
   margin-bottom: 1.25rem;
