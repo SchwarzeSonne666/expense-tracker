@@ -1,5 +1,15 @@
 /* ===== Skincare Page Styles ===== */
 
+/* ── Theme Color Variables ── */
+:root {
+  --sc-cleanse: #4299e1;
+  --sc-tone: #48bb78;
+  --sc-serum: #ed64a6;
+  --sc-cream: #f6ad55;
+  --sc-sun: #f56565;
+  --sc-active: #9f7aea;
+}
+
 /* Today Summary */
 .sc-today {
   text-align: center;
@@ -46,19 +56,19 @@
 
 .sc-active-tag.retinoid {
   background: rgba(237, 100, 166, 0.15);
-  color: #ed64a6;
+  color: var(--sc-serum);
   border: 1px solid rgba(237, 100, 166, 0.25);
 }
 
 .sc-active-tag.aha {
   background: rgba(72, 187, 120, 0.15);
-  color: #48bb78;
+  color: var(--sc-tone);
   border: 1px solid rgba(72, 187, 120, 0.25);
 }
 
 .sc-active-tag.niacin {
   background: rgba(246, 173, 85, 0.15);
-  color: #f6ad55;
+  color: var(--sc-cream);
   border: 1px solid rgba(246, 173, 85, 0.25);
 }
 
@@ -73,7 +83,7 @@
   display: flex;
   gap: 2px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 3px;
   margin-bottom: 0.75rem;
   max-width: 240px;
@@ -86,7 +96,7 @@
   padding: 0.45rem 0;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -120,7 +130,7 @@
   padding: 0.65rem 0.85rem;
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
   animation: slideIn 0.3s ease both;
 }
@@ -169,12 +179,12 @@
   font-weight: 600;
 }
 
-.sc-step-badge.cleanse { background: rgba(66, 153, 225, 0.12); color: #4299e1; }
-.sc-step-badge.tone { background: rgba(72, 187, 120, 0.12); color: #48bb78; }
-.sc-step-badge.serum { background: rgba(237, 100, 166, 0.12); color: #ed64a6; }
-.sc-step-badge.cream { background: rgba(246, 173, 85, 0.12); color: #f6ad55; }
-.sc-step-badge.sun { background: rgba(245, 101, 101, 0.12); color: #f56565; }
-.sc-step-badge.active { background: rgba(159, 122, 234, 0.12); color: #9f7aea; }
+.sc-step-badge.cleanse { background: rgba(66, 153, 225, 0.12); color: var(--sc-cleanse); }
+.sc-step-badge.tone { background: rgba(72, 187, 120, 0.12); color: var(--sc-tone); }
+.sc-step-badge.serum { background: rgba(237, 100, 166, 0.12); color: var(--sc-serum); }
+.sc-step-badge.cream { background: rgba(246, 173, 85, 0.12); color: var(--sc-cream); }
+.sc-step-badge.sun { background: rgba(245, 101, 101, 0.12); color: var(--sc-sun); }
+.sc-step-badge.active { background: rgba(159, 122, 234, 0.12); color: var(--sc-active); }
 .sc-step-badge.wait { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); font-style: italic; }
 
 .sc-step-note {
@@ -182,7 +192,7 @@
   padding: 0.5rem 0.75rem;
   background: rgba(102, 126, 234, 0.06);
   border-left: 3px solid var(--accent-primary);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 0.72rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -213,7 +223,7 @@
 .sc-cal-day {
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 0.5rem 0.25rem;
   text-align: center;
   transition: all var(--transition-fast);
@@ -251,9 +261,9 @@
   line-height: 1.3;
 }
 
-.sc-cal-pm.retinoid { color: #ed64a6; }
-.sc-cal-pm.aha { color: #48bb78; }
-.sc-cal-pm.niacin { color: #f6ad55; }
+.sc-cal-pm.retinoid { color: var(--sc-serum); }
+.sc-cal-pm.aha { color: var(--sc-tone); }
+.sc-cal-pm.niacin { color: var(--sc-cream); }
 .sc-cal-pm.rest { color: var(--text-muted); }
 
 .sc-pattern-tip {
@@ -262,7 +272,7 @@
   gap: 6px;
   padding: 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.68rem;
   color: var(--text-secondary);
 }
@@ -282,7 +292,7 @@
 .sc-spot-card {
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
   transition: all var(--transition-fast);
 }
@@ -325,7 +335,7 @@
 .sc-product-group {
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -447,7 +457,7 @@
 
 .sc-product-del-btn:hover {
   background: rgba(245, 101, 101, 0.12) !important;
-  color: #f56565 !important;
+  color: var(--danger) !important;
 }
 
 .sc-product-edit-btn:hover {
@@ -516,6 +526,8 @@
   flex-shrink: 0;
 }
 
+/* ── Custom Dropdowns inside Skincare ── */
+
 /* Tag dropdown (theme selector in day meta) */
 .sc-tag-dropdown {
   min-width: 120px;
@@ -573,7 +585,7 @@
   display: flex;
   gap: 2px;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 3px;
   margin-bottom: 0.75rem;
 }
@@ -583,7 +595,7 @@
   padding: 0.5rem 0.25rem;
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.72rem;
   font-weight: 600;
@@ -611,7 +623,7 @@
   margin-bottom: 0.75rem;
   padding: 3px;
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
 .sc-edit-day-tab {
@@ -619,7 +631,7 @@
   padding: 0.35rem 0.15rem;
   background: transparent;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   font-family: inherit;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -658,9 +670,9 @@
   max-width: 100%;
 }
 
-.sc-edit-day-tab-theme.retinoid { color: #ed64a6; }
-.sc-edit-day-tab-theme.aha { color: #48bb78; }
-.sc-edit-day-tab-theme.niacin { color: #f6ad55; }
+.sc-edit-day-tab-theme.retinoid { color: var(--sc-serum); }
+.sc-edit-day-tab-theme.aha { color: var(--sc-tone); }
+.sc-edit-day-tab-theme.niacin { color: var(--sc-cream); }
 .sc-edit-day-tab-theme.rest { color: var(--text-muted); }
 
 /* Day tag label (shows e.g. 레티노이드) */
@@ -677,15 +689,15 @@
 
 .sc-edit-day-label.retinoid {
   background: rgba(237, 100, 166, 0.12);
-  color: #ed64a6;
+  color: var(--sc-serum);
 }
 .sc-edit-day-label.aha {
   background: rgba(72, 187, 120, 0.12);
-  color: #48bb78;
+  color: var(--sc-tone);
 }
 .sc-edit-day-label.niacin {
   background: rgba(246, 173, 85, 0.12);
-  color: #f6ad55;
+  color: var(--sc-cream);
 }
 .sc-edit-day-label.rest {
   background: rgba(102, 126, 234, 0.08);
@@ -701,7 +713,7 @@
   padding: 0.45rem 0.6rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .sc-edit-day-meta label {
@@ -711,28 +723,21 @@
   flex-shrink: 0;
 }
 
-.sc-edit-day-meta input,
-.sc-edit-day-meta select {
+.sc-edit-day-meta input {
   flex: 1;
   min-width: 0;
   padding: 0.25rem 0.45rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.72rem;
 }
 
-.sc-edit-day-meta input:focus,
-.sc-edit-day-meta select:focus {
+.sc-edit-day-meta input:focus {
   outline: none;
   border-color: var(--accent-primary);
-}
-
-.sc-edit-day-meta select option {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
 }
 
 /* Edit Routine: Info Text & Empty State */
@@ -741,7 +746,7 @@
   margin-bottom: 0.75rem;
   background: rgba(102, 126, 234, 0.08);
   border-left: 3px solid var(--accent-primary);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 0.72rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -765,7 +770,7 @@
   padding-right: 4px;
 }
 
-/* Custom scrollbar for step list */
+/* Custom scrollbar — matches expense tracker */
 .sc-edit-routine-list::-webkit-scrollbar {
   width: 4px;
 }
@@ -773,8 +778,11 @@
   background: transparent;
 }
 .sc-edit-routine-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+.sc-edit-routine-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .sc-edit-item {
@@ -784,7 +792,7 @@
   padding: 0.6rem 0.7rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
 }
 
@@ -864,12 +872,12 @@
 }
 
 /* Active badge chip — colored by type */
-.sc-badge-chip.active.cleanse { background: rgba(66, 153, 225, 0.15); color: #4299e1; border-color: rgba(66, 153, 225, 0.3); }
-.sc-badge-chip.active.tone { background: rgba(72, 187, 120, 0.15); color: #48bb78; border-color: rgba(72, 187, 120, 0.3); }
-.sc-badge-chip.active.serum { background: rgba(237, 100, 166, 0.15); color: #ed64a6; border-color: rgba(237, 100, 166, 0.3); }
-.sc-badge-chip.active.cream { background: rgba(246, 173, 85, 0.15); color: #f6ad55; border-color: rgba(246, 173, 85, 0.3); }
-.sc-badge-chip.active.sun { background: rgba(245, 101, 101, 0.15); color: #f56565; border-color: rgba(245, 101, 101, 0.3); }
-.sc-badge-chip.active.active { background: rgba(159, 122, 234, 0.15); color: #9f7aea; border-color: rgba(159, 122, 234, 0.3); }
+.sc-badge-chip.active.cleanse { background: rgba(66, 153, 225, 0.15); color: var(--sc-cleanse); border-color: rgba(66, 153, 225, 0.3); }
+.sc-badge-chip.active.tone { background: rgba(72, 187, 120, 0.15); color: var(--sc-tone); border-color: rgba(72, 187, 120, 0.3); }
+.sc-badge-chip.active.serum { background: rgba(237, 100, 166, 0.15); color: var(--sc-serum); border-color: rgba(237, 100, 166, 0.3); }
+.sc-badge-chip.active.cream { background: rgba(246, 173, 85, 0.15); color: var(--sc-cream); border-color: rgba(246, 173, 85, 0.3); }
+.sc-badge-chip.active.sun { background: rgba(245, 101, 101, 0.15); color: var(--sc-sun); border-color: rgba(245, 101, 101, 0.3); }
+.sc-badge-chip.active.active { background: rgba(159, 122, 234, 0.15); color: var(--sc-active); border-color: rgba(159, 122, 234, 0.3); }
 
 .sc-edit-usage {
   flex: 1;
@@ -877,7 +885,7 @@
   padding: 0.25rem 0.45rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-family: inherit;
   font-size: 0.7rem;
@@ -894,7 +902,7 @@
   padding: 0.25rem 0.4rem;
   background: rgba(102, 126, 234, 0.06);
   border: 1px solid rgba(102, 126, 234, 0.15);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--accent-primary);
   font-family: inherit;
   font-size: 0.62rem;
@@ -931,7 +939,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
   padding: 0;
@@ -944,7 +952,7 @@
 }
 
 .sc-edit-remove:hover {
-  color: #f56565 !important;
+  color: var(--danger) !important;
   background: rgba(245, 101, 101, 0.12) !important;
   border-color: rgba(245, 101, 101, 0.25) !important;
 }
@@ -963,8 +971,6 @@
   padding-top: 0.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
-
-/* Custom dropdown in add step area inherits from styles.css .custom-dropdown */
 
 /* Responsive */
 @media (max-width: 640px) {
