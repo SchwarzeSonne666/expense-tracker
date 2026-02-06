@@ -31,69 +31,77 @@ class ExpenseTracker {
         this.categoriesRef = window.db.ref('categories');
         this.memosRef = window.db.ref('memos');
 
-        // Listen for real-time changes
-        this.expensesRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                this.expenses = Object.values(data);
-            } else {
-                this.expenses = [];
-            }
-            // Update localStorage cache
-            localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
-            this.renderExpenses();
-            this.updateStats();
-        });
+        // Save local data BEFORE Firebase listeners overwrite them
+        const localExpenses = [...this.expenses];
+        const localCategories = [...this.categories];
+        const localMemos = [...this.memos];
 
-        this.categoriesRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                this.categories = data;
-            } else {
-                this.categories = ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
-            }
-            localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
-            this.renderCategoryOptions();
-        });
+        // First: sync local data to Firebase if Firebase is empty
+        this.syncLocalToFirebase(localExpenses, localCategories, localMemos).then(() => {
+            // Then: start listening for real-time changes
+            this.expensesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    this.expenses = Object.values(data);
+                } else {
+                    this.expenses = [];
+                }
+                localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
+                this.renderExpenses();
+                this.updateStats();
+            });
 
-        this.memosRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                this.memos = data;
-            } else {
-                this.memos = ['카드 자동결제', '계좌이체', '현금납부'];
-            }
-            localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
-            this.renderMemoOptions();
-        });
+            this.categoriesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    this.categories = data;
+                } else {
+                    this.categories = ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
+                }
+                localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
+                this.renderCategoryOptions();
+            });
 
-        // Upload existing localStorage data to Firebase if Firebase is empty
-        this.syncLocalToFirebase();
+            this.memosRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    this.memos = data;
+                } else {
+                    this.memos = ['카드 자동결제', '계좌이체', '현금납부'];
+                }
+                localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
+                this.renderMemoOptions();
+            });
+        });
     }
 
     // One-time sync: push localStorage data to Firebase if Firebase is empty
-    syncLocalToFirebase() {
-        this.expensesRef.once('value', (snapshot) => {
-            if (!snapshot.val() && this.expenses.length > 0) {
+    async syncLocalToFirebase(localExpenses, localCategories, localMemos) {
+        try {
+            const expSnap = await this.expensesRef.once('value');
+            if (!expSnap.val() && localExpenses.length > 0) {
                 const expenseMap = {};
-                this.expenses.forEach(exp => {
+                localExpenses.forEach(exp => {
                     expenseMap[exp.id] = exp;
                 });
-                this.expensesRef.set(expenseMap);
+                await this.expensesRef.set(expenseMap);
+                console.log('Local expenses uploaded to Firebase:', localExpenses.length);
             }
-        });
 
-        this.categoriesRef.once('value', (snapshot) => {
-            if (!snapshot.val() && this.categories.length > 0) {
-                this.categoriesRef.set(this.categories);
+            const catSnap = await this.categoriesRef.once('value');
+            if (!catSnap.val() && localCategories.length > 0) {
+                await this.categoriesRef.set(localCategories);
+                console.log('Local categories uploaded to Firebase:', localCategories.length);
             }
-        });
 
-        this.memosRef.once('value', (snapshot) => {
-            if (!snapshot.val() && this.memos.length > 0) {
-                this.memosRef.set(this.memos);
+            const memoSnap = await this.memosRef.once('value');
+            if (!memoSnap.val() && localMemos.length > 0) {
+                await this.memosRef.set(localMemos);
+                console.log('Local memos uploaded to Firebase:', localMemos.length);
             }
-        });
+        } catch (error) {
+            console.error('Firebase sync error:', error);
+        }
     }
 
     // Render 1~31 date grid buttons
