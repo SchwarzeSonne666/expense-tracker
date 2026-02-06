@@ -118,46 +118,79 @@ class ExpenseTracker {
         }
     }
 
-    // Render 1~31 date dropdown items
+    // Render date picker with tabs and chips
     renderDateGrid() {
-        const list = document.getElementById('dateDropdownList');
-        list.innerHTML = '';
-        for (let d = 1; d <= 31; d++) {
-            const item = document.createElement('div');
-            item.className = 'dropdown-item';
-            item.dataset.value = d;
-            item.innerHTML = `<span class="dropdown-item-dot"></span>매월 ${d}일`;
-            list.appendChild(item);
-        }
-        this.setupDateDropdown();
+        this.currentDateRange = '1-10';
+        this.renderDateChips('1-10');
+        this.setupDatePicker();
     }
 
-    // Setup date dropdown behavior
-    setupDateDropdown() {
-        const display = document.getElementById('expenseDateDisplay');
-        const hidden = document.getElementById('expenseDate');
-        const list = document.getElementById('dateDropdownList');
+    // Render date chips for a given range
+    renderDateChips(range) {
+        const chipsContainer = document.getElementById('dateChips');
+        const [start, end] = range.split('-').map(Number);
+        const selected = parseInt(document.getElementById('expenseDate').value);
 
-        display.addEventListener('click', (e) => {
+        let html = '';
+        for (let d = start; d <= end; d++) {
+            const isSelected = d === selected;
+            html += `<button type="button" class="date-chip${isSelected ? ' selected' : ''}" data-day="${d}">${d}</button>`;
+        }
+        chipsContainer.innerHTML = html;
+    }
+
+    // Setup date picker behavior
+    setupDatePicker() {
+        const picker = document.getElementById('datePicker');
+        const trigger = document.getElementById('datePickerTrigger');
+        const popup = document.getElementById('datePickerPopup');
+        const tabs = document.getElementById('dateTabs');
+        const chips = document.getElementById('dateChips');
+
+        // Toggle popup
+        trigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Close other dropdowns first
-            document.querySelectorAll('.dropdown-list.show').forEach(el => {
-                if (el !== list) el.classList.remove('show');
-            });
-            // Highlight current selection
-            list.querySelectorAll('.dropdown-item').forEach(item => {
-                item.classList.toggle('active-date', item.dataset.value === hidden.value);
-            });
-            list.classList.toggle('show');
+            document.querySelectorAll('.dropdown-list.show').forEach(el => el.classList.remove('show'));
+            picker.classList.toggle('open');
+
+            // Switch to tab that contains selected date
+            const val = parseInt(document.getElementById('expenseDate').value);
+            if (val) {
+                let range = '1-10';
+                if (val >= 11 && val <= 20) range = '11-20';
+                else if (val >= 21) range = '21-31';
+                if (range !== this.currentDateRange) {
+                    this.currentDateRange = range;
+                    tabs.querySelectorAll('.date-tab').forEach(t => t.classList.toggle('active', t.dataset.range === range));
+                    this.renderDateChips(range);
+                }
+            }
         });
 
-        list.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const item = e.target.closest('.dropdown-item');
-            if (item) {
-                const day = item.dataset.value;
-                this.selectDate(parseInt(day));
-                list.classList.remove('show');
+        // Tab switching
+        tabs.addEventListener('click', (e) => {
+            const tab = e.target.closest('.date-tab');
+            if (tab) {
+                tabs.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.currentDateRange = tab.dataset.range;
+                this.renderDateChips(tab.dataset.range);
+            }
+        });
+
+        // Chip selection
+        chips.addEventListener('click', (e) => {
+            const chip = e.target.closest('.date-chip');
+            if (chip) {
+                this.selectDate(parseInt(chip.dataset.day));
+                picker.classList.remove('open');
+            }
+        });
+
+        // Close on outside click
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.date-picker')) {
+                picker.classList.remove('open');
             }
         });
     }
@@ -165,17 +198,22 @@ class ExpenseTracker {
     // Select a date
     selectDate(day) {
         document.getElementById('expenseDate').value = day;
-        const display = document.getElementById('expenseDateDisplay');
-        display.value = `매월 ${day}일`;
-        display.classList.add('has-value');
+        const trigger = document.getElementById('datePickerTrigger');
+        document.getElementById('datePickerText').textContent = `매월 ${day}일`;
+        trigger.classList.add('has-value');
+        // Update chips highlight
+        document.querySelectorAll('.date-chip').forEach(c => {
+            c.classList.toggle('selected', parseInt(c.dataset.day) === day);
+        });
     }
 
     // Clear date selection
     clearDate() {
         document.getElementById('expenseDate').value = '';
-        const display = document.getElementById('expenseDateDisplay');
-        display.value = '';
-        display.classList.remove('has-value');
+        document.getElementById('datePickerText').textContent = '결제일 선택';
+        document.getElementById('datePickerTrigger').classList.remove('has-value');
+        document.getElementById('datePicker').classList.remove('open');
+        document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
     }
 
     // Load expenses from localStorage
