@@ -994,6 +994,75 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* ===== Import Routine Modal ===== */
+.sc-import-modal {
+  max-width: 520px;
+  width: 95%;
+}
+
+.sc-import-desc {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+.sc-import-desc code {
+  padding: 0.1rem 0.35rem;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 4px;
+  font-size: 0.68rem;
+  color: var(--accent-primary);
+}
+
+.sc-import-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.sc-import-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sc-import-textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* Custom scrollbar for textarea */
+.sc-import-textarea::-webkit-scrollbar {
+  width: 4px;
+}
+.sc-import-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sc-import-textarea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+.sc-import-textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sc-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .sc-calendar {

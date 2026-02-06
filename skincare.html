@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=16">
+    <link rel="stylesheet" href="skincare.css?v=17">
 </head>
 
 <body>
@@ -38,7 +38,11 @@
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     복사
                 </button>
-                <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
+                <button class="sc-copy-btn" id="importRoutineBtn" title="루틴 가져오기">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    가져오기
+                </button>
+                <button class="sc-edit-btn" id="editRoutineBtn">편집</button>
             </div>
         </div>
 
@@ -169,6 +173,35 @@
         </div>
     </div>
 
+    <!-- Import Routine Modal -->
+    <div id="importRoutineModal" class="modal">
+        <div class="modal-content sc-import-modal">
+            <div class="modal-header">
+                <h2>루틴 가져오기</h2>
+                <button class="modal-close" id="closeImportRoutine">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="sc-import-desc">복사한 루틴 텍스트를 붙여넣으세요. 형식: <code>[아침]</code>, <code>[저녁 공통]</code>, <code>[저녁 월요일 — 테마]</code></p>
+                <textarea id="importRoutineText" class="sc-import-textarea" rows="12" placeholder="=== 피부관리 루틴 ===
+
+[아침]
+  1. 제품명 | 사용법
+  2. 제품명 | 사용법 ⏱대기시간
+
+[저녁 공통]
+  1. 제품명 | 사용법
+
+[저녁 월요일 — 레티노이드]
+  1. 제품명 | 사용법 ⏱10분 대기
+..."></textarea>
+                <div class="sc-import-actions">
+                    <button class="btn btn-cancel" id="cancelImportRoutine">취소</button>
+                    <button class="btn btn-primary" id="applyImportRoutine">적용</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div id="toastContainer" class="toast-container"></div>
 
@@ -188,7 +221,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=14"></script>
+    <script src="skincare.js?v=15"></script>
 </body>
 
 </html>

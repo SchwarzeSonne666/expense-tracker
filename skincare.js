@@ -59,15 +59,15 @@
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체 (특히 레티노이드 도포 부위)', badge: '크림', badgeClass: 'cream' },
         ]},
         evening_화: { label: '기본 보습 + 재생', tagClass: 'rest', steps: [
-            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '토리든 히알루론산 세럼', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
+            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '아누아 PDRN 수분크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
         ]},
         evening_수: { label: 'AHA', tagClass: 'aha', steps: [
             { product: '코스알엑스 AHA 7 파워 리퀴드', usage: '토너 후 T존·볼 중심 (홍조 부위 회피)', badge: '액티브', badgeClass: 'active', wait: '10분 대기' },
-            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '토리든 히알루론산 세럼', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
+            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '아누아 PDRN 수분크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
         ]},
@@ -78,21 +78,21 @@
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체 (특히 레티노이드 도포 부위)', badge: '크림', badgeClass: 'cream' },
         ]},
         evening_금: { label: '기본 보습 + 재생', tagClass: 'rest', steps: [
-            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '토리든 히알루론산 세럼', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
+            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '아누아 PDRN 수분크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
         ]},
         evening_토: { label: '나이아신아마이드', tagClass: 'niacin', steps: [
             { product: '더마팩토리 나이아신아마이드 20%', usage: '왼쪽 얼굴 중심 + 색소침착 부위', badge: '액티브', badgeClass: 'active', wait: '5분 대기' },
-            { product: 'VT PDRN 에센스', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
             { product: '토리든 히알루론산 세럼', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
+            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '아누아 PDRN 수분크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
         ]},
         evening_일: { label: '집중 보습', tagClass: 'rest', steps: [
-            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '토리든 히알루론산 세럼', usage: '얼굴 전체', badge: '세럼', badgeClass: 'serum' },
+            { product: 'VT PDRN 에센스', usage: '얼굴 전체 2~3방울', badge: '세럼', badgeClass: 'serum' },
             { product: '아누아 PDRN 수분크림', usage: '얼굴 전체', badge: '크림', badgeClass: 'cream' },
             { product: '알엑스 더마 시카 리젠 크림', usage: '얼굴 전체 (두껍게)', badge: '크림', badgeClass: 'cream' },
         ]},
@@ -932,6 +932,110 @@
                 text += '\n';
             }
             copyWithFeedback('copyProductsBtn', text.trim(), '제품 목록이 클립보드에 복사되었습니다');
+        });
+
+        // ===== Import Routine =====
+        const importModal = document.getElementById('importRoutineModal');
+        document.getElementById('importRoutineBtn').addEventListener('click', () => {
+            document.getElementById('importRoutineText').value = '';
+            importModal.style.display = 'flex';
+        });
+        document.getElementById('closeImportRoutine').addEventListener('click', () => { importModal.style.display = 'none'; });
+        document.getElementById('cancelImportRoutine').addEventListener('click', () => { importModal.style.display = 'none'; });
+        importModal.addEventListener('click', e => { if (e.target === importModal) importModal.style.display = 'none'; });
+
+        document.getElementById('applyImportRoutine').addEventListener('click', () => {
+            const raw = document.getElementById('importRoutineText').value.trim();
+            if (!raw) { showToast('텍스트를 붙여넣으세요', 'error'); return; }
+
+            // Parse sections: [아침], [저녁 공통], [저녁 X요일 — 테마]
+            const sections = {};
+            let currentSection = null;
+            raw.split('\n').forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith('===')) return;
+                const sectionMatch = trimmed.match(/^\[(.+)\]$/);
+                if (sectionMatch) {
+                    currentSection = sectionMatch[1];
+                    sections[currentSection] = [];
+                    return;
+                }
+                if (currentSection) {
+                    // Parse step: "  1. 제품명 | 사용법 ⏱대기시간" or "- 제품명 | ..."
+                    const stepMatch = trimmed.match(/^(?:\d+\.\s*|-\s*)(.+)$/);
+                    if (stepMatch) sections[currentSection].push(stepMatch[1]);
+                }
+            });
+
+            if (Object.keys(sections).length === 0) {
+                showToast('파싱할 수 있는 섹션이 없습니다', 'error');
+                return;
+            }
+
+            // Parse single step string into step object
+            function parseStep(str) {
+                let wait = '';
+                const waitMatch = str.match(/⏱\s*(.+)$/);
+                if (waitMatch) {
+                    wait = waitMatch[1].trim();
+                    str = str.replace(/⏱\s*.+$/, '').trim();
+                }
+                const parts = str.split('|').map(s => s.trim());
+                const productName = parts[0] || '';
+                const usage = parts[1] || '';
+                const badgeInfo = getBadgeForProduct(productName);
+                const step = { product: productName, usage, badge: badgeInfo.badge, badgeClass: badgeInfo.badgeClass };
+                if (wait) step.wait = wait;
+                return step;
+            }
+
+            let updatedCount = 0;
+
+            // [아침]
+            if (sections['아침']) {
+                routines.morning = sections['아침'].map(parseStep);
+                updatedCount++;
+            }
+
+            // [저녁 공통]
+            if (sections['저녁 공통']) {
+                routines.evening_common = sections['저녁 공통'].map(parseStep);
+                updatedCount++;
+            }
+
+            // [저녁 X요일 — 테마]
+            const dayMap = { '월': '월', '화': '화', '수': '수', '목': '목', '금': '금', '토': '토', '일': '일' };
+            Object.keys(sections).forEach(key => {
+                const dayMatch = key.match(/저녁\s*(\S)요일(?:\s*[—\-]\s*(.+))?/);
+                if (dayMatch && dayMap[dayMatch[1]]) {
+                    const day = dayMatch[1];
+                    const label = dayMatch[2] ? dayMatch[2].trim() : (routines['evening_' + day]?.label || '기본');
+                    const existing = routines['evening_' + day] || {};
+                    // Infer tagClass from label
+                    let tagClass = existing.tagClass || 'rest';
+                    if (label.includes('레티노이드')) tagClass = 'retinoid';
+                    else if (label.match(/AHA/i)) tagClass = 'aha';
+                    else if (label.includes('나이아신')) tagClass = 'niacin';
+                    else if (!dayMatch[2]) tagClass = existing.tagClass || 'rest';
+                    else tagClass = 'rest';
+
+                    routines['evening_' + day] = {
+                        label,
+                        tagClass,
+                        steps: sections[key].map(parseStep)
+                    };
+                    updatedCount++;
+                }
+            });
+
+            if (updatedCount === 0) {
+                showToast('매칭되는 섹션이 없습니다', 'error');
+                return;
+            }
+
+            saveRoutines();
+            importModal.style.display = 'none';
+            showToast(`${updatedCount}개 섹션 업데이트 완료`);
         });
 
         // Product modal
