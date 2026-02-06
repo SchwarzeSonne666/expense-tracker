@@ -805,30 +805,51 @@
   text-overflow: ellipsis;
 }
 
-/* Row 2: badge + usage + wait time */
+/* Row 2: badge chips */
 .sc-edit-row2 {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
   padding-left: 28px; /* align with product name (20px num + 8px gap) */
 }
 
-.sc-edit-badge-sel {
-  padding: 0.2rem 0.35rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-family: inherit;
-  font-size: 0.62rem;
-  flex-shrink: 0;
-  width: auto;
+/* Row 3: usage + wait time */
+.sc-edit-row3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 28px;
 }
 
-.sc-edit-badge-sel:focus {
-  outline: none;
-  border-color: var(--accent-primary);
+/* Badge Chips */
+.sc-edit-badge-chips {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
 }
+
+.sc-badge-chip {
+  padding: 0.18rem 0.45rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.58rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sc-badge-chip:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Active badge chip — colored by type */
+.sc-badge-chip.active.cleanse { background: rgba(66, 153, 225, 0.15); color: #4299e1; border-color: rgba(66, 153, 225, 0.3); }
+.sc-badge-chip.active.tone { background: rgba(72, 187, 120, 0.15); color: #48bb78; border-color: rgba(72, 187, 120, 0.3); }
+.sc-badge-chip.active.serum { background: rgba(237, 100, 166, 0.15); color: #ed64a6; border-color: rgba(237, 100, 166, 0.3); }
+.sc-badge-chip.active.cream { background: rgba(246, 173, 85, 0.15); color: #f6ad55; border-color: rgba(246, 173, 85, 0.3); }
+.sc-badge-chip.active.sun { background: rgba(245, 101, 101, 0.15); color: #f56565; border-color: rgba(245, 101, 101, 0.3); }
+.sc-badge-chip.active.active { background: rgba(159, 122, 234, 0.15); color: #9f7aea; border-color: rgba(159, 122, 234, 0.3); }
 
 .sc-edit-usage {
   flex: 1;

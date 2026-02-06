@@ -483,9 +483,11 @@
                     </div>
                 </div>
                 <div class="sc-edit-row2">
-                    <select class="sc-edit-badge-sel" data-idx="${i}">
-                        ${BADGE_OPTIONS.map(b => `<option value="${b.value}" ${s.badgeClass === b.value ? 'selected' : ''}>${b.label}</option>`).join('')}
-                    </select>
+                    <div class="sc-edit-badge-chips" data-idx="${i}">
+                        ${BADGE_OPTIONS.map(b => `<button type="button" class="sc-badge-chip ${b.value}${s.badgeClass === b.value ? ' active' : ''}" data-badge="${b.value}" data-idx="${i}">${b.label}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="sc-edit-row3">
                     <input class="sc-edit-usage" value="${escHtml(s.usage || '')}" data-idx="${i}" placeholder="사용법 입력">
                     ${s.wait ? `<input class="sc-edit-wait-input" value="${escHtml(s.wait)}" data-idx="${i}" placeholder="대기시간">` : ''}
                 </div>
@@ -579,8 +581,26 @@
 
         // Day tab buttons — no static listeners needed, renderDayTabs() attaches them dynamically
 
-        // Routine edit: move/remove (delegated with closest)
+        // Routine edit: move/remove/badge chip (delegated with closest)
         document.getElementById('editRoutineList').addEventListener('click', e => {
+            // Badge chip click
+            const chipBtn = e.target.closest('.sc-badge-chip');
+            if (chipBtn) {
+                const idx = parseInt(chipBtn.dataset.idx);
+                const badgeVal = chipBtn.dataset.badge;
+                if (!isNaN(idx) && idx >= 0 && idx < editingStepsCopy.length) {
+                    const opt = BADGE_OPTIONS.find(b => b.value === badgeVal);
+                    editingStepsCopy[idx].badgeClass = badgeVal;
+                    editingStepsCopy[idx].badge = opt ? opt.label : badgeVal;
+                    commitEditingSteps();
+                    // Update active state without full re-render
+                    const container = chipBtn.closest('.sc-edit-badge-chips');
+                    container.querySelectorAll('.sc-badge-chip').forEach(c => c.classList.remove('active'));
+                    chipBtn.classList.add('active');
+                }
+                return;
+            }
+
             const upBtn = e.target.closest('.sc-edit-move-up');
             const downBtn = e.target.closest('.sc-edit-move-down');
             const removeBtn = e.target.closest('.sc-edit-remove');
@@ -628,11 +648,6 @@
 
             if (e.target.classList.contains('sc-edit-usage')) {
                 editingStepsCopy[idx].usage = e.target.value;
-                commitEditingSteps();
-            } else if (e.target.classList.contains('sc-edit-badge-sel')) {
-                const opt = BADGE_OPTIONS.find(b => b.value === e.target.value);
-                editingStepsCopy[idx].badgeClass = e.target.value;
-                editingStepsCopy[idx].badge = opt ? opt.label : e.target.value;
                 commitEditingSteps();
             } else if (e.target.classList.contains('sc-edit-wait-input')) {
                 const val = e.target.value.trim();
