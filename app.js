@@ -36,9 +36,8 @@ class ExpenseTracker {
         const localCategories = [...this.categories];
         const localMemos = [...this.memos];
 
-        // First: sync local data to Firebase if Firebase is empty
-        this.syncLocalToFirebase(localExpenses, localCategories, localMemos).then(() => {
-            // Then: start listening for real-time changes
+        // Start listeners (works regardless of sync result)
+        const startListeners = () => {
             this.expensesRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -49,30 +48,45 @@ class ExpenseTracker {
                 localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
                 this.renderExpenses();
                 this.updateStats();
+                console.log('Firebase expenses loaded:', this.expenses.length);
+            }, (error) => {
+                console.error('Firebase expenses listener error:', error);
             });
 
             this.categoriesRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    this.categories = data;
+                    this.categories = Array.isArray(data) ? data : Object.values(data);
                 } else {
                     this.categories = ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
                 }
                 localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
                 this.renderCategoryOptions();
+            }, (error) => {
+                console.error('Firebase categories listener error:', error);
             });
 
             this.memosRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    this.memos = data;
+                    this.memos = Array.isArray(data) ? data : Object.values(data);
                 } else {
                     this.memos = ['카드 자동결제', '계좌이체', '현금납부'];
                 }
                 localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
                 this.renderMemoOptions();
+            }, (error) => {
+                console.error('Firebase memos listener error:', error);
             });
-        });
+        };
+
+        // First sync local data, then start listeners
+        this.syncLocalToFirebase(localExpenses, localCategories, localMemos)
+            .then(startListeners)
+            .catch((err) => {
+                console.error('Sync failed, starting listeners anyway:', err);
+                startListeners();
+            });
     }
 
     // One-time sync: push localStorage data to Firebase if Firebase is empty
