@@ -477,6 +477,11 @@
         { value: 'rest', label: '쉬는 날 / 보습' },
     ];
 
+    function getTagColor(tagClass) {
+        const map = { retinoid: '#ed64a6', aha: '#48bb78', niacin: '#f6ad55', rest: '#667eea' };
+        return map[tagClass] || '#667eea';
+    }
+
     const DAY_ORDER = ['월', '화', '수', '목', '금', '토', '일'];
 
     function renderDayTabs() {
@@ -564,12 +569,16 @@
         // For evening_day scope, show day meta (label + tagClass) editable
         if (editScope === 'evening_day') {
             const info = routines[editingRoutineKey] || DEFAULT_ROUTINES[editingRoutineKey] || { label: '기본', tagClass: 'rest', steps: [] };
+            const currentTag = TAG_CLASS_OPTIONS.find(t => t.value === info.tagClass) || TAG_CLASS_OPTIONS[3];
             html += `<div class="sc-edit-day-meta">
                 <label>테마</label>
                 <input type="text" class="sc-edit-day-label-input" value="${info.label || ''}" placeholder="예: 레티노이드">
-                <select class="sc-edit-day-tag-sel">
-                    ${TAG_CLASS_OPTIONS.map(t => `<option value="${t.value}" ${info.tagClass === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
-                </select>
+                <div class="custom-dropdown sc-tag-dropdown">
+                    <input type="text" class="sc-edit-day-tag-input" value="${currentTag.label}" readonly data-value="${currentTag.value}" placeholder="태그 선택">
+                    <div class="dropdown-list sc-tag-dropdown-list">
+                        ${TAG_CLASS_OPTIONS.map(t => `<div class="dropdown-item${info.tagClass === t.value ? ' active' : ''}" data-value="${t.value}"><span class="dropdown-item-dot" style="background:${getTagColor(t.value)}"></span>${t.label}</div>`).join('')}
+                    </div>
+                </div>
             </div>`;
         }
 
@@ -689,8 +698,39 @@
 
         // Day tab buttons — no static listeners needed, renderDayTabs() attaches them dynamically
 
-        // Routine edit: move/remove/badge chip (delegated with closest)
+        // Routine edit: move/remove/badge chip/tag dropdown (delegated with closest)
         document.getElementById('editRoutineList').addEventListener('click', e => {
+            // Tag dropdown item click (day meta theme selector)
+            const tagItem = e.target.closest('.sc-tag-dropdown-list .dropdown-item');
+            if (tagItem) {
+                const tagVal = tagItem.dataset.value;
+                const tagInput = document.querySelector('.sc-edit-day-tag-input');
+                const tagOpt = TAG_CLASS_OPTIONS.find(t => t.value === tagVal);
+                if (tagInput && tagOpt) {
+                    tagInput.value = tagOpt.label;
+                    tagInput.dataset.value = tagVal;
+                    // Update active state
+                    tagItem.closest('.sc-tag-dropdown-list').querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+                    tagItem.classList.add('active');
+                    // Close dropdown
+                    tagItem.closest('.dropdown-list').classList.remove('show');
+                    // Save
+                    if (routines[editingRoutineKey]) {
+                        routines[editingRoutineKey].tagClass = tagVal;
+                        saveRoutines();
+                    }
+                }
+                return;
+            }
+
+            // Tag dropdown input click — toggle dropdown
+            const tagInput = e.target.closest('.sc-edit-day-tag-input');
+            if (tagInput) {
+                const list = tagInput.parentElement.querySelector('.dropdown-list');
+                list.classList.toggle('show');
+                return;
+            }
+
             // Badge chip click
             const chipBtn = e.target.closest('.sc-badge-chip');
             if (chipBtn) {
@@ -742,14 +782,7 @@
                 }
                 return;
             }
-            // Day meta: tag class select
-            if (e.target.classList.contains('sc-edit-day-tag-sel')) {
-                if (routines[editingRoutineKey]) {
-                    routines[editingRoutineKey].tagClass = e.target.value;
-                    saveRoutines();
-                }
-                return;
-            }
+            // Day meta: tag class — handled by click delegation above
 
             const idx = parseInt(e.target.dataset.idx);
             if (isNaN(idx) || idx < 0 || idx >= editingStepsCopy.length) return;
