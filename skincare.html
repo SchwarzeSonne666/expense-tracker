@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=10">
+    <link rel="stylesheet" href="skincare.css?v=11">
 </head>
 
 <body>
@@ -117,9 +117,10 @@
                 </div>
                 <!-- Add Step -->
                 <div class="sc-edit-add-step">
-                    <select id="addStepSelect" class="sc-edit-select">
-                        <option value="">제품 선택하여 추가...</option>
-                    </select>
+                    <div class="custom-dropdown" id="addStepDropdown">
+                        <input type="text" id="addStepInput" placeholder="제품 검색하여 추가..." autocomplete="off">
+                        <div class="dropdown-list" id="addStepDropdownList"></div>
+                    </div>
                     <button class="btn btn-add-category" id="addStepBtn">추가</button>
                 </div>
             </div>
@@ -136,15 +137,10 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>카테고리</label>
-                    <select id="newProductCategory" class="sc-modal-select">
-                        <option value="cleansing">🧴 클렌징</option>
-                        <option value="toner">💧 토너/패드</option>
-                        <option value="serum" selected>✨ 세럼/에센스</option>
-                        <option value="cream">🧈 크림/보습</option>
-                        <option value="suncare">☀️ 선케어</option>
-                        <option value="active">⚡ 액티브</option>
-                        <option value="spot">🎯 스팟케어</option>
-                    </select>
+                    <div class="custom-dropdown" id="categoryDropdownSC">
+                        <input type="text" id="newProductCategory" placeholder="카테고리 선택" autocomplete="off" readonly data-value="serum">
+                        <div class="dropdown-list" id="categoryDropdownListSC"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>제품명</label>
@@ -182,7 +178,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=10"></script>
+    <script src="skincare.js?v=11"></script>
 </body>
 
 </html>

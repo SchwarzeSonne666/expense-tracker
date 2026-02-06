@@ -516,18 +516,16 @@
   flex-shrink: 0;
 }
 
-/* Skincare Dark Select — unified style for all selects */
-.sc-modal-select,
-.sc-edit-select,
+/* Skincare Dark Select — for remaining native selects */
 .sc-edit-day-tag-sel {
-  width: 100%;
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  width: auto;
+  padding: 0.25rem 1.8rem 0.25rem 0.45rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   cursor: pointer;
   transition: all var(--transition-fast);
   -webkit-appearance: none;
@@ -539,8 +537,6 @@
   background-size: 12px;
 }
 
-.sc-modal-select:focus,
-.sc-edit-select:focus,
 .sc-edit-day-tag-sel:focus {
   outline: none;
   border-color: var(--accent-primary);
@@ -548,32 +544,37 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.sc-modal-select:hover,
-.sc-edit-select:hover,
 .sc-edit-day-tag-sel:hover {
   border-color: rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.07);
 }
 
-.sc-modal-select option,
-.sc-edit-select option,
 .sc-edit-day-tag-sel option {
   background: #1a1f3a;
   color: var(--text-primary);
   padding: 0.5rem 0.75rem;
 }
 
-/* Size overrides */
-.sc-edit-select {
+/* Custom dropdown inside skincare modals */
+.sc-edit-modal .custom-dropdown,
+#addProductModal .custom-dropdown {
   flex: 1;
-  font-size: 0.8rem;
-  padding: 0.45rem 2rem 0.45rem 0.65rem;
 }
 
-.sc-edit-day-tag-sel {
-  width: auto;
-  font-size: 0.72rem;
-  padding: 0.25rem 1.8rem 0.25rem 0.45rem;
+.sc-edit-modal .custom-dropdown input,
+#addProductModal .custom-dropdown input {
+  cursor: pointer;
+}
+
+.sc-edit-modal .dropdown-list,
+#addProductModal .dropdown-list {
+  max-height: 180px;
+}
+
+/* Add step dropdown — compact sizing */
+.sc-edit-add-step .custom-dropdown input {
+  font-size: 0.8rem;
+  padding: 0.45rem 0.65rem;
 }
 
 /* ===== Edit Routine Modal — Upgraded ===== */
@@ -980,7 +981,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* .sc-edit-select styles moved to unified select block above */
+/* Custom dropdown in add step area inherits from styles.css .custom-dropdown */
 
 /* Responsive */
 @media (max-width: 640px) {

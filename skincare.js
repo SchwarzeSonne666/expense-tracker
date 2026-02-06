@@ -276,12 +276,120 @@
     }
 
     function renderProductSelect() {
-        const sel = document.getElementById('addStepSelect');
-        sel.innerHTML = '<option value="">제품 선택하여 추가...</option>' +
-            products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        // Populate the add-step dropdown list with product items
+        const listEl = document.getElementById('addStepDropdownList');
+        if (products.length === 0) {
+            listEl.innerHTML = '<div class="dropdown-empty">등록된 제품이 없습니다</div>';
+            return;
+        }
+        listEl.innerHTML = products.map(p => {
+            const cat = CATEGORIES.find(c => c.key === p.category);
+            const icon = cat ? cat.icon : '📦';
+            return `<div class="dropdown-item" data-value="${escHtml(p.name)}"><span class="dropdown-item-dot"></span>${icon} ${escHtml(p.name)}</div>`;
+        }).join('');
+    }
+
+    function renderCategoryDropdown() {
+        const listEl = document.getElementById('categoryDropdownListSC');
+        listEl.innerHTML = CATEGORIES.map(c =>
+            `<div class="dropdown-item" data-value="${c.key}" data-label="${c.icon} ${c.label}"><span class="dropdown-item-dot"></span>${c.icon} ${c.label}</div>`
+        ).join('');
+    }
+
+    // Setup custom dropdown — generic helper (mirrors expense tracker pattern)
+    function setupSkincareDropdown(input, listEl, opts = {}) {
+        const { onSelect, getItems, filterFn, readonlyMode } = opts;
+
+        const showFiltered = () => {
+            if (getItems) getItems(); // refresh list content
+            if (!readonlyMode) {
+                const val = input.value.toLowerCase();
+                const items = listEl.querySelectorAll('.dropdown-item');
+                let anyVisible = false;
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    const match = !val || text.includes(val);
+                    item.style.display = match ? '' : 'none';
+                    if (match) anyVisible = true;
+                });
+                if (!anyVisible) {
+                    // Show "no match" only if not already present
+                    if (!listEl.querySelector('.dropdown-empty')) {
+                        const empty = document.createElement('div');
+                        empty.className = 'dropdown-empty';
+                        empty.textContent = '일치하는 항목 없음';
+                        listEl.appendChild(empty);
+                    }
+                } else {
+                    const empty = listEl.querySelector('.dropdown-empty');
+                    if (empty) empty.remove();
+                }
+            }
+            listEl.classList.add('show');
+        };
+
+        input.addEventListener('focus', showFiltered);
+        if (!readonlyMode) {
+            input.addEventListener('input', showFiltered);
+        }
+
+        listEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                if (onSelect) {
+                    onSelect(item.dataset.value, item.dataset.label || item.textContent.trim());
+                } else {
+                    input.value = item.dataset.label || item.textContent.trim();
+                }
+                listEl.classList.remove('show');
+            }
+        });
+
+        // Keyboard nav
+        input.addEventListener('keydown', (e) => {
+            const visibleItems = Array.from(listEl.querySelectorAll('.dropdown-item')).filter(i => i.style.display !== 'none');
+            const activeItem = listEl.querySelector('.dropdown-item.active');
+            let index = visibleItems.indexOf(activeItem);
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                index = index < visibleItems.length - 1 ? index + 1 : 0;
+                visibleItems.forEach(el => el.classList.remove('active'));
+                visibleItems[index]?.classList.add('active');
+                visibleItems[index]?.scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                index = index > 0 ? index - 1 : visibleItems.length - 1;
+                visibleItems.forEach(el => el.classList.remove('active'));
+                visibleItems[index]?.classList.add('active');
+                visibleItems[index]?.scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter' && activeItem) {
+                e.preventDefault();
+                if (onSelect) {
+                    onSelect(activeItem.dataset.value, activeItem.dataset.label || activeItem.textContent.trim());
+                } else {
+                    input.value = activeItem.dataset.label || activeItem.textContent.trim();
+                }
+                listEl.classList.remove('show');
+            } else if (e.key === 'Escape') {
+                listEl.classList.remove('show');
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => listEl.classList.remove('show'), 150);
+        });
     }
 
     // ===== Product Modal (Add/Edit) =====
+    function setCategoryInput(key) {
+        const input = document.getElementById('newProductCategory');
+        const cat = CATEGORIES.find(c => c.key === key);
+        input.value = cat ? `${cat.icon} ${cat.label}` : key;
+        input.dataset.value = key;
+    }
+
     function openProductModal(mode, idx) {
         const modal = document.getElementById('addProductModal');
         const title = document.getElementById('productModalTitle');
@@ -293,7 +401,7 @@
             document.getElementById('newProductName').value = p.name;
             document.getElementById('newProductRole').value = p.role;
             document.getElementById('newProductWhen').value = p.when;
-            document.getElementById('newProductCategory').value = p.category || 'serum';
+            setCategoryInput(p.category || 'serum');
             title.textContent = '제품 편집';
             saveBtn.textContent = '수정 완료';
         } else {
@@ -301,7 +409,7 @@
             document.getElementById('newProductName').value = '';
             document.getElementById('newProductRole').value = '';
             document.getElementById('newProductWhen').value = '';
-            document.getElementById('newProductCategory').value = 'serum';
+            setCategoryInput('serum');
             title.textContent = '제품 추가';
             saveBtn.textContent = '추가';
         }
@@ -312,7 +420,7 @@
         const name = document.getElementById('newProductName').value.trim();
         const role = document.getElementById('newProductRole').value.trim();
         const when = document.getElementById('newProductWhen').value.trim();
-        const category = document.getElementById('newProductCategory').value;
+        const category = document.getElementById('newProductCategory').dataset.value || 'serum';
         if (!name) { showToast('제품명을 입력하세요', 'error'); return; }
 
         if (editingProductIdx >= 0) {
@@ -672,15 +780,55 @@
 
         // Add step to routine — now with auto badge matching
         document.getElementById('addStepBtn').addEventListener('click', () => {
-            const sel = document.getElementById('addStepSelect');
-            const productName = sel.value;
+            const input = document.getElementById('addStepInput');
+            const productName = input.dataset.value || input.value.trim();
             if (!productName) return;
+            // Verify product exists
+            const exists = products.find(p => p.name === productName);
+            if (!exists) { showToast('등록된 제품을 선택하세요', 'error'); return; }
             const badgeInfo = getBadgeForProduct(productName);
             editingStepsCopy.push({ product: productName, usage: '', badge: badgeInfo.badge, badgeClass: badgeInfo.badgeClass });
             commitEditingSteps();
             renderEditList();
-            sel.value = '';
+            input.value = '';
+            input.dataset.value = '';
             showToast('단계 추가됨');
+        });
+
+        // Category custom dropdown for product modal
+        renderCategoryDropdown();
+        setupSkincareDropdown(
+            document.getElementById('newProductCategory'),
+            document.getElementById('categoryDropdownListSC'),
+            {
+                readonlyMode: true,
+                onSelect: (value, label) => {
+                    const input = document.getElementById('newProductCategory');
+                    input.value = label;
+                    input.dataset.value = value;
+                }
+            }
+        );
+
+        // Add step custom dropdown (product search)
+        setupSkincareDropdown(
+            document.getElementById('addStepInput'),
+            document.getElementById('addStepDropdownList'),
+            {
+                getItems: () => renderProductSelect(),
+                onSelect: (value) => {
+                    const input = document.getElementById('addStepInput');
+                    input.value = value;
+                    input.dataset.value = value;
+                }
+            }
+        );
+
+        // Close all custom dropdowns on outside click
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.custom-dropdown')) {
+                document.querySelectorAll('.dropdown-list.show').forEach(el => el.classList.remove('show'));
+            }
         });
 
         // Product modal
