@@ -427,18 +427,20 @@
         const list = document.getElementById('editRoutineList');
         list.innerHTML = steps.map((s, i) => `
             <div class="sc-edit-item" data-idx="${i}">
-                <div class="sc-edit-grip">⠿</div>
-                <div class="sc-edit-info">
-                    <div class="sc-edit-product">${s.product}</div>
-                    <input class="sc-edit-usage" value="${s.usage}" data-field="usage" data-idx="${i}" placeholder="용법">
+                <div class="sc-edit-row1">
+                    <span class="sc-edit-num">${i + 1}</span>
+                    <span class="sc-edit-product">${s.product}</span>
+                    <select class="sc-edit-badge-sel" data-idx="${i}">
+                        ${BADGE_OPTIONS.map(b => `<option value="${b.value}" ${s.badgeClass === b.value ? 'selected' : ''}>${b.label}</option>`).join('')}
+                    </select>
                 </div>
-                <select class="sc-edit-badge-sel" data-idx="${i}">
-                    ${BADGE_OPTIONS.map(b => `<option value="${b.value}" ${s.badgeClass === b.value ? 'selected' : ''}>${b.label}</option>`).join('')}
-                </select>
-                <div class="sc-edit-actions">
-                    <button class="sc-edit-move-up" data-idx="${i}" title="위로">&uarr;</button>
-                    <button class="sc-edit-move-down" data-idx="${i}" title="아래로">&darr;</button>
-                    <button class="sc-edit-remove" data-idx="${i}" title="삭제">&times;</button>
+                <div class="sc-edit-row2">
+                    <input class="sc-edit-usage" value="${s.usage}" data-field="usage" data-idx="${i}" placeholder="사용법 입력">
+                    <div class="sc-edit-actions">
+                        <button class="sc-edit-move-up" data-idx="${i}" title="위로">▲</button>
+                        <button class="sc-edit-move-down" data-idx="${i}" title="아래로">▼</button>
+                        <button class="sc-edit-remove" data-idx="${i}" title="삭제">✕</button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -505,36 +507,46 @@
                 document.getElementById('editRoutineModal').style.display = 'none';
         });
 
-        // Edit routine list interactions
+        // Edit routine list interactions (use closest() for reliable delegation)
         document.getElementById('editRoutineList').addEventListener('click', e => {
+            const upBtn = e.target.closest('.sc-edit-move-up');
+            const downBtn = e.target.closest('.sc-edit-move-down');
+            const removeBtn = e.target.closest('.sc-edit-remove');
+            const btn = upBtn || downBtn || removeBtn;
+            if (!btn) return;
+
+            const idx = parseInt(btn.dataset.idx);
+            if (isNaN(idx)) return;
             const steps = [...getEditingSteps()];
-            const idx = parseInt(e.target.dataset.idx);
-            if (e.target.classList.contains('sc-edit-move-up') && idx > 0) {
+
+            if (upBtn && idx > 0) {
                 [steps[idx - 1], steps[idx]] = [steps[idx], steps[idx - 1]];
                 setEditingSteps(steps);
                 renderEditList(steps);
-            } else if (e.target.classList.contains('sc-edit-move-down') && idx < steps.length - 1) {
+            } else if (downBtn && idx < steps.length - 1) {
                 [steps[idx], steps[idx + 1]] = [steps[idx + 1], steps[idx]];
                 setEditingSteps(steps);
                 renderEditList(steps);
-            } else if (e.target.classList.contains('sc-edit-remove')) {
+            } else if (removeBtn) {
                 steps.splice(idx, 1);
                 setEditingSteps(steps);
                 renderEditList(steps);
             }
         });
 
-        // Edit usage inline
+        // Edit usage inline + badge change
         document.getElementById('editRoutineList').addEventListener('change', e => {
             const idx = parseInt(e.target.dataset.idx);
+            if (isNaN(idx)) return;
             const steps = [...getEditingSteps()];
+            if (idx >= steps.length) return;
+
             if (e.target.classList.contains('sc-edit-usage')) {
-                steps[idx].usage = e.target.value;
+                steps[idx] = { ...steps[idx], usage: e.target.value };
                 setEditingSteps(steps);
             } else if (e.target.classList.contains('sc-edit-badge-sel')) {
                 const opt = BADGE_OPTIONS.find(b => b.value === e.target.value);
-                steps[idx].badgeClass = e.target.value;
-                steps[idx].badge = opt ? opt.label : e.target.value;
+                steps[idx] = { ...steps[idx], badgeClass: e.target.value, badge: opt ? opt.label : e.target.value };
                 setEditingSteps(steps);
             }
         });
