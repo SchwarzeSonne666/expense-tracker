@@ -140,10 +140,6 @@
   animation: slideIn 0.3s ease both;
 }
 
-.sc-step.sc-step-hidden {
-  display: none;
-}
-
 .sc-step:hover {
   background: var(--bg-card-hover);
   transform: translateX(3px);
@@ -207,37 +203,12 @@
   line-height: 1.5;
 }
 
-.sc-step-note.sc-step-hidden {
-  display: none;
-}
-
 /* Routine Divider (between common & day-specific) */
 .sc-routine-divider {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0.25rem 0;
-}
-
-/* Routine Collapse Toggle */
-.sc-routine-toggle {
-  width: 100%;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.sc-routine-toggle:hover {
-  background: rgba(102, 126, 234, 0.08);
-  border-color: rgba(102, 126, 234, 0.2);
-  color: var(--accent-primary);
 }
 
 /* Section */
@@ -368,7 +339,7 @@
   color: var(--text-muted);
 }
 
-/* ===== Product List — Category Groups with Accordion ===== */
+/* ===== Product List — Category Groups ===== */
 .sc-products {
   display: flex;
   flex-direction: column;

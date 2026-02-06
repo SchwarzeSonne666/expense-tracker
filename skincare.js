@@ -270,41 +270,21 @@
             steps = [...common, ...(info.steps || [])];
         }
 
-        // Collapsible routine: show first 3, then toggle
-        const COLLAPSE_THRESHOLD = 5;
-        const shouldCollapse = steps.length > COLLAPSE_THRESHOLD;
-        const isExpanded = container.dataset.expanded === 'true';
-
         let html = '';
         steps.forEach((s, i) => {
-            const hidden = shouldCollapse && !isExpanded && i >= 3;
             // Add divider between common and day-specific steps
             if (time === 'evening' && commonCount > 0 && i === commonCount) {
                 const info = getEveningInfo(day);
                 html += `<div class="sc-routine-divider"><span class="sc-active-tag ${info.tagClass}" style="font-size:0.6rem;padding:0.15rem 0.5rem;">${info.label}</span></div>`;
             }
-            html += `<div class="sc-step${hidden ? ' sc-step-hidden' : ''}" style="animation-delay:${i * 0.04}s">`;
+            html += `<div class="sc-step" style="animation-delay:${i * 0.04}s">`;
             html += `<div class="sc-step-num">${i + 1}</div>`;
             html += `<div class="sc-step-body"><div class="sc-step-product">${s.product}</div><div class="sc-step-usage">${s.usage}</div></div>`;
             html += `<span class="sc-step-badge ${s.badgeClass}">${s.badge}</span></div>`;
-            if (s.wait) html += `<div class="sc-step-note${hidden ? ' sc-step-hidden' : ''}" style="animation-delay:${i * 0.04}s">⏱ ${s.wait}</div>`;
+            if (s.wait) html += `<div class="sc-step-note" style="animation-delay:${i * 0.04}s">⏱ ${s.wait}</div>`;
         });
 
-        if (shouldCollapse) {
-            const remaining = steps.length - 3;
-            html += `<button class="sc-routine-toggle" id="routineToggle">${isExpanded ? '접기 ▲' : `+${remaining}개 더 보기 ▼`}</button>`;
-        }
-
         container.innerHTML = html;
-
-        // Attach toggle handler
-        const toggleBtn = document.getElementById('routineToggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                container.dataset.expanded = isExpanded ? 'false' : 'true';
-                renderRoutine(currentTime);
-            });
-        }
     }
 
     function getMorningKeyProducts() {
@@ -466,8 +446,6 @@
                 currentTime = btn.dataset.time;
                 document.querySelectorAll('.sc-time-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                // Reset expand state on time switch
-                document.getElementById('routineSteps').dataset.expanded = 'false';
                 renderRoutine(currentTime);
             });
         });
