@@ -118,27 +118,58 @@ class ExpenseTracker {
         }
     }
 
-    // Render 1~31 date grid buttons
+    // Render 1~31 date dropdown items
     renderDateGrid() {
-        const grid = document.getElementById('dateGrid');
-        grid.innerHTML = '';
+        const list = document.getElementById('dateDropdownList');
+        list.innerHTML = '';
         for (let d = 1; d <= 31; d++) {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'date-btn';
-            btn.textContent = d;
-            btn.dataset.day = d;
-            btn.addEventListener('click', () => this.selectDate(d));
-            grid.appendChild(btn);
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.dataset.value = d;
+            item.innerHTML = `<span class="dropdown-item-dot"></span>매월 ${d}일`;
+            list.appendChild(item);
         }
+        this.setupDateDropdown();
     }
 
-    // Select a date in the grid
+    // Setup date dropdown behavior
+    setupDateDropdown() {
+        const display = document.getElementById('expenseDateDisplay');
+        const hidden = document.getElementById('expenseDate');
+        const list = document.getElementById('dateDropdownList');
+
+        display.addEventListener('click', () => {
+            // Highlight current selection
+            list.querySelectorAll('.dropdown-item').forEach(item => {
+                item.classList.toggle('active-date', item.dataset.value === hidden.value);
+            });
+            list.classList.toggle('show');
+        });
+
+        list.addEventListener('click', (e) => {
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                const day = item.dataset.value;
+                this.selectDate(parseInt(day));
+                list.classList.remove('show');
+            }
+        });
+    }
+
+    // Select a date
     selectDate(day) {
         document.getElementById('expenseDate').value = day;
-        document.querySelectorAll('.date-btn').forEach(btn => {
-            btn.classList.toggle('selected', parseInt(btn.dataset.day) === day);
-        });
+        const display = document.getElementById('expenseDateDisplay');
+        display.value = `매월 ${day}일`;
+        display.classList.add('has-value');
+    }
+
+    // Clear date selection
+    clearDate() {
+        document.getElementById('expenseDate').value = '';
+        const display = document.getElementById('expenseDateDisplay');
+        display.value = '';
+        display.classList.remove('has-value');
     }
 
     // Load expenses from localStorage
@@ -395,8 +426,7 @@ class ExpenseTracker {
     cancelEdit() {
         this.editingId = null;
         document.getElementById('expenseForm').reset();
-        document.getElementById('expenseDate').value = '';
-        document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('selected'));
+        this.clearDate();
         const submitBtn = document.querySelector('.btn-primary');
         submitBtn.textContent = '+ 추가하기';
         const formCard = document.getElementById('formCard');
