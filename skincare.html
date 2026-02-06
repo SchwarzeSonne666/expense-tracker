@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="피부관리 루틴 대시보드">
+    <title>피부관리 루틴 | 대시보드</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="skincare.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab">고정지출</a>
+                <a href="skincare.html" class="nav-tab active">피부관리</a>
+            </nav>
+        </header>
+
+        <!-- Today's Summary -->
+        <section class="sc-today">
+            <div class="sc-today-label">TODAY</div>
+            <h2 class="sc-today-day" id="todayDay"></h2>
+            <div class="sc-today-active" id="todayActive"></div>
+        </section>
+
+        <!-- Time Toggle -->
+        <div class="sc-time-toggle">
+            <button class="sc-time-btn active" data-time="morning">아침</button>
+            <button class="sc-time-btn" data-time="evening">저녁</button>
+        </div>
+
+        <!-- Routine Steps -->
+        <section class="sc-routine" id="routineSteps">
+            <!-- populated by JS -->
+        </section>
+
+        <!-- Weekly Calendar -->
+        <section class="sc-section">
+            <h3 class="sc-section-title">주간 캘린더</h3>
+            <div class="sc-calendar" id="weeklyCalendar">
+                <!-- populated by JS -->
+            </div>
+            <div class="sc-pattern-tip">
+                <span class="sc-tip-icon">💡</span>
+                <span>월목 = 레티노이드 · 수 = AHA · 토 = 나이아신아마이드 · 나머지 = 쉬는 날</span>
+            </div>
+        </section>
+
+        <!-- Spot Care -->
+        <section class="sc-section">
+            <h3 class="sc-section-title">스팟 케어</h3>
+            <div class="sc-spot-grid">
+                <div class="sc-spot-card">
+                    <div class="sc-spot-icon">🔴</div>
+                    <div class="sc-spot-label">새 여드름</div>
+                    <div class="sc-spot-product">파티온 트러블 세럼</div>
+                    <div class="sc-spot-how">저녁 마지막, 해당 부위만</div>
+                </div>
+                <div class="sc-spot-card">
+                    <div class="sc-spot-icon">🟤</div>
+                    <div class="sc-spot-label">자국/색소침착</div>
+                    <div class="sc-spot-product">아젤리아크림</div>
+                    <div class="sc-spot-how">저녁 크림 후, 주 3~4회</div>
+                </div>
+                <div class="sc-spot-card">
+                    <div class="sc-spot-icon">🔥</div>
+                    <div class="sc-spot-label">염증 심할 때</div>
+                    <div class="sc-spot-product">노스카나겔</div>
+                    <div class="sc-spot-how">취침 전, 얇게 도포</div>
+                </div>
+                <div class="sc-spot-card">
+                    <div class="sc-spot-icon">😳</div>
+                    <div class="sc-spot-label">홍조/열감</div>
+                    <div class="sc-spot-product">냉장 캐롯 카밍 패드</div>
+                    <div class="sc-spot-how">토너 대신 사용 + 시카 밤 교체</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product List -->
+        <section class="sc-section">
+            <h3 class="sc-section-title">전체 제품 목록</h3>
+            <div class="sc-products" id="productList">
+                <!-- populated by JS -->
+            </div>
+        </section>
+
+    </div>
+
+    <script src="skincare.js"></script>
+</body>
+
+</html>
