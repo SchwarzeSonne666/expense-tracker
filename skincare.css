@@ -540,6 +540,157 @@
   color: var(--text-primary);
 }
 
+/* ===== Edit Routine Modal — Upgraded ===== */
+
+/* Wider modal */
+.sc-edit-modal {
+  max-width: 520px;
+  width: 95%;
+}
+
+/* Scope Selector (아침 / 저녁 공통 / 저녁 요일별) */
+.sc-edit-scope {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 0.75rem;
+}
+
+.sc-edit-scope-btn {
+  flex: 1;
+  padding: 0.5rem 0.25rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.sc-edit-scope-btn:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sc-edit-scope-btn.active {
+  background: rgba(102, 126, 234, 0.2);
+  color: var(--accent-primary);
+  box-shadow: 0 1px 4px rgba(102, 126, 234, 0.15);
+}
+
+/* Day Tabs (월~일) for evening_day scope */
+.sc-edit-day-tabs {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 0.75rem;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.sc-edit-day-tab {
+  flex: 1;
+  padding: 0.4rem 0;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.sc-edit-day-tab:hover {
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sc-edit-day-tab.active {
+  background: rgba(102, 126, 234, 0.18);
+  color: var(--accent-primary);
+}
+
+/* Day tag label (shows e.g. 레티노이드) */
+.sc-edit-day-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.sc-edit-day-label.retinoid {
+  background: rgba(237, 100, 166, 0.12);
+  color: #ed64a6;
+}
+.sc-edit-day-label.aha {
+  background: rgba(72, 187, 120, 0.12);
+  color: #48bb78;
+}
+.sc-edit-day-label.niacin {
+  background: rgba(246, 173, 85, 0.12);
+  color: #f6ad55;
+}
+.sc-edit-day-label.rest {
+  background: rgba(102, 126, 234, 0.08);
+  color: var(--accent-primary);
+}
+
+/* Day label edit fields (inline) */
+.sc-edit-day-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.sc-edit-day-meta label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sc-edit-day-meta input,
+.sc-edit-day-meta select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.45rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.72rem;
+}
+
+.sc-edit-day-meta input:focus,
+.sc-edit-day-meta select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.sc-edit-day-meta select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
 /* Edit Routine: Info Text & Empty State */
 .sc-edit-info-text {
   padding: 0.5rem 0.75rem;
@@ -559,15 +710,27 @@
   font-size: 0.78rem;
 }
 
-/* Edit Routine Modal */
+/* Edit Routine Step List */
 .sc-edit-routine-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 1rem;
-  max-height: 50vh;
+  max-height: 45vh;
   overflow-y: auto;
   padding-right: 4px;
+}
+
+/* Custom scrollbar for step list */
+.sc-edit-routine-list::-webkit-scrollbar {
+  width: 4px;
+}
+.sc-edit-routine-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sc-edit-routine-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
 }
 
 .sc-edit-item {
@@ -578,11 +741,12 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  transition: border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .sc-edit-item:hover {
   border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Row 1: number + product name + badge */
@@ -628,6 +792,11 @@
   flex-shrink: 0;
 }
 
+.sc-edit-badge-sel:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
 /* Row 2: usage input + action buttons */
 .sc-edit-row2 {
   display: flex;
@@ -653,6 +822,47 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* Row 3: wait time */
+.sc-edit-row3 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 0.25rem;
+}
+
+.sc-edit-wait-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sc-edit-wait-input {
+  width: 100px;
+  padding: 0.22rem 0.45rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.68rem;
+}
+
+.sc-edit-wait-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sc-edit-wait-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* Action buttons */
 .sc-edit-actions {
   display: flex;
   gap: 3px;
@@ -694,9 +904,12 @@
   border-color: rgba(102, 126, 234, 0.25) !important;
 }
 
+/* Add step area */
 .sc-edit-add-step {
   display: flex;
   gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sc-edit-select {
@@ -708,6 +921,11 @@
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.8rem;
+}
+
+.sc-edit-select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
 }
 
 .sc-edit-select option {

@@ -343,50 +343,115 @@
         if (changed) saveRoutines();
     }
 
-    // ===== Edit Routine Modal =====
-    // The key insight: we work on a local deep copy (editingStepsCopy).
-    // On each action we update the copy, re-render, and save to Firebase.
+    // ===== Edit Routine Modal (Upgraded) =====
+    // Work on local deep copy (editingStepsCopy). Commit to Firebase on each change.
+    // Supports 3 scopes: morning, evening_common, evening_day (per-day)
+
+    let editScope = 'morning';        // 'morning' | 'evening_common' | 'evening_day'
+    let editDay = '월';               // active day tab for evening_day scope
+
+    // Category → badge auto-match map
+    const CATEGORY_TO_BADGE = {
+        cleansing: { badge: '세안', badgeClass: 'cleanse' },
+        toner: { badge: '토너', badgeClass: 'tone' },
+        serum: { badge: '세럼', badgeClass: 'serum' },
+        cream: { badge: '크림', badgeClass: 'cream' },
+        suncare: { badge: '선크림', badgeClass: 'sun' },
+        active: { badge: '액티브', badgeClass: 'active' },
+        spot: { badge: '스팟', badgeClass: 'active' },
+    };
+
+    // Tag class options for evening day meta
+    const TAG_CLASS_OPTIONS = [
+        { value: 'retinoid', label: '레티노이드' },
+        { value: 'aha', label: 'AHA' },
+        { value: 'niacin', label: '나이아신아마이드' },
+        { value: 'rest', label: '쉬는 날 / 보습' },
+    ];
 
     function openEditRoutine() {
         const day = getTodayDayKo();
-        let title = '';
+        editDay = day;
 
+        // Default scope: morning or evening_day based on current time toggle
         if (currentTime === 'morning') {
-            editingRoutineKey = 'morning';
-            const src = routines.morning || DEFAULT_ROUTINES.morning;
-            editingStepsCopy = deepCopy(src);
-            title = '아침 루틴 편집';
+            editScope = 'morning';
         } else {
-            // For evening: editing the day-specific steps only (common is shared)
-            editingRoutineKey = 'evening_' + day;
-            const info = routines[editingRoutineKey] || DEFAULT_ROUTINES[editingRoutineKey];
-            editingStepsCopy = deepCopy(info.steps || []);
-            title = `저녁 (${day}) 루틴 편집`;
+            editScope = 'evening_day';
         }
 
-        document.getElementById('editRoutineTitle').textContent = title;
+        loadEditScope();
+        renderProductSelect();
 
-        // Show info about what's being edited
+        // Activate scope button
+        document.querySelectorAll('.sc-edit-scope-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.scope === editScope);
+        });
+
+        // Activate day tab
+        document.querySelectorAll('.sc-edit-day-tab').forEach(b => {
+            b.classList.toggle('active', b.dataset.day === editDay);
+        });
+
+        // Show/hide day tabs
+        document.getElementById('editDayTabs').style.display = editScope === 'evening_day' ? 'flex' : 'none';
+
+        document.getElementById('editRoutineModal').style.display = 'flex';
+    }
+
+    function loadEditScope() {
         const infoEl = document.getElementById('editRoutineInfo');
-        if (currentTime === 'evening') {
-            infoEl.textContent = '공통 세안 3단계 이후의 요일별 루틴을 편집합니다';
+        const titleEl = document.getElementById('editRoutineTitle');
+
+        if (editScope === 'morning') {
+            editingRoutineKey = 'morning';
+            editingStepsCopy = deepCopy(routines.morning || DEFAULT_ROUTINES.morning);
+            titleEl.textContent = '루틴 편집';
+            infoEl.textContent = '☀️ 아침 루틴을 편집합니다';
+            infoEl.style.display = 'block';
+        } else if (editScope === 'evening_common') {
+            editingRoutineKey = 'evening_common';
+            editingStepsCopy = deepCopy(routines.evening_common || DEFAULT_ROUTINES.evening_common);
+            titleEl.textContent = '루틴 편집';
+            infoEl.textContent = '🌙 매일 저녁 공통으로 사용되는 세안 단계를 편집합니다';
             infoEl.style.display = 'block';
         } else {
-            infoEl.style.display = 'none';
+            // evening_day
+            editingRoutineKey = 'evening_' + editDay;
+            const info = routines[editingRoutineKey] || DEFAULT_ROUTINES[editingRoutineKey] || { label: '기본', tagClass: 'rest', steps: [] };
+            editingStepsCopy = deepCopy(info.steps || []);
+            titleEl.textContent = '루틴 편집';
+            const dayFullName = getDayFullName(editDay);
+            infoEl.textContent = `📅 ${dayFullName} 저녁 루틴 (공통 세안 이후 단계)`;
+            infoEl.style.display = 'block';
         }
 
         renderEditList();
-        renderProductSelect();
-        document.getElementById('editRoutineModal').style.display = 'flex';
     }
 
     function renderEditList() {
         const list = document.getElementById('editRoutineList');
+        let html = '';
+
+        // For evening_day scope, show day meta (label + tagClass) editable
+        if (editScope === 'evening_day') {
+            const info = routines[editingRoutineKey] || DEFAULT_ROUTINES[editingRoutineKey] || { label: '기본', tagClass: 'rest', steps: [] };
+            html += `<div class="sc-edit-day-meta">
+                <label>테마</label>
+                <input type="text" class="sc-edit-day-label-input" value="${info.label || ''}" placeholder="예: 레티노이드">
+                <select class="sc-edit-day-tag-sel">
+                    ${TAG_CLASS_OPTIONS.map(t => `<option value="${t.value}" ${info.tagClass === t.value ? 'selected' : ''}>${t.label}</option>`).join('')}
+                </select>
+            </div>`;
+        }
+
         if (editingStepsCopy.length === 0) {
-            list.innerHTML = '<div class="sc-edit-empty">단계가 없습니다. 아래에서 제품을 추가하세요.</div>';
+            html += '<div class="sc-edit-empty">단계가 없습니다. 아래에서 제품을 추가하세요.</div>';
+            list.innerHTML = html;
             return;
         }
-        list.innerHTML = editingStepsCopy.map((s, i) => `
+
+        html += editingStepsCopy.map((s, i) => `
             <div class="sc-edit-item" data-idx="${i}">
                 <div class="sc-edit-row1">
                     <span class="sc-edit-num">${i + 1}</span>
@@ -396,22 +461,35 @@
                     </select>
                 </div>
                 <div class="sc-edit-row2">
-                    <input class="sc-edit-usage" value="${s.usage || ''}" data-idx="${i}" placeholder="사용법 입력">
+                    <input class="sc-edit-usage" value="${escHtml(s.usage || '')}" data-idx="${i}" placeholder="사용법 입력">
                     <div class="sc-edit-actions">
                         <button class="sc-edit-move-up" data-idx="${i}" title="위로">▲</button>
                         <button class="sc-edit-move-down" data-idx="${i}" title="아래로">▼</button>
                         <button class="sc-edit-remove" data-idx="${i}" title="삭제">✕</button>
                     </div>
                 </div>
+                <div class="sc-edit-row3">
+                    <span class="sc-edit-wait-label">⏱ 대기</span>
+                    <input class="sc-edit-wait-input" value="${escHtml(s.wait || '')}" data-idx="${i}" placeholder="예: 10분 대기">
+                </div>
             </div>
         `).join('');
+
+        list.innerHTML = html;
+    }
+
+    // Escape HTML for value attributes
+    function escHtml(str) {
+        return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function commitEditingSteps() {
-        // Write editingStepsCopy back to routines and save
         if (editingRoutineKey === 'morning') {
             routines.morning = deepCopy(editingStepsCopy);
+        } else if (editingRoutineKey === 'evening_common') {
+            routines.evening_common = deepCopy(editingStepsCopy);
         } else {
+            // evening_X day key
             if (!routines[editingRoutineKey]) {
                 const def = DEFAULT_ROUTINES[editingRoutineKey] || { label: '기본', tagClass: 'rest', steps: [] };
                 routines[editingRoutineKey] = deepCopy(def);
@@ -419,6 +497,14 @@
             routines[editingRoutineKey].steps = deepCopy(editingStepsCopy);
         }
         saveRoutines();
+    }
+
+    function getBadgeForProduct(productName) {
+        const p = products.find(pr => pr.name === productName);
+        if (p && p.category && CATEGORY_TO_BADGE[p.category]) {
+            return { ...CATEGORY_TO_BADGE[p.category] };
+        }
+        return { badge: '세럼', badgeClass: 'serum' }; // fallback
     }
 
     // ===== Events =====
@@ -447,7 +533,7 @@
             });
         });
 
-        // Edit routine modal
+        // Edit routine modal — open / close
         document.getElementById('editRoutineBtn').addEventListener('click', openEditRoutine);
         document.getElementById('closeEditRoutine').addEventListener('click', () => {
             document.getElementById('editRoutineModal').style.display = 'none';
@@ -455,6 +541,26 @@
         document.getElementById('editRoutineModal').addEventListener('click', e => {
             if (e.target.id === 'editRoutineModal')
                 document.getElementById('editRoutineModal').style.display = 'none';
+        });
+
+        // Scope selector buttons
+        document.querySelectorAll('.sc-edit-scope-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editScope = btn.dataset.scope;
+                document.querySelectorAll('.sc-edit-scope-btn').forEach(b => b.classList.toggle('active', b.dataset.scope === editScope));
+                // Show/hide day tabs
+                document.getElementById('editDayTabs').style.display = editScope === 'evening_day' ? 'flex' : 'none';
+                loadEditScope();
+            });
+        });
+
+        // Day tab buttons
+        document.querySelectorAll('.sc-edit-day-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                editDay = btn.dataset.day;
+                document.querySelectorAll('.sc-edit-day-tab').forEach(b => b.classList.toggle('active', b.dataset.day === editDay));
+                loadEditScope();
+            });
         });
 
         // Routine edit: move/remove (delegated with closest)
@@ -475,15 +581,32 @@
             } else if (removeBtn) {
                 editingStepsCopy.splice(idx, 1);
             } else {
-                return; // no action matched
+                return;
             }
 
             commitEditingSteps();
             renderEditList();
         });
 
-        // Routine edit: usage text & badge change
+        // Routine edit: usage text, badge change, wait time, day meta
         document.getElementById('editRoutineList').addEventListener('change', e => {
+            // Day meta: label input
+            if (e.target.classList.contains('sc-edit-day-label-input')) {
+                if (routines[editingRoutineKey]) {
+                    routines[editingRoutineKey].label = e.target.value.trim() || '기본';
+                    saveRoutines();
+                }
+                return;
+            }
+            // Day meta: tag class select
+            if (e.target.classList.contains('sc-edit-day-tag-sel')) {
+                if (routines[editingRoutineKey]) {
+                    routines[editingRoutineKey].tagClass = e.target.value;
+                    saveRoutines();
+                }
+                return;
+            }
+
             const idx = parseInt(e.target.dataset.idx);
             if (isNaN(idx) || idx < 0 || idx >= editingStepsCopy.length) return;
 
@@ -495,15 +618,34 @@
                 editingStepsCopy[idx].badgeClass = e.target.value;
                 editingStepsCopy[idx].badge = opt ? opt.label : e.target.value;
                 commitEditingSteps();
+            } else if (e.target.classList.contains('sc-edit-wait-input')) {
+                const val = e.target.value.trim();
+                if (val) {
+                    editingStepsCopy[idx].wait = val;
+                } else {
+                    delete editingStepsCopy[idx].wait;
+                }
+                commitEditingSteps();
             }
         });
 
-        // Add step to routine
+        // Also handle input event for day label (immediate feedback)
+        document.getElementById('editRoutineList').addEventListener('input', e => {
+            if (e.target.classList.contains('sc-edit-day-label-input')) {
+                if (routines[editingRoutineKey]) {
+                    routines[editingRoutineKey].label = e.target.value.trim() || '기본';
+                    // Don't save on every keystroke, use change event above
+                }
+            }
+        });
+
+        // Add step to routine — now with auto badge matching
         document.getElementById('addStepBtn').addEventListener('click', () => {
             const sel = document.getElementById('addStepSelect');
             const productName = sel.value;
             if (!productName) return;
-            editingStepsCopy.push({ product: productName, usage: '', badge: '세럼', badgeClass: 'serum' });
+            const badgeInfo = getBadgeForProduct(productName);
+            editingStepsCopy.push({ product: productName, usage: '', badge: badgeInfo.badge, badgeClass: badgeInfo.badgeClass });
             commitEditingSteps();
             renderEditList();
             sel.value = '';
