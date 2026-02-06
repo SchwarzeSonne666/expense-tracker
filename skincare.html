@@ -7,7 +7,7 @@
     <meta name="description" content="피부관리 루틴 대시보드">
     <title>피부관리 루틴 | 대시보드</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=15">
+    <link rel="stylesheet" href="skincare.css?v=16">
 </head>
 
 <body>
@@ -33,7 +33,13 @@
                 <button class="sc-time-btn" data-time="morning">아침</button>
                 <button class="sc-time-btn" data-time="evening">저녁</button>
             </div>
-            <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
+            <div class="sc-section-actions">
+                <button class="sc-copy-btn" id="copyRoutineBtn" title="전체 루틴 복사">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    복사
+                </button>
+                <button class="sc-edit-btn" id="editRoutineBtn">루틴 편집</button>
+            </div>
         </div>
 
         <!-- Routine Steps -->
@@ -182,7 +188,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
-    <script src="skincare.js?v=13"></script>
+    <script src="skincare.js?v=14"></script>
 </body>
 
 </html>

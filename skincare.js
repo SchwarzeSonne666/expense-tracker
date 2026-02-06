@@ -864,6 +864,45 @@
             }
         });
 
+        // Shared copy-to-clipboard with button feedback
+        const COPY_SVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+        function copyWithFeedback(btnId, text, toastMsg) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById(btnId);
+                btn.classList.add('copied');
+                btn.innerHTML = '✓ 복사됨';
+                showToast(toastMsg);
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `${COPY_SVG} 복사`;
+                }, 1500);
+            });
+        }
+
+        // Format steps as text lines
+        function formatSteps(steps) {
+            return steps.map((s, i) => {
+                let line = `  ${i + 1}. ${s.product} | ${s.usage}`;
+                if (s.wait) line += ` ⏱${s.wait}`;
+                return line;
+            }).join('\n');
+        }
+
+        // Copy full routine for Claude
+        document.getElementById('copyRoutineBtn').addEventListener('click', () => {
+            const morning = routines.morning || DEFAULT_ROUTINES.morning;
+            const common = routines.evening_common || DEFAULT_ROUTINES.evening_common;
+            let text = '=== 피부관리 루틴 ===\n\n';
+            text += '[아침]\n' + formatSteps(morning) + '\n\n';
+            text += '[저녁 공통]\n' + formatSteps(common) + '\n\n';
+            DAY_ORDER.forEach(day => {
+                const info = getEveningInfo(day);
+                text += `[저녁 ${day}요일 — ${info.label}]\n`;
+                text += formatSteps(info.steps || []) + '\n\n';
+            });
+            copyWithFeedback('copyRoutineBtn', text.trim(), '전체 루틴이 클립보드에 복사되었습니다');
+        });
+
         // Copy products list for Claude
         document.getElementById('copyProductsBtn').addEventListener('click', () => {
             if (products.length === 0) { showToast('복사할 제품이 없습니다', 'error'); return; }
@@ -892,18 +931,7 @@
                 });
                 text += '\n';
             }
-            navigator.clipboard.writeText(text.trim()).then(() => {
-                const btn = document.getElementById('copyProductsBtn');
-                btn.classList.add('copied');
-                btn.querySelector('svg').style.display = 'none';
-                const origText = btn.textContent;
-                btn.textContent = '✓ 복사됨';
-                showToast('제품 목록이 클립보드에 복사되었습니다');
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 복사`;
-                }, 1500);
-            });
+            copyWithFeedback('copyProductsBtn', text.trim(), '제품 목록이 클립보드에 복사되었습니다');
         });
 
         // Product modal
