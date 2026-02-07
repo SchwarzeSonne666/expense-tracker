@@ -82,8 +82,8 @@
     function init() {
         if (typeof firebase === 'undefined' || !firebase.auth) return;
 
-        // Session-level persistence (re-auth needed when tab closes)
-        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+        // Local persistence (stays logged in across pages & tabs until browser closes)
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
