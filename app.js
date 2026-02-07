@@ -664,13 +664,15 @@ class ExpenseTracker {
             expenseList.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">—</div>
-          <p class="empty-state-text">아직 등록된 월간 고정지출이 없습니다.<br>왼쪽 폼에서 새로운 지출을 추가해보세요!</p>
+          <p class="empty-state-text">아직 등록된 월간 고정지출이 없습니다.</p>
         </div>
       `;
             return;
         }
 
-        expenseList.innerHTML = this.expenses.map(expense => {
+        const isEdit = this._editMode === true;
+
+        expenseList.innerHTML = this.expenses.map((expense, idx) => {
             const color = this.getCategoryColor(expense.category);
             const escapedName = this.escapeHtml(expense.name);
             const escapedCategory = this.escapeHtml(expense.category);
@@ -679,8 +681,10 @@ class ExpenseTracker {
             const pausedClass = isActive ? '' : ' paused';
             const toggleIcon = isActive ? '●' : '○';
             const toggleTitle = isActive ? '중지' : '활성화';
+            const dragHandle = isEdit ? `<span class="expense-drag-handle" data-drag-idx="${idx}">☰</span>` : '';
             return `
-        <div class="expense-item${pausedClass}" style="border-left-color: ${color}">
+        <div class="expense-item${pausedClass}${isEdit ? ' editing' : ''}" style="border-left-color: ${color}" data-idx="${idx}" draggable="${isEdit}">
+          ${dragHandle}
           <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
           <span class="expense-name">${escapedName}</span>
           <span class="expense-memo-tag">${escapedMemo}</span>
@@ -693,6 +697,65 @@ class ExpenseTracker {
         </div>
       `;
         }).join('');
+
+        if (isEdit) this.setupDragSort();
+    }
+
+    // 편집 모드 토글
+    toggleEditMode() {
+        this._editMode = !this._editMode;
+        const btn = document.getElementById('fixedEditModeBtn');
+        if (btn) {
+            btn.textContent = this._editMode ? '완료' : '편집';
+            btn.classList.toggle('active', this._editMode);
+        }
+        this.renderExpenses();
+    }
+
+    // 드래그 정렬
+    setupDragSort() {
+        const list = document.getElementById('expenseList');
+        if (!list) return;
+        let dragIdx = null;
+
+        list.addEventListener('dragstart', (e) => {
+            const item = e.target.closest('.expense-item');
+            if (!item) return;
+            dragIdx = parseInt(item.dataset.idx);
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        list.addEventListener('dragend', (e) => {
+            const item = e.target.closest('.expense-item');
+            if (item) item.classList.remove('dragging');
+            dragIdx = null;
+            // 모든 over 클래스 제거
+            list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        });
+
+        list.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.expense-item');
+            if (!item) return;
+            // 모든 over 제거 후 현재만 추가
+            list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            item.classList.add('drag-over');
+        });
+
+        list.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.expense-item');
+            if (!item || dragIdx === null) return;
+            const dropIdx = parseInt(item.dataset.idx);
+            if (dragIdx === dropIdx) return;
+
+            // 배열 재정렬
+            const moved = this.expenses.splice(dragIdx, 1)[0];
+            this.expenses.splice(dropIdx, 0, moved);
+            this.saveExpenses();
+            this.renderExpenses();
+        });
     }
 
     // Update statistics
@@ -731,13 +794,25 @@ class ExpenseTracker {
             });
         }
 
+        // Fixed edit mode toggle
+        const editModeBtn = document.getElementById('fixedEditModeBtn');
+        if (editModeBtn) {
+            editModeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleEditMode();
+            });
+        }
+
         // Fixed add modal open/close
         const openModalBtn = document.getElementById('openFixedAddModal');
         const closeModalBtn = document.getElementById('closeFixedAddModal');
         const fixedAddModal = document.getElementById('fixedAddModal');
 
         if (openModalBtn) {
-            openModalBtn.addEventListener('click', () => this.openFixedModal(false));
+            openModalBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openFixedModal(false);
+            });
         }
         if (closeModalBtn) {
             closeModalBtn.addEventListener('click', () => this.closeFixedModal());

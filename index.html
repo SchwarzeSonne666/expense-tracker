@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=63">
+    <link rel="stylesheet" href="styles.css?v=64">
 </head>
 
 <body>
@@ -106,17 +106,19 @@
                         <span class="fixed-toggle-arrow" id="fixedToggleArrow">▼</span>
                         <h2 class="card-title">월간 고정지출</h2>
                     </div>
-                    <div class="total-badge">
-                        <span class="total-badge-label">합계</span>
-                        <span class="total-badge-value" id="totalExpense">₩0</span>
+                    <div class="fixed-header-right">
+                        <button type="button" class="fixed-header-btn" id="openFixedAddModal" title="추가">추가</button>
+                        <button type="button" class="fixed-header-btn edit" id="fixedEditModeBtn" title="편집">편집</button>
+                        <div class="total-badge">
+                            <span class="total-badge-label">합계</span>
+                            <span class="total-badge-value" id="totalExpense">₩0</span>
+                        </div>
                     </div>
                 </div>
                 <div class="fixed-expense-body" id="fixedExpenseBody">
                     <div id="expenseList" class="expense-list">
                         <!-- Expenses will be dynamically inserted here -->
                     </div>
-                    <!-- Add Button -->
-                    <button type="button" class="btn btn-primary fixed-add-open-btn" id="openFixedAddModal">+ 새 고정지출 추가</button>
                 </div>
 
                 <!-- Chart Area (placeholder) -->
@@ -285,7 +287,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=44"></script>
+    <script src="app.js?v=45"></script>
 </body>
 
 </html>
