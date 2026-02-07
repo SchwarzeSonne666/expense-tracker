@@ -1300,22 +1300,21 @@ class DailyLedger {
 
                 // 할부/카드 보조 태그
                 let badgeHtml = '';
-                if (item.installment && item.installment > 1) {
-                    const instLabel = isCardRef ? `${item.installment}개월` : `${item.installmentMonth}/${item.installment}`;
-                    badgeHtml += `<span class="daily-item-installment">${instLabel}</span>`;
-                }
                 if (isCardRef) {
+                    // 당월 참조: 일시불 → [일시불][다음달] / 할부 → [다음달][원금 ₩...]
                     if (item.installment && item.installment > 1) {
-                        badgeHtml += `<span class="daily-item-card-ref-tag">다음달 ${item.installment}개월</span>`;
+                        badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
                         badgeHtml += `<span class="daily-item-ref-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
                     } else {
-                        badgeHtml += '<span class="daily-item-card-ref-tag">다음달 일시불</span>';
+                        badgeHtml += '<span class="daily-item-installment">일시불</span>';
+                        badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
                     }
                 } else if (item.cardDeferred) {
-                    if (!(item.installment && item.installment > 1)) {
-                        badgeHtml += '<span class="daily-item-card-deferred">카드 일시불</span>';
+                    // 다음달 실제 청구: 할부 → [1/5개월] / 일시불 → [카드 일시불]
+                    if (item.installment && item.installment > 1) {
+                        badgeHtml += `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
                     } else {
-                        badgeHtml += '<span class="daily-item-card-deferred">카드</span>';
+                        badgeHtml += '<span class="daily-item-card-deferred">카드 일시불</span>';
                     }
                 }
 
