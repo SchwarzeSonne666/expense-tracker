@@ -1,5 +1,19 @@
 /* ===== Skincare Page Styles ===== */
 
+/* Override body overflow for skincare page (no internal scroll) */
+body.sc-page {
+  overflow: auto;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 2rem;
+}
+
+body.sc-page .container {
+  flex: none;
+  min-height: auto;
+}
+
 /* ── Theme Color Variables ── */
 :root {
   --sc-cleanse: #4299e1;
@@ -13,8 +27,8 @@
 /* Today Summary */
 .sc-today {
   text-align: center;
-  padding: 1.25rem 1rem;
-  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
   animation: fadeInDown 0.5s ease;
 }
 

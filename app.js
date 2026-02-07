@@ -1,3 +1,46 @@
+// ===== Shared Utilities =====
+const Utils = {
+    /** HTML 이스케이프 (XSS 방지) */
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+
+    /** 통화 포맷 (₩1,234) */
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
+    },
+
+    /** 토스트 알림 */
+    showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    },
+
+    /** 06:00 기준 오늘 날짜 반환 */
+    getEffectiveDate() {
+        const now = new Date();
+        if (now.getHours() < 6) return new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        return now;
+    },
+
+    /** 06:00 기준 오늘 일자 (day number) */
+    getEffectiveDay() {
+        return this.getEffectiveDate().getDate();
+    }
+};
+
+// ===== Constants =====
+const CARD_GOALS = { '현대카드': 1000000, '네이버카드': 300000 };
+const CARD_COLORS = { '현대카드': '#4299e1', '네이버카드': '#48bb78' };
+const DAY_BOUNDARY_HOUR = 6;
+
 // ===== Shared Chip Picker Modal =====
 const ChipPicker = {
     _modal: null,
@@ -604,14 +647,7 @@ class ExpenseTracker {
     }
 
     // Show toast notification
-    showToast(message, type = 'info') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+    showToast(message, type = 'info') { Utils.showToast(message, type); }
 
     // Confirm delete with dialog
     confirmDelete(id) {
@@ -620,20 +656,8 @@ class ExpenseTracker {
         this._pendingDeleteId = id;
     }
 
-    // Escape HTML to prevent XSS
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    // Format currency
-    formatCurrency(amount) {
-        return new Intl.NumberFormat('ko-KR', {
-            style: 'currency',
-            currency: 'KRW'
-        }).format(amount);
-    }
+    escapeHtml(str) { return Utils.escapeHtml(str); }
+    formatCurrency(amount) { return Utils.formatCurrency(amount); }
 
     // Get category color
     getCategoryColor(category) {
@@ -1220,16 +1244,7 @@ class DailyLedger {
         if (label) label.textContent = `${this.year}년 ${this.month}월`;
     }
 
-    getEffectiveDay() {
-        const now = new Date();
-        let day = now.getDate();
-        if (now.getHours() < 6) {
-            const yesterday = new Date(now);
-            yesterday.setDate(yesterday.getDate() - 1);
-            day = yesterday.getDate();
-        }
-        return day;
-    }
+    getEffectiveDay() { return Utils.getEffectiveDay(); }
 
     setDefaultDay() {
         this.selectedDay = this.getEffectiveDay();
@@ -1424,20 +1439,8 @@ class DailyLedger {
         return days[date.getDay()];
     }
 
-    // Format currency
-    formatCurrency(amount) {
-        return new Intl.NumberFormat('ko-KR', {
-            style: 'currency',
-            currency: 'KRW'
-        }).format(amount);
-    }
-
-    // Escape HTML
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
+    formatCurrency(amount) { return Utils.formatCurrency(amount); }
+    escapeHtml(str) { return Utils.escapeHtml(str); }
 
     render() {
         const listEl = document.getElementById('dailyList');
@@ -1575,13 +1578,8 @@ class DailyLedger {
         listEl.innerHTML = html;
     }
 
-    // 카드 실적 목표 (카드명: 목표금액)
-    getCardGoals() {
-        return {
-            '현대카드': 1000000,
-            '네이버카드': 300000
-        };
-    }
+    /** 카드 실적 목표 반환 — 상수 CARD_GOALS 참조 */
+    getCardGoals() { return CARD_GOALS; }
 
     renderCardUsage() {
         const section = document.getElementById('cardUsageSection');
@@ -1628,7 +1626,7 @@ class DailyLedger {
         }
 
         section.style.display = 'block';
-        const cardColors = { '현대카드': '#4299e1', '네이버카드': '#48bb78' };
+        const cardColors = CARD_COLORS;
         const defaultColors = ['#f6ad55', '#ed64a6', '#667eea', '#38b2ac'];
         let colorIdx = 0;
 

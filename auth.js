@@ -34,7 +34,16 @@
                         color:#fff;font-size:1.1rem;font-family:inherit;
                         text-align:center;letter-spacing:0.3em;
                         outline:none;transition:border-color 0.2s;
+                        -webkit-appearance:none;
                     ">
+                    <button id="authSubmitBtn" type="button" style="
+                        width:100%;margin-top:0.75rem;padding:0.7rem 1rem;
+                        background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border:none;border-radius:0.5rem;
+                        color:#fff;font-size:0.9rem;font-weight:700;
+                        font-family:inherit;cursor:pointer;
+                        transition:opacity 0.2s;
+                    ">로그인</button>
                     <div id="authError" style="
                         margin-top:0.75rem;font-size:0.72rem;
                         color:#f56565;opacity:0;transition:opacity 0.2s;
@@ -45,33 +54,60 @@
         document.body.appendChild(overlay);
     }
 
+    async function attemptLogin() {
+        const input = document.getElementById('authInput');
+        const error = document.getElementById('authError');
+        const btn = document.getElementById('authSubmitBtn');
+        const pw = input.value;
+        if (!pw) return;
+
+        // Disable while authenticating
+        input.disabled = true;
+        btn.disabled = true;
+        input.style.opacity = '0.5';
+        btn.style.opacity = '0.5';
+
+        try {
+            await firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, pw);
+            // Success — onAuthStateChanged will remove overlay
+        } catch (err) {
+            error.style.opacity = '1';
+            input.value = '';
+            input.disabled = false;
+            btn.disabled = false;
+            input.style.opacity = '1';
+            btn.style.opacity = '1';
+            input.style.borderColor = '#f56565';
+            setTimeout(() => { input.style.borderColor = 'rgba(255,255,255,0.12)'; }, 800);
+            input.focus();
+        }
+    }
+
     function attachEvents() {
         const input = document.getElementById('authInput');
         const error = document.getElementById('authError');
+        const btn = document.getElementById('authSubmitBtn');
         if (!input) return;
 
         input.focus();
 
-        input.addEventListener('keydown', async (e) => {
+        // Enter key (desktop + mobile)
+        input.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter') { error.style.opacity = '0'; return; }
-            const pw = input.value;
-            if (!pw) return;
+            e.preventDefault();
+            attemptLogin();
+        });
 
-            // Disable input while authenticating
-            input.disabled = true;
-            input.style.opacity = '0.5';
+        // Button click (mobile primary)
+        btn.addEventListener('click', () => {
+            attemptLogin();
+        });
 
-            try {
-                await firebase.auth().signInWithEmailAndPassword(AUTH_EMAIL, pw);
-                // Success — onAuthStateChanged will remove overlay
-            } catch (err) {
-                error.style.opacity = '1';
-                input.value = '';
-                input.disabled = false;
-                input.style.opacity = '1';
-                input.style.borderColor = '#f56565';
-                setTimeout(() => { input.style.borderColor = 'rgba(255,255,255,0.12)'; }, 800);
-                input.focus();
+        // Also handle 'Go' button on mobile keyboards via form submit simulation
+        input.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                attemptLogin();
             }
         });
 
