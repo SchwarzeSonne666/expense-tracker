@@ -1292,38 +1292,35 @@ class DailyLedger {
                 const typeClass = isIncome ? 'income' : 'expense';
                 const cardRefClass = isCardRef ? ' card-ref' : '';
                 const escapedName = this.escapeHtml(item.name);
+                const catColor = (item.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(item.category) : '';
+                const categoryHtml = item.category
+                    ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(item.category)}</span>`
+                    : '<span class="daily-item-category empty"></span>';
+                const methodHtml = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
 
-                let categoryTag = '';
-                if (item.category) {
-                    const catColor = (typeof tracker !== 'undefined') ? tracker.getCategoryColor(item.category) : '#667eea';
-                    categoryTag = `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(item.category)}</span>`;
-                }
-
-                const methodTag = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
-
-                let installmentTag = '';
-                let installmentDetail = '';
+                // 할부/카드 보조 태그
+                let badgeHtml = '';
                 if (item.installment && item.installment > 1) {
-                    if (isCardRef) {
-                        installmentTag = `<span class="daily-item-installment">${item.installment}개월</span>`;
-                    } else {
-                        installmentTag = `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
-                    }
-                    installmentDetail = `<span class="daily-item-installment-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
+                    const instLabel = isCardRef ? `${item.installment}개월` : `${item.installmentMonth}/${item.installment}`;
+                    badgeHtml += `<span class="daily-item-installment">${instLabel}</span>`;
                 }
-
-                const cardTag = isCardRef
-                    ? '<span class="daily-item-card-ref-tag">다음달 청구</span>'
-                    : (item.cardDeferred ? '<span class="daily-item-card-deferred">카드결제</span>' : '');
+                if (isCardRef) {
+                    badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
+                } else if (item.cardDeferred) {
+                    badgeHtml += '<span class="daily-item-card-deferred">카드</span>';
+                }
 
                 html += `
                     <div class="daily-item${cardRefClass}">
+                        ${categoryHtml}
                         <span class="daily-item-name">${escapedName}</span>
+                        ${methodHtml}
+                        ${badgeHtml}
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
-                        <div class="daily-item-tags">
-                            ${categoryTag}${methodTag}${installmentTag}${installmentDetail}${cardTag}
+                        <div class="daily-item-actions">
+                            <button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button>
+                            <button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
                         </div>
-                        <button class="daily-item-delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
                     </div>`;
             }
 
@@ -1436,12 +1433,17 @@ class DailyLedger {
             }
         });
 
-        // Delete items (event delegation)
+        // Edit & Delete items (event delegation)
         const listEl = document.getElementById('dailyList');
         if (listEl) {
             listEl.addEventListener('click', (e) => {
-                const deleteBtn = e.target.closest('.daily-item-delete');
-                if (deleteBtn) {
+                const editBtn = e.target.closest('[data-edit-day]');
+                const deleteBtn = e.target.closest('[data-day][data-id]:not([data-edit-day])');
+                if (editBtn) {
+                    const day = editBtn.dataset.editDay;
+                    const id = editBtn.dataset.editId;
+                    this.startEdit(day, id);
+                } else if (deleteBtn) {
                     const day = deleteBtn.dataset.day;
                     const id = deleteBtn.dataset.id;
                     this.deleteItem(parseInt(day), id);
@@ -1599,6 +1601,69 @@ class DailyLedger {
         });
     }
 
+    startEdit(dd, itemId) {
+        const dayItems = this.items[dd];
+        if (!dayItems || !dayItems[itemId]) return;
+        const item = dayItems[itemId];
+
+        // cardRef 항목은 편집 불가
+        if (item.cardRef) return;
+
+        this._editingDay = dd;
+        this._editingId = itemId;
+
+        const nameInput = document.getElementById('dailyName');
+        const categoryInput = document.getElementById('dailyCategory');
+        const amountInput = document.getElementById('dailyAmount');
+        const methodInput = document.getElementById('dailyMethod');
+        const addBtn = document.getElementById('addDailyBtn');
+
+        // 타입 전환
+        const typeBtns = document.querySelectorAll('.daily-type-btn');
+        typeBtns.forEach(b => {
+            b.classList.toggle('active', b.dataset.type === item.type);
+        });
+        this.currentType = item.type;
+        this.toggleMethodInstallment(item.type);
+
+        // 날짜
+        this.selectedDay = parseInt(dd);
+        this.updateDayButton();
+
+        // 값 채우기
+        nameInput.value = item.name || '';
+        if (categoryInput) categoryInput.value = item.category || '';
+        amountInput.value = String(parseInt(item.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        if (methodInput) methodInput.value = item.method || '';
+
+        // 버튼 텍스트 변경
+        addBtn.textContent = '수정';
+        addBtn.classList.add('editing');
+
+        nameInput.focus();
+    }
+
+    cancelEdit() {
+        this._editingDay = null;
+        this._editingId = null;
+
+        const nameInput = document.getElementById('dailyName');
+        const categoryInput = document.getElementById('dailyCategory');
+        const amountInput = document.getElementById('dailyAmount');
+        const methodInput = document.getElementById('dailyMethod');
+        const addBtn = document.getElementById('addDailyBtn');
+        const installmentBtn = document.getElementById('dailyInstallmentBtn');
+
+        nameInput.value = '';
+        if (categoryInput) categoryInput.value = '';
+        amountInput.value = '';
+        if (methodInput) methodInput.value = '';
+        this.selectedInstallment = 1;
+        if (installmentBtn) installmentBtn.textContent = '일시불';
+        addBtn.textContent = '+ 추가';
+        addBtn.classList.remove('editing');
+    }
+
     handleAdd() {
         const nameInput = document.getElementById('dailyName');
         const categoryInput = document.getElementById('dailyCategory');
@@ -1626,15 +1691,40 @@ class DailyLedger {
             return;
         }
 
-        this.addItem(this.currentType, day, name, category, amount, method, installment);
+        if (this._editingDay && this._editingId) {
+            // 수정 모드: 기존 항목 업데이트
+            const dd = this._editingDay;
+            const id = this._editingId;
+            const updateData = {
+                type: this.currentType,
+                name: name,
+                amount: amount
+            };
+            if (category) updateData.category = category;
+            if (method) updateData.method = method;
+            // createdAt 유지
+            const existing = this.items[dd] && this.items[dd][id];
+            if (existing && existing.createdAt) updateData.createdAt = existing.createdAt;
 
-        // Clear name, category, amount, method, reset installment — keep day
+            const mm = String(this.month).padStart(2, '0');
+            window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).set(updateData);
+            this.cancelEdit();
+            if (typeof tracker !== 'undefined') tracker.showToast('항목이 수정되었습니다.', 'success');
+        } else {
+            // 추가 모드
+            this.addItem(this.currentType, day, name, category, amount, method, installment);
+        }
+
+        // Clear
         nameInput.value = '';
         if (categoryInput) categoryInput.value = '';
         amountInput.value = '';
         if (methodInput) methodInput.value = '';
         this.selectedInstallment = 1;
         if (installmentBtn) installmentBtn.textContent = '일시불';
+        const addBtn = document.getElementById('addDailyBtn');
+        addBtn.textContent = '+ 추가';
+        addBtn.classList.remove('editing');
         nameInput.focus();
     }
 }
