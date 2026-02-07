@@ -26,7 +26,7 @@ const Utils = {
     /** 06:00 기준 오늘 날짜 반환 */
     getEffectiveDate() {
         const now = new Date();
-        if (now.getHours() < 6) return new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        if (now.getHours() < DAY_BOUNDARY_HOUR) return new Date(now.getTime() - DAY_BOUNDARY_HOUR * 60 * 60 * 1000);
         return now;
     },
 

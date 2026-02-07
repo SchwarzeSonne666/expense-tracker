@@ -119,6 +119,13 @@
     let spotCare = [];
     let currentTime = 'morning';
 
+    // HTML 이스케이프 (XSS 방지)
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     // Deep copy helper
     function deepCopy(obj) {
         return JSON.parse(JSON.stringify(obj));
@@ -252,7 +259,7 @@
         const day = getTodayDayKo();
         document.getElementById('todayDay').textContent = getDayFullName(day);
         const info = getEveningInfo(day);
-        document.getElementById('todayActive').innerHTML = `오늘 저녁: <span class="sc-active-tag ${info.tagClass}">${info.label}</span>`;
+        document.getElementById('todayActive').innerHTML = `오늘 저녁: <span class="sc-active-tag ${escapeHtml(info.tagClass)}">${escapeHtml(info.label)}</span>`;
     }
 
     function renderRoutine(time) {
@@ -274,9 +281,9 @@
         steps.forEach((s, i) => {
             html += `<div class="sc-step" style="animation-delay:${i * 0.04}s">`;
             html += `<div class="sc-step-num">${i + 1}</div>`;
-            html += `<div class="sc-step-body"><div class="sc-step-product">${s.product}</div><div class="sc-step-usage">${s.usage}</div></div>`;
-            html += `<span class="sc-step-badge ${s.badgeClass}">${s.badge}</span></div>`;
-            if (s.wait) html += `<div class="sc-step-note" style="animation-delay:${i * 0.04}s">⏱ ${s.wait}</div>`;
+            html += `<div class="sc-step-body"><div class="sc-step-product">${escapeHtml(s.product)}</div><div class="sc-step-usage">${escapeHtml(s.usage)}</div></div>`;
+            html += `<span class="sc-step-badge ${escapeHtml(s.badgeClass)}">${escapeHtml(s.badge)}</span></div>`;
+            if (s.wait) html += `<div class="sc-step-note" style="animation-delay:${i * 0.04}s">⏱ ${escapeHtml(s.wait)}</div>`;
         });
 
         container.innerHTML = html;
@@ -307,9 +314,9 @@
             const info = getEveningInfo(day);
             const isToday = orderIdx[i] === todayIdx;
             return `<div class="sc-cal-day${isToday ? ' today' : ''}">
-                <div class="sc-cal-label">${day}</div>
+                <div class="sc-cal-label">${escapeHtml(day)}</div>
                 <div class="sc-cal-am">${amText}</div>
-                <div class="sc-cal-pm ${info.tagClass}">${info.label}</div>
+                <div class="sc-cal-pm ${escapeHtml(info.tagClass)}">${escapeHtml(info.label)}</div>
             </div>`;
         }).join('');
     }
@@ -321,15 +328,16 @@
         container.innerHTML = items.map(s => {
             const stepsArr = s.steps || (s.product ? s.product.split(/\s*[\u2192→+]\s*/).map(p => p.replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d]+\.?\s*/, '').trim()).filter(Boolean) : []);
             const stepsHtml = stepsArr.map((p, i) => {
-                if (stepsArr.length > 1) return `<div>① ${i === 0 ? '' : ''}${p}</div>`.replace('①', `${String.fromCodePoint(0x2460 + i)}`);
-                return `<div>${p}</div>`;
+                const ep = escapeHtml(p);
+                if (stepsArr.length > 1) return `<div>${String.fromCodePoint(0x2460 + i)} ${ep}</div>`;
+                return `<div>${ep}</div>`;
             }).join('');
             return `
             <div class="sc-spot-card">
-                <div class="sc-spot-icon">${s.icon}</div>
-                <div class="sc-spot-label">${s.label}</div>
+                <div class="sc-spot-icon">${escapeHtml(s.icon)}</div>
+                <div class="sc-spot-label">${escapeHtml(s.label)}</div>
                 <div class="sc-spot-product">${stepsHtml}</div>
-                <div class="sc-spot-how">${s.how}</div>
+                <div class="sc-spot-how">${escapeHtml(s.how)}</div>
             </div>`;
         }).join('');
     }
@@ -357,8 +365,8 @@
             html += `</div>`;
             items.forEach(p => {
                 html += `<div class="sc-product-item">`;
-                html += `<div class="sc-product-info"><span class="sc-product-name">${p.name}</span><span class="sc-product-role">${p.role}</span></div>`;
-                html += `<span class="sc-product-when">${p.when}</span>`;
+                html += `<div class="sc-product-info"><span class="sc-product-name">${escapeHtml(p.name)}</span><span class="sc-product-role">${escapeHtml(p.role)}</span></div>`;
+                html += `<span class="sc-product-when">${escapeHtml(p.when)}</span>`;
                 html += `</div>`;
             });
             html += `</div>`;
