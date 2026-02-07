@@ -844,6 +844,7 @@ class DailyLedger {
         this.attachEvents();
         this.updateMonthLabel();
         this.setDefaultDay();
+        this.setupDayPicker();
     }
 
     initFirebase() {
@@ -881,19 +882,73 @@ class DailyLedger {
         if (label) label.textContent = `${this.year}년 ${this.month}월`;
     }
 
-    setDefaultDay() {
-        const dayInput = document.getElementById('dailyDay');
-        if (dayInput) {
-            const now = new Date();
-            // Use effective date (06:00 boundary)
-            let day = now.getDate();
-            if (now.getHours() < 6) {
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                day = yesterday.getDate();
-            }
-            dayInput.value = day;
+    getEffectiveDay() {
+        const now = new Date();
+        let day = now.getDate();
+        if (now.getHours() < 6) {
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            day = yesterday.getDate();
         }
+        return day;
+    }
+
+    setDefaultDay() {
+        this.selectedDay = this.getEffectiveDay();
+        this.updateDayButton();
+    }
+
+    updateDayButton() {
+        const btn = document.getElementById('dailyDayBtn');
+        if (btn) btn.textContent = `${this.selectedDay}일`;
+    }
+
+    getDaysInMonth() {
+        return new Date(this.year, this.month, 0).getDate();
+    }
+
+    renderDayGrid() {
+        const grid = document.getElementById('dailyDayGridInner');
+        if (!grid) return;
+
+        const daysInMonth = this.getDaysInMonth();
+        const today = this.getEffectiveDay();
+
+        let html = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const selectedClass = d === this.selectedDay ? ' selected' : '';
+            const todayClass = d === today ? ' today' : '';
+            html += `<button type="button" class="daily-day-cell${selectedClass}${todayClass}" data-day="${d}">${d}</button>`;
+        }
+        grid.innerHTML = html;
+    }
+
+    setupDayPicker() {
+        const btn = document.getElementById('dailyDayBtn');
+        const grid = document.getElementById('dailyDayGrid');
+        const gridInner = document.getElementById('dailyDayGridInner');
+        if (!btn || !grid || !gridInner) return;
+
+        btn.addEventListener('click', () => {
+            this.renderDayGrid();
+            grid.classList.toggle('show');
+        });
+
+        gridInner.addEventListener('click', (e) => {
+            const cell = e.target.closest('.daily-day-cell');
+            if (cell) {
+                this.selectedDay = parseInt(cell.dataset.day);
+                this.updateDayButton();
+                grid.classList.remove('show');
+            }
+        });
+
+        // Close on outside click
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.daily-day-wrapper')) {
+                grid.classList.remove('show');
+            }
+        });
     }
 
     changeMonth(delta) {
@@ -906,6 +961,12 @@ class DailyLedger {
             this.year--;
         }
         this.updateMonthLabel();
+        // Clamp selectedDay to new month's max days
+        const maxDays = this.getDaysInMonth();
+        if (this.selectedDay > maxDays) {
+            this.selectedDay = maxDays;
+            this.updateDayButton();
+        }
         if (this.firebaseReady) {
             this.loadMonth();
         }
@@ -1068,7 +1129,6 @@ class DailyLedger {
 
         // Enter key on inputs
         const inputs = [
-            document.getElementById('dailyDay'),
             document.getElementById('dailyName'),
             document.getElementById('dailyAmount'),
             document.getElementById('dailyMethod')
@@ -1154,18 +1214,16 @@ class DailyLedger {
     }
 
     handleAdd() {
-        const dayInput = document.getElementById('dailyDay');
         const nameInput = document.getElementById('dailyName');
         const amountInput = document.getElementById('dailyAmount');
         const methodInput = document.getElementById('dailyMethod');
 
-        const day = parseInt(dayInput.value);
+        const day = this.selectedDay;
         const name = nameInput.value.trim();
         const amount = parseFloat(amountInput.value);
         const method = methodInput ? methodInput.value.trim() : '';
 
         if (!day || day < 1 || day > 31) {
-            dayInput.focus();
             return;
         }
         if (!name) {
