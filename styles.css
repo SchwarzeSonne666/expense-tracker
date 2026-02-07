@@ -314,7 +314,6 @@ h1 {
 .daily-summary-row.carryover .daily-summary-value { color: var(--text-muted); }
 .daily-summary-row.income .daily-summary-value { color: var(--success); }
 .daily-summary-row.fixed .daily-summary-value { color: var(--warning); }
-.daily-summary-row.card-deferred .daily-summary-value { color: #ed64a6; }
 .daily-summary-row.expense .daily-summary-value { color: var(--danger); }
 .daily-summary-row.balance .daily-summary-value { color: var(--accent-primary); }
 
@@ -429,6 +428,93 @@ h1 {
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* Card Usage Section */
+.card-usage-section {
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(237, 100, 166, 0.15);
+  border-radius: var(--radius-sm);
+  background: rgba(237, 100, 166, 0.03);
+  padding: 0.4rem;
+}
+
+.card-usage-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ed64a6;
+  margin-bottom: 0.3rem;
+}
+
+.card-usage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.card-usage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.card-usage-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-usage-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.card-usage-amounts {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.card-usage-used {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.card-usage-sep {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+.card-usage-goal {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.card-usage-bar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.card-usage-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  opacity: 0.8;
+}
+
+.card-usage-bar-fill.achieved {
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(72, 187, 120, 0.4);
+  background: var(--success) !important;
+}
+
+.card-usage-pct {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: right;
 }
 
 /* Daily List */

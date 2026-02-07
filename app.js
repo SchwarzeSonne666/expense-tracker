@@ -1208,6 +1208,7 @@ class DailyLedger {
             this.items = data || {};
             this.render();
             this.renderInstallments();
+            this.renderCardUsage();
             this.updateSummary();
         }, (error) => {
             console.error('DailyLedger Firebase error:', error);
@@ -1574,6 +1575,100 @@ class DailyLedger {
         listEl.innerHTML = html;
     }
 
+    // 카드 실적 목표 (카드명: 목표금액)
+    getCardGoals() {
+        return {
+            '현대카드': 1000000,
+            '네이버카드': 300000
+        };
+    }
+
+    renderCardUsage() {
+        const section = document.getElementById('cardUsageSection');
+        const listEl = document.getElementById('cardUsageList');
+        if (!section || !listEl) return;
+
+        // 카드별 사용액 집계 (cardDeferred 항목 — 실제 청구 기준)
+        const cardTotals = {};
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (!item || item.cardRef) continue;
+                if (item.cardDeferred && item.method) {
+                    const card = item.method;
+                    cardTotals[card] = (cardTotals[card] || 0) + (item.amount || 0);
+                }
+            }
+        }
+
+        // cardRef 항목도 집계 (당월 사용 기준 — 다음달 청구될 금액)
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (!item || !item.cardRef) continue;
+                if (item.method) {
+                    const card = item.method;
+                    const amt = (item.installmentTotal && item.installment > 1) ? item.installmentTotal : (item.amount || 0);
+                    cardTotals[card] = (cardTotals[card] || 0) + amt;
+                }
+            }
+        }
+
+        const goals = this.getCardGoals();
+        // 목표가 있는 카드 + 사용액이 있는 카드 모두 표시
+        const allCards = new Set([...Object.keys(goals), ...Object.keys(cardTotals)]);
+
+        if (allCards.size === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        const colors = ['#ed64a6', '#667eea', '#38b2ac', '#f6ad55', '#4299e1'];
+        let colorIdx = 0;
+
+        let html = '';
+        for (const card of allCards) {
+            const used = cardTotals[card] || 0;
+            const goal = goals[card] || 0;
+            const color = colors[colorIdx % colors.length];
+            colorIdx++;
+
+            if (goal > 0) {
+                const pct = Math.min(Math.round((used / goal) * 100), 100);
+                const achieved = pct >= 100;
+                html += `
+                    <div class="card-usage-item">
+                        <div class="card-usage-top">
+                            <span class="card-usage-name" style="color:${color}">${this.escapeHtml(card)}</span>
+                            <span class="card-usage-amounts">
+                                <span class="card-usage-used">${this.formatCurrency(used)}</span>
+                                <span class="card-usage-sep">/</span>
+                                <span class="card-usage-goal">${this.formatCurrency(goal)}</span>
+                            </span>
+                        </div>
+                        <div class="card-usage-bar">
+                            <div class="card-usage-bar-fill${achieved ? ' achieved' : ''}" style="width:${pct}%;background:${color}"></div>
+                        </div>
+                        <div class="card-usage-pct" style="color:${achieved ? '#48bb78' : color}">${pct}%${achieved ? ' 달성' : ''}</div>
+                    </div>`;
+            } else {
+                html += `
+                    <div class="card-usage-item">
+                        <div class="card-usage-top">
+                            <span class="card-usage-name" style="color:${color}">${this.escapeHtml(card)}</span>
+                            <span class="card-usage-used">${this.formatCurrency(used)}</span>
+                        </div>
+                    </div>`;
+            }
+        }
+        listEl.innerHTML = html;
+    }
+
     getFixedTotal() {
         try {
             return (typeof tracker !== 'undefined' && tracker.expenses)
@@ -1749,7 +1844,6 @@ class DailyLedger {
         let totalIncome = 0;
         let totalExpense = 0;
         let fixedTotal = 0;
-        let cardDeferredTotal = 0;
 
         for (const dd of Object.keys(this.items)) {
             const dayItems = this.items[dd];
@@ -1764,10 +1858,6 @@ class DailyLedger {
                     totalIncome += (item.amount || 0);
                 } else {
                     totalExpense += (item.amount || 0);
-                    // 카드 이월 결제 합산 (cardDeferred 일시불)
-                    if (item.cardDeferred && !(item.installment && item.installment > 1)) {
-                        cardDeferredTotal += (item.amount || 0);
-                    }
                 }
             }
         }
@@ -1778,14 +1868,12 @@ class DailyLedger {
         const carryoverEl = document.getElementById('dailyCarryover');
         const incomeEl = document.getElementById('dailyIncome');
         const fixedEl = document.getElementById('dailyFixed');
-        const cardDeferredEl = document.getElementById('dailyCardDeferred');
         const expenseEl = document.getElementById('dailyExpense');
         const balanceEl = document.getElementById('dailyBalance');
 
         if (carryoverEl) carryoverEl.textContent = this.formatCurrency(carryover);
         if (incomeEl) incomeEl.textContent = this.formatCurrency(totalIncome);
         if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
-        if (cardDeferredEl) cardDeferredEl.textContent = this.formatCurrency(cardDeferredTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
         if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
 
