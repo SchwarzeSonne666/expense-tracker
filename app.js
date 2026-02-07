@@ -521,7 +521,7 @@ class ExpenseTracker {
         } catch (_) {}
     }
 
-    // Setup custom dropdown behavior
+    // Setup custom dropdown behavior (chip grid style)
     setupCustomDropdown(input, listEl, getItems) {
         const showFiltered = () => {
             const val = input.value.toLowerCase();
@@ -533,7 +533,7 @@ class ExpenseTracker {
             } else {
                 listEl.innerHTML = filtered.map(item => {
                     const escaped = this.escapeHtml(item);
-                    return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
                 }).join('');
             }
             listEl.classList.add('show');
@@ -543,41 +543,12 @@ class ExpenseTracker {
         input.addEventListener('input', showFiltered);
 
         listEl.addEventListener('mousedown', (e) => {
-            e.preventDefault(); // Prevent blur before click registers
-            const item = e.target.closest('.dropdown-item');
+            e.preventDefault();
+            const item = e.target.closest('.chip-item');
             if (item) {
                 input.value = item.dataset.value;
                 listEl.classList.remove('show');
                 input.dispatchEvent(new Event('change'));
-            }
-        });
-
-        // Keyboard navigation
-        input.addEventListener('keydown', (e) => {
-            const visibleItems = listEl.querySelectorAll('.dropdown-item');
-            const activeItem = listEl.querySelector('.dropdown-item.active');
-            let index = Array.from(visibleItems).indexOf(activeItem);
-
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (index < visibleItems.length - 1) index++;
-                else index = 0;
-                visibleItems.forEach(el => el.classList.remove('active'));
-                visibleItems[index]?.classList.add('active');
-                visibleItems[index]?.scrollIntoView({ block: 'nearest' });
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (index > 0) index--;
-                else index = visibleItems.length - 1;
-                visibleItems.forEach(el => el.classList.remove('active'));
-                visibleItems[index]?.classList.add('active');
-                visibleItems[index]?.scrollIntoView({ block: 'nearest' });
-            } else if (e.key === 'Enter' && activeItem) {
-                e.preventDefault();
-                input.value = activeItem.dataset.value;
-                listEl.classList.remove('show');
-            } else if (e.key === 'Escape') {
-                listEl.classList.remove('show');
             }
         });
 
