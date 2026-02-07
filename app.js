@@ -1038,7 +1038,6 @@ class DailyLedger {
             const data = snapshot.val();
             this.items = data || {};
             this.render();
-            this.renderFixedItems();
             this.renderInstallments();
             this.updateSummary();
         }, (error) => {
@@ -1358,33 +1357,6 @@ class DailyLedger {
         }
 
         listEl.innerHTML = html || '<div class="daily-empty">이번 달 기록이 없습니다</div>';
-    }
-
-    renderFixedItems() {
-        const section = document.getElementById('fixedStatusSection');
-        const listEl = document.getElementById('fixedStatusList');
-        if (!section || !listEl) return;
-
-        const fixedItems = [];
-        for (const dd of Object.keys(this.items)) {
-            const dayItems = this.items[dd];
-            if (!dayItems || typeof dayItems !== 'object') continue;
-            for (const itemId of Object.keys(dayItems)) {
-                const item = dayItems[itemId];
-                if (item && item.fixedExpense) {
-                    fixedItems.push({ dd, itemId, ...item });
-                }
-            }
-        }
-
-        if (fixedItems.length === 0) {
-            section.style.display = 'none';
-            return;
-        }
-
-        section.style.display = 'block';
-        const total = fixedItems.reduce((s, i) => s + (i.amount || 0), 0);
-        listEl.innerHTML = `<span class="fixed-status-total-amount">${this.formatCurrency(total)}</span>`;
     }
 
     renderInstallments() {
