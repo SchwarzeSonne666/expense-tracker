@@ -1444,6 +1444,12 @@ class DailyLedger {
         window.db.ref(`balances/${this.year}/${mm}`).set(balance);
     }
 
+    // 현재 보고 있는 월이 실제 오늘의 월인지 확인
+    isCurrentMonth() {
+        const now = new Date();
+        return this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
+    }
+
     updateSummary() {
         let totalIncome = 0;
         let totalExpense = 0;
@@ -1463,7 +1469,8 @@ class DailyLedger {
             }
         }
 
-        const fixedTotal = this.getFixedTotal();
+        // 고정지출은 현재 달에만 적용
+        const fixedTotal = this.isCurrentMonth() ? this.getFixedTotal() : 0;
         const carryover = this._carryover || 0;
         const balance = carryover + totalIncome - totalExpense - fixedTotal;
 
@@ -1479,8 +1486,10 @@ class DailyLedger {
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
         if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
 
-        // 현재 월 잔액 저장 (다음달 이월용)
-        this.saveBalance(balance);
+        // 현재 달에서만 잔액 저장 (과거/미래 달 조회 시 덮어쓰기 방지)
+        if (this.isCurrentMonth()) {
+            this.saveBalance(balance);
+        }
     }
 
     attachEvents() {
