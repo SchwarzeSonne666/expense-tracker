@@ -308,6 +308,7 @@ class ExpenseTracker {
             amount: parseFloat(amount),
             category: category.trim(),
             memo: memo.trim(),
+            active: true,
             createdAt: new Date().toISOString()
         };
 
@@ -323,6 +324,17 @@ class ExpenseTracker {
         this.saveExpenses();
         this.renderExpenses();
         this.updateStats();
+    }
+
+    // Toggle expense active/paused
+    toggleExpense(id) {
+        const expense = this.expenses.find(e => e.id === id);
+        if (expense) {
+            expense.active = expense.active === false ? true : false;
+            this.saveExpenses();
+            this.renderExpenses();
+            this.updateStats();
+        }
     }
 
     // Update expense
@@ -379,9 +391,11 @@ class ExpenseTracker {
         document.getElementById('editBanner').style.display = 'none';
     }
 
-    // Get total expense amount
+    // Get total expense amount (active only)
     getTotalAmount() {
-        return this.expenses.reduce((total, expense) => total + expense.amount, 0);
+        return this.expenses
+            .filter(e => e.active !== false)
+            .reduce((total, expense) => total + expense.amount, 0);
     }
 
     // Get unique categories count
@@ -462,8 +476,12 @@ class ExpenseTracker {
             const escapedName = this.escapeHtml(expense.name);
             const escapedCategory = this.escapeHtml(expense.category);
             const escapedMemo = expense.memo ? ` · ${this.escapeHtml(expense.memo)}` : '';
+            const isActive = expense.active !== false;
+            const pausedClass = isActive ? '' : ' paused';
+            const toggleIcon = isActive ? '●' : '○';
+            const toggleTitle = isActive ? '중지' : '활성화';
             return `
-        <div class="expense-item" style="border-left-color: ${color}">
+        <div class="expense-item${pausedClass}" style="border-left-color: ${color}">
           <div class="expense-info">
             <div class="expense-name">${escapedName}</div>
             <div class="expense-meta">
@@ -473,6 +491,9 @@ class ExpenseTracker {
           </div>
           <div class="expense-amount">${this.formatCurrency(expense.amount)}</div>
           <div class="expense-actions">
+            <button class="btn-icon toggle ${isActive ? 'active' : ''}" data-toggle-id="${expense.id}" title="${toggleTitle}">
+              ${toggleIcon}
+            </button>
             <button class="btn-icon edit" data-edit-id="${expense.id}" title="수정">
               ✎
             </button>
@@ -788,12 +809,15 @@ class ExpenseTracker {
             }
         });
 
-        // Event delegation for expense edit/delete buttons
+        // Event delegation for expense toggle/edit/delete buttons
         const expenseList = document.getElementById('expenseList');
         expenseList.addEventListener('click', (e) => {
+            const toggleBtn = e.target.closest('[data-toggle-id]');
             const editBtn = e.target.closest('[data-edit-id]');
             const deleteBtn = e.target.closest('[data-delete-id]');
-            if (editBtn) {
+            if (toggleBtn) {
+                this.toggleExpense(parseInt(toggleBtn.dataset.toggleId));
+            } else if (editBtn) {
                 this.editExpense(parseInt(editBtn.dataset.editId));
             } else if (deleteBtn) {
                 this.confirmDelete(parseInt(deleteBtn.dataset.deleteId));
@@ -976,7 +1000,7 @@ class DailyLedger {
     getFixedTotal() {
         try {
             return (typeof tracker !== 'undefined' && tracker.expenses)
-                ? tracker.expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
+                ? tracker.expenses.filter(e => e.active !== false).reduce((sum, e) => sum + (e.amount || 0), 0)
                 : 0;
         } catch (_) { return 0; }
     }

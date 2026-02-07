@@ -705,6 +705,33 @@ input::placeholder {
   background: rgba(102, 126, 234, 0.1);
 }
 
+.btn-icon.toggle {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.btn-icon.toggle.active {
+  color: var(--accent-primary);
+}
+
+.btn-icon.toggle:hover {
+  color: var(--accent-primary);
+  background: rgba(102, 126, 234, 0.1);
+}
+
+/* Paused (inactive) expense item */
+.expense-item.paused {
+  opacity: 0.4;
+}
+
+.expense-item.paused .expense-amount {
+  text-decoration: line-through;
+}
+
+.expense-item.paused .btn-icon.toggle {
+  opacity: 1;
+}
+
 .btn-icon.delete:disabled {
   opacity: 0.3;
   cursor: not-allowed;
