@@ -909,6 +909,7 @@ class ExpenseTracker {
             fixedToggle.addEventListener('click', () => {
                 const collapsed = fixedBody.classList.toggle('collapsed');
                 fixedArrow.textContent = collapsed ? '▶' : '▼';
+                if (typeof dailyLedger !== 'undefined') dailyLedger.renderChart();
             });
         }
 
@@ -1234,6 +1235,7 @@ class DailyLedger {
             this.renderInstallments();
             this.renderCardUsage();
             this.updateSummary();
+            this.renderChart();
         }, (error) => {
             console.error('DailyLedger Firebase error:', error);
         });
@@ -1675,6 +1677,194 @@ class DailyLedger {
             }
         }
         listEl.innerHTML = html;
+    }
+
+    // === 라디얼 바 차트 ===
+
+    // 차트 데이터 집계 (카테고리별 지출)
+    getChartData() {
+        const catMap = {};
+        // 일일 지출 집계
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const id of Object.keys(dayItems)) {
+                const item = dayItems[id];
+                if (!item || item.type === 'income') continue;
+                if (item.cardRef) continue;
+                const cat = item.category || '미분류';
+                catMap[cat] = (catMap[cat] || 0) + (item.amount || 0);
+            }
+        }
+        // 고정지출 집계
+        if (typeof tracker !== 'undefined' && tracker.expenses) {
+            for (const e of tracker.expenses) {
+                if (e.active === false) continue;
+                const cat = e.category || '미분류';
+                catMap[cat] = (catMap[cat] || 0) + (e.amount || 0);
+            }
+        }
+        const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+        const total = sorted.reduce((s, [, v]) => s + v, 0);
+        return { sorted, total };
+    }
+
+    // 차트 렌더링 분기
+    renderChart() {
+        const chartArea = document.getElementById('chartArea');
+        if (!chartArea) return;
+        const { sorted, total } = this.getChartData();
+        if (total === 0) {
+            chartArea.innerHTML = '<div class="chart-empty">지출 데이터 없음</div>';
+            return;
+        }
+        const fixedBody = document.getElementById('fixedExpenseBody');
+        const collapsed = fixedBody && fixedBody.classList.contains('collapsed');
+        if (collapsed) {
+            this.renderChartDetailed(chartArea, sorted, total);
+        } else {
+            this.renderChartCompact(chartArea, sorted, total);
+        }
+        this.animateChart(chartArea);
+    }
+
+    // 금액 간략 표기
+    compactAmount(amount) {
+        if (amount >= 10000) {
+            const man = (amount / 10000).toFixed(amount % 10000 === 0 ? 0 : 1);
+            return `${man}만`;
+        }
+        return amount.toLocaleString();
+    }
+
+    // 카테고리 색상
+    getChartColor(category) {
+        if (typeof tracker !== 'undefined') return tracker.getCategoryColor(category);
+        const hash = category.split('').reduce((acc, c) => c.charCodeAt(0) + acc, 0);
+        return `hsl(${hash % 360}, 65%, 60%)`;
+    }
+
+    // SVG 라디얼 바 생성
+    buildRadialSVG(sorted, total, size) {
+        const cx = size / 2, cy = size / 2;
+        const maxRings = Math.min(sorted.length, 5);
+        const ringWidth = size < 100 ? 6 : 8;
+        const gap = size < 100 ? 3 : 4;
+        const outerR = (size / 2) - 2;
+        let arcs = '';
+        for (let i = 0; i < maxRings; i++) {
+            const [cat, amount] = sorted[i];
+            const r = outerR - i * (ringWidth + gap);
+            if (r < 8) break;
+            const circumference = 2 * Math.PI * r;
+            const ratio = amount / total;
+            const dashLen = circumference * ratio;
+            const color = this.getChartColor(cat);
+            arcs += `<circle class="chart-arc" cx="${cx}" cy="${cy}" r="${r}"
+                stroke="${color}" stroke-width="${ringWidth}" fill="none"
+                stroke-dasharray="${dashLen} ${circumference - dashLen}"
+                stroke-linecap="round"
+                data-target="${dashLen} ${circumference - dashLen}"
+                data-total="${circumference}"
+                transform="rotate(-90 ${cx} ${cy})" />`;
+        }
+        return `<svg class="chart-radial-ring" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+            ${arcs}
+            <text x="${cx}" y="${cy - 4}" class="chart-radial-label" text-anchor="middle" fill="var(--text-muted)" font-size="${size < 100 ? 7 : 8}">총 지출</text>
+            <text x="${cx}" y="${cy + (size < 100 ? 9 : 11)}" class="chart-radial-total" text-anchor="middle" fill="var(--text-primary)" font-size="${size < 100 ? 10 : 12}" font-weight="600">${this.compactAmount(total)}</text>
+        </svg>`;
+    }
+
+    // 컴팩트 모드 (고정지출 펼쳐져 있을 때)
+    renderChartCompact(chartArea, sorted, total) {
+        const top5 = sorted.slice(0, 5);
+        const legendHtml = top5.map(([cat, amount]) => {
+            const pct = ((amount / total) * 100).toFixed(0);
+            const color = this.getChartColor(cat);
+            return `<div class="chart-legend-item">
+                <span class="chart-legend-dot" style="background:${color}"></span>
+                <span class="chart-legend-name">${this.escapeHtml(cat)}</span>
+                <span class="chart-legend-pct">${pct}%</span>
+            </div>`;
+        }).join('');
+        chartArea.innerHTML = `
+            <div class="chart-compact">
+                ${this.buildRadialSVG(sorted, total, 90)}
+                <div class="chart-legend">${legendHtml}</div>
+            </div>`;
+    }
+
+    // 상세 모드 (고정지출 접혀 있을 때)
+    renderChartDetailed(chartArea, sorted, total) {
+        const top5 = sorted.slice(0, 5);
+        const rest = sorted.slice(5);
+        const restTotal = rest.reduce((s, [, v]) => s + v, 0);
+        const displayItems = [...top5];
+        if (restTotal > 0) displayItems.push(['기타', restTotal]);
+
+        const legendHtml = displayItems.map(([cat, amount]) => {
+            const pct = ((amount / total) * 100).toFixed(0);
+            const color = this.getChartColor(cat);
+            return `<div class="chart-legend-detail-item">
+                <div class="chart-legend-detail-top">
+                    <span class="chart-legend-dot" style="background:${color}"></span>
+                    <span class="chart-legend-name">${this.escapeHtml(cat)}</span>
+                    <span class="chart-legend-amt">${Utils.formatCurrency(amount)}</span>
+                    <span class="chart-legend-pct">${pct}%</span>
+                </div>
+                <div class="chart-legend-bar"><div class="chart-legend-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+            </div>`;
+        }).join('');
+
+        // 통계
+        const itemCount = Object.keys(this.items).reduce((cnt, dd) => {
+            const d = this.items[dd];
+            if (!d || typeof d !== 'object') return cnt;
+            return cnt + Object.values(d).filter(i => i && i.type !== 'income' && !i.cardRef).length;
+        }, 0);
+        const daysElapsed = Math.max(1, new Date().getDate());
+        const dailyAvg = Math.round(total / daysElapsed);
+        const maxCat = sorted.length > 0 ? sorted[0] : ['—', 0];
+
+        chartArea.innerHTML = `
+            <div class="chart-detailed">
+                <div class="chart-detailed-header">월간 지출 분석</div>
+                <div class="chart-detailed-body">
+                    ${this.buildRadialSVG(sorted, total, 120)}
+                    <div class="chart-legend-detail">${legendHtml}</div>
+                </div>
+                <div class="chart-stats">
+                    <div class="chart-stat">
+                        <div class="chart-stat-value">${Utils.formatCurrency(dailyAvg)}</div>
+                        <div class="chart-stat-label">일 평균</div>
+                    </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-value">${this.escapeHtml(maxCat[0])}</div>
+                        <div class="chart-stat-label">최대 지출</div>
+                    </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-value">${itemCount}건</div>
+                        <div class="chart-stat-label">총 건수</div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // 차트 등장 애니메이션
+    animateChart(chartArea) {
+        const arcs = chartArea.querySelectorAll('.chart-arc');
+        arcs.forEach((arc, i) => {
+            const totalLen = parseFloat(arc.dataset.total);
+            const target = arc.dataset.target;
+            arc.style.strokeDasharray = `0 ${totalLen}`;
+            arc.style.transition = 'none';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    arc.style.transition = `stroke-dasharray 0.6s ease ${i * 0.08}s`;
+                    arc.style.strokeDasharray = target;
+                });
+            });
+        });
     }
 
     getFixedTotal() {

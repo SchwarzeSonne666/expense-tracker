@@ -195,6 +195,158 @@ h1 {
   border-radius: var(--radius-sm);
 }
 
+/* 차트 빈 상태 */
+.chart-empty {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+/* 라디얼 링 공통 */
+.chart-radial-ring {
+  flex-shrink: 0;
+}
+
+.chart-arc {
+  opacity: 0.9;
+}
+
+/* 범례 공통 */
+.chart-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-legend-name {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-legend-pct {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* 컴팩트 모드 */
+.chart-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* 상세 모드 */
+.chart-detailed {
+  padding: 0.6rem;
+}
+
+.chart-detailed-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.6rem;
+}
+
+.chart-detailed-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.chart-legend-detail {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.chart-legend-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.chart-legend-detail-top {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chart-legend-amt {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.chart-legend-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.chart-legend-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* 통계 행 */
+.chart-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chart-stat {
+  text-align: center;
+}
+
+.chart-stat-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.chart-stat-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* 고정지출 접힘 시 차트 영역 확장 */
+.fixed-expense-body.collapsed ~ .chart-area {
+  flex: 1;
+}
+
 .total-badge {
   display: flex;
   align-items: center;
@@ -1966,6 +2118,35 @@ input::placeholder {
 
   .installment-amount {
     font-size: 0.62rem;
+  }
+
+  /* 차트 모바일 */
+  .chart-compact {
+    gap: 0.5rem;
+    padding: 0.4rem;
+  }
+
+  .chart-compact .chart-radial-ring {
+    width: 72px;
+    height: 72px;
+  }
+
+  .chart-detailed-body {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .chart-legend-amt {
+    display: none;
+  }
+
+  .chart-stat-value {
+    font-size: 0.68rem;
+  }
+
+  .chart-stat-label {
+    font-size: 0.55rem;
   }
 }
 

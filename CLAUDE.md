@@ -44,8 +44,8 @@
 
 ### Current Versions
 ```
-styles.css   → v=79  (index.html, skincare.html 공통)
-app.js       → v=59  (index.html)
+styles.css   → v=80  (index.html, skincare.html 공통)
+app.js       → v=60  (index.html)
 auth.js      → v=5   (index.html, skincare.html 공통)
 skincare.js  → v=23  (skincare.html)
 skincare.css → v=30  (skincare.html)
