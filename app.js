@@ -1307,9 +1307,10 @@ class DailyLedger {
             for (const [itemId, item] of filtered) {
                 const isIncome = item.type === 'income';
                 const isCardRef = item.cardRef === true;
+                const isFixed = item.fixedExpense === true;
                 const sign = isIncome ? '+' : '-';
                 const typeClass = isIncome ? 'income' : 'expense';
-                const cardRefClass = isCardRef ? ' card-ref' : '';
+                const extraClass = isCardRef ? ' card-ref' : (isFixed ? ' fixed-item' : '');
                 const escapedName = this.escapeHtml(item.name);
                 const catColor = (item.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(item.category) : '';
                 const categoryHtml = item.category
@@ -1317,10 +1318,11 @@ class DailyLedger {
                     : '<span class="daily-item-category empty"></span>';
                 const methodHtml = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
 
-                // 할부/카드 보조 태그
+                // 보조 태그
                 let badgeHtml = '';
-                if (isCardRef) {
-                    // 당월 참조: 일시불 → [일시불][다음달] / 할부 → [다음달][원금 ₩...]
+                if (isFixed) {
+                    badgeHtml += '<span class="daily-item-fixed-tag">고정</span>';
+                } else if (isCardRef) {
                     if (item.installment && item.installment > 1) {
                         badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
                         badgeHtml += `<span class="daily-item-ref-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
@@ -1329,16 +1331,18 @@ class DailyLedger {
                         badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
                     }
                 } else if (item.cardDeferred) {
-                    // 다음달 실제 청구: 일시불 → [일시불]
                     if (!(item.installment && item.installment > 1)) {
                         badgeHtml += '<span class="daily-item-installment">일시불</span>';
                     }
                 }
 
-                const actionsHtml = `<div class="daily-item-actions"><button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`;
+                // 고정지출 항목은 편집 없이 삭제만 가능
+                const actionsHtml = isFixed
+                    ? `<div class="daily-item-actions"><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`
+                    : `<div class="daily-item-actions"><button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`;
 
                 html += `
-                    <div class="daily-item${cardRefClass}">
+                    <div class="daily-item${extraClass}">
                         ${categoryHtml}
                         <span class="daily-item-name">${escapedName}</span>
                         ${methodHtml}
@@ -1459,7 +1463,9 @@ class DailyLedger {
                         for (const itemId of Object.keys(dayItems)) {
                             const item = dayItems[itemId];
                             if (!item || item.cardRef) continue;
-                            if (item.type === 'income') {
+                            if (item.fixedExpense) {
+                                cumulative -= (item.amount || 0);
+                            } else if (item.type === 'income') {
                                 cumulative += (item.amount || 0);
                             } else {
                                 cumulative -= (item.amount || 0);
@@ -1492,9 +1498,69 @@ class DailyLedger {
         }
     }
 
+    // 이번 달에 고정지출이 반영됐는지 확인
+    hasFixedApplied() {
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (item && item.fixedExpense) return true;
+            }
+        }
+        return false;
+    }
+
+    // 고정지출 반영 버튼 상태 업데이트
+    updateFixedBtn() {
+        const btn = document.getElementById('applyFixedBtn');
+        if (!btn) return;
+        const applied = this.hasFixedApplied();
+        btn.textContent = applied ? '반영됨' : '반영';
+        btn.disabled = applied;
+        btn.classList.toggle('applied', applied);
+    }
+
+    // 고정지출을 이번 달 1일에 개별 항목으로 기록
+    applyFixed() {
+        if (!this.firebaseReady) return;
+        if (this.hasFixedApplied()) {
+            if (typeof tracker !== 'undefined') tracker.showToast('이미 고정지출이 반영되어 있습니다.', 'error');
+            return;
+        }
+
+        const expenses = (typeof tracker !== 'undefined' && tracker.expenses)
+            ? tracker.expenses.filter(e => e.active !== false)
+            : [];
+
+        if (expenses.length === 0) {
+            if (typeof tracker !== 'undefined') tracker.showToast('반영할 고정지출 항목이 없습니다.', 'error');
+            return;
+        }
+
+        const mm = String(this.month).padStart(2, '0');
+        const createdAt = new Date().toISOString();
+
+        for (const exp of expenses) {
+            const ref = window.db.ref(`daily/${this.year}/${mm}/01`).push();
+            ref.set({
+                type: 'expense',
+                name: exp.name,
+                amount: exp.amount,
+                category: exp.category || '',
+                method: exp.memo || '',
+                fixedExpense: true,
+                createdAt: createdAt
+            });
+        }
+
+        if (typeof tracker !== 'undefined') tracker.showToast('고정지출이 반영되었습니다.', 'success');
+    }
+
     updateSummary() {
         let totalIncome = 0;
         let totalExpense = 0;
+        let fixedTotal = 0;
 
         for (const dd of Object.keys(this.items)) {
             const dayItems = this.items[dd];
@@ -1503,7 +1569,9 @@ class DailyLedger {
                 const item = dayItems[itemId];
                 if (!item) continue;
                 if (item.cardRef) continue;
-                if (item.type === 'income') {
+                if (item.fixedExpense) {
+                    fixedTotal += (item.amount || 0);
+                } else if (item.type === 'income') {
                     totalIncome += (item.amount || 0);
                 } else {
                     totalExpense += (item.amount || 0);
@@ -1511,8 +1579,6 @@ class DailyLedger {
             }
         }
 
-        // 고정지출은 현재 달에만 적용
-        const fixedTotal = this.isCurrentMonth() ? this.getFixedTotal() : 0;
         const carryover = this._carryover || 0;
         const balance = carryover + totalIncome - totalExpense - fixedTotal;
 
@@ -1527,6 +1593,9 @@ class DailyLedger {
         if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
         if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
+
+        // 반영 버튼 상태 업데이트
+        this.updateFixedBtn();
     }
 
     attachEvents() {
@@ -1535,6 +1604,12 @@ class DailyLedger {
         const nextBtn = document.getElementById('nextMonth');
         if (prevBtn) prevBtn.addEventListener('click', () => this.changeMonth(-1));
         if (nextBtn) nextBtn.addEventListener('click', () => this.changeMonth(1));
+
+        // 고정지출 반영 버튼
+        const applyFixedBtn = document.getElementById('applyFixedBtn');
+        if (applyFixedBtn) {
+            applyFixedBtn.addEventListener('click', () => this.applyFixed());
+        }
 
         // Type toggle
         const typeBtns = document.querySelectorAll('.daily-type-btn');
