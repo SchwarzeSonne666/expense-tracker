@@ -496,13 +496,10 @@ h1 {
   height: 8px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 4px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .card-usage-bar-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
   height: 100%;
   border-radius: 4px;
   transition: width 0.4s ease;
@@ -513,15 +510,6 @@ h1 {
   opacity: 1;
   box-shadow: 0 0 6px rgba(72, 187, 120, 0.4);
   background: var(--success) !important;
-}
-
-.card-usage-pct {
-  position: absolute;
-  right: 0;
-  top: -11px;
-  font-size: 0.52rem;
-  font-weight: 700;
-  z-index: 1;
 }
 
 /* Daily List */

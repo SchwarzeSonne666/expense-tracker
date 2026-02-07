@@ -1653,7 +1653,6 @@ class DailyLedger {
                         </div>
                         <div class="card-usage-bar">
                             <div class="card-usage-bar-fill${achieved ? ' achieved' : ''}" style="width:${pct}%;background:${color}"></div>
-                            <span class="card-usage-pct" style="color:${achieved ? '#48bb78' : color}">${pct}%${achieved ? ' ✓' : ''}</span>
                         </div>
                     </div>`;
             } else {
