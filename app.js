@@ -1287,15 +1287,24 @@ class DailyLedger {
             const dow = this.getDayOfWeek(dayNum);
             const dayItems = this.items[dd];
 
-            html += `<div class="daily-day-group">`;
-            html += `<div class="daily-day-header">${dayNum}일 (${dow})</div>`;
-
             // Sort items within day by createdAt descending
             const itemEntries = Object.entries(dayItems).sort((a, b) => {
                 return (b[1].createdAt || '').localeCompare(a[1].createdAt || '');
             });
 
-            for (const [itemId, item] of itemEntries) {
+            // 할부 항목 필터 — 할부 현황에 표시되므로 목록에서 제외
+            const filtered = itemEntries.filter(([, item]) => {
+                if (!item.cardRef && item.installment && item.installment > 1) return false;
+                return true;
+            });
+
+            // 표시할 항목이 없는 날은 건너뛰기
+            if (filtered.length === 0) continue;
+
+            html += `<div class="daily-day-group">`;
+            html += `<div class="daily-day-header">${dayNum}일 (${dow})</div>`;
+
+            for (const [itemId, item] of filtered) {
                 const isIncome = item.type === 'income';
                 const isCardRef = item.cardRef === true;
                 const sign = isIncome ? '+' : '-';
@@ -1320,10 +1329,8 @@ class DailyLedger {
                         badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
                     }
                 } else if (item.cardDeferred) {
-                    // 다음달 실제 청구: 할부 → [1/5개월] / 일시불 → [카드 일시불]
-                    if (item.installment && item.installment > 1) {
-                        badgeHtml += `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
-                    } else {
+                    // 다음달 실제 청구: 일시불 → [일시불]
+                    if (!(item.installment && item.installment > 1)) {
                         badgeHtml += '<span class="daily-item-installment">일시불</span>';
                     }
                 }
@@ -1344,7 +1351,7 @@ class DailyLedger {
             html += `</div>`;
         }
 
-        listEl.innerHTML = html;
+        listEl.innerHTML = html || '<div class="daily-empty">이번 달 기록이 없습니다</div>';
     }
 
     renderInstallments() {
