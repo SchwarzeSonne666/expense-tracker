@@ -645,6 +645,23 @@ h1 {
   flex-shrink: 0;
 }
 
+/* 카드 사용 내역 참조 (당월 조회용, 합산 제외) */
+.daily-item.card-ref {
+  opacity: 0.5;
+}
+
+.daily-item-card-ref-tag {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #f6ad55;
+  background: rgba(246, 173, 85, 0.1);
+  border: 1px solid rgba(246, 173, 85, 0.25);
+  border-radius: 0.75rem;
+  padding: 0.08rem 0.35rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .daily-method-wrapper.disabled,
 .daily-installment-wrapper.disabled {
   opacity: 0.3;

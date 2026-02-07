@@ -1150,7 +1150,10 @@ class DailyLedger {
     }
 
     addItem(type, day, name, category, amount, method, installment) {
-        if (!this.firebaseReady) return;
+        if (!this.firebaseReady) {
+            console.error('DailyLedger: Firebase not ready');
+            return;
+        }
         const totalAmount = parseFloat(amount);
         const isCard = this.isCardMethod(method);
         const createdAt = new Date().toISOString();
@@ -1158,6 +1161,32 @@ class DailyLedger {
         // 카드 결제 → 다음달 1일에 기록, 일반 → 이번달 해당일에 기록
         const baseOffset = isCard ? 1 : 0;
         const baseDay = isCard ? '01' : String(day).padStart(2, '0');
+
+        const onError = (err) => {
+            console.error('DailyLedger addItem error:', err);
+            if (typeof tracker !== 'undefined') tracker.showToast('저장 실패: ' + err.message, 'error');
+        };
+
+        // 당월 참조용 기록 (카드 결제 시, 합산 제외 / 조회용)
+        const writeCardRef = () => {
+            if (!isCard) return;
+            const dd = String(day).padStart(2, '0');
+            const mm = String(this.month).padStart(2, '0');
+            const refData = {
+                type: type,
+                name: name,
+                amount: totalAmount,
+                createdAt: createdAt,
+                cardRef: true
+            };
+            if (category) refData.category = category;
+            if (method) refData.method = method;
+            if (installment && installment > 1) {
+                refData.installment = installment;
+                refData.installmentTotal = totalAmount;
+            }
+            window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(refData).catch(onError);
+        };
 
         if (installment && installment > 1) {
             // 할부: 각 회차를 순차적으로 등록
@@ -1180,8 +1209,9 @@ class DailyLedger {
                 if (category) itemData.category = category;
                 if (method) itemData.method = method;
                 if (isCard) itemData.cardDeferred = true;
-                futureRef.set(itemData);
+                futureRef.set(itemData).catch(onError);
             }
+            writeCardRef();
         } else {
             // 일시불
             const target = this.getNextMonth(this.year, this.month, baseOffset);
@@ -1196,7 +1226,8 @@ class DailyLedger {
             if (category) data.category = category;
             if (method) data.method = method;
             if (isCard) data.cardDeferred = true;
-            ref.set(data);
+            ref.set(data).catch(onError);
+            writeCardRef();
         }
     }
 
@@ -1256,8 +1287,10 @@ class DailyLedger {
 
             for (const [itemId, item] of itemEntries) {
                 const isIncome = item.type === 'income';
+                const isCardRef = item.cardRef === true;
                 const sign = isIncome ? '+' : '-';
                 const typeClass = isIncome ? 'income' : 'expense';
+                const cardRefClass = isCardRef ? ' card-ref' : '';
                 const escapedName = this.escapeHtml(item.name);
 
                 let categoryTag = '';
@@ -1271,14 +1304,20 @@ class DailyLedger {
                 let installmentTag = '';
                 let installmentDetail = '';
                 if (item.installment && item.installment > 1) {
-                    installmentTag = `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
+                    if (isCardRef) {
+                        installmentTag = `<span class="daily-item-installment">${item.installment}개월</span>`;
+                    } else {
+                        installmentTag = `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
+                    }
                     installmentDetail = `<span class="daily-item-installment-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
                 }
 
-                const cardTag = item.cardDeferred ? '<span class="daily-item-card-deferred">카드결제</span>' : '';
+                const cardTag = isCardRef
+                    ? '<span class="daily-item-card-ref-tag">다음달 청구</span>'
+                    : (item.cardDeferred ? '<span class="daily-item-card-deferred">카드결제</span>' : '');
 
                 html += `
-                    <div class="daily-item">
+                    <div class="daily-item${cardRefClass}">
                         <span class="daily-item-name">${escapedName}</span>
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
                         <div class="daily-item-tags">
@@ -1312,6 +1351,7 @@ class DailyLedger {
             for (const itemId of Object.keys(dayItems)) {
                 const item = dayItems[itemId];
                 if (!item) continue;
+                if (item.cardRef) continue;
                 if (item.type === 'income') {
                     totalIncome += (item.amount || 0);
                 } else {
