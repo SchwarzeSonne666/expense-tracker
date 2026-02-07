@@ -858,10 +858,17 @@ h1 {
 .expense-drag-handle:active { cursor: grabbing; }
 
 .expense-item.dragging {
-  opacity: 0.4;
+  opacity: 0.85;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
 }
-.expense-item.drag-over {
-  border-top: 2px solid var(--accent-primary);
+
+.expense-drag-placeholder {
+  background: rgba(102,126,234,0.08);
+  border: 2px dashed rgba(102,126,234,0.3);
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
 }
 
 .fixed-add-form .form-group {

@@ -683,7 +683,7 @@ class ExpenseTracker {
             const toggleTitle = isActive ? '중지' : '활성화';
             const dragHandle = isEdit ? `<span class="expense-drag-handle" data-drag-idx="${idx}">☰</span>` : '';
             return `
-        <div class="expense-item${pausedClass}${isEdit ? ' editing' : ''}" style="border-left-color: ${color}" data-idx="${idx}" draggable="${isEdit}">
+        <div class="expense-item${pausedClass}${isEdit ? ' editing' : ''}" style="border-left-color: ${color}" data-idx="${idx}">
           ${dragHandle}
           <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
           <span class="expense-name">${escapedName}</span>
@@ -712,50 +712,144 @@ class ExpenseTracker {
         this.renderExpenses();
     }
 
-    // 드래그 정렬
+    // 드래그 정렬 (마우스 + 터치 지원)
     setupDragSort() {
         const list = document.getElementById('expenseList');
         if (!list) return;
+
+        // 이전 리스너 정리
+        if (this._dragCleanup) this._dragCleanup();
+
+        let dragItem = null;
         let dragIdx = null;
+        let startY = 0;
+        let currentY = 0;
+        let placeholder = null;
 
-        list.addEventListener('dragstart', (e) => {
-            const item = e.target.closest('.expense-item');
-            if (!item) return;
-            dragIdx = parseInt(item.dataset.idx);
-            item.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
+        const getY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
 
-        list.addEventListener('dragend', (e) => {
-            const item = e.target.closest('.expense-item');
-            if (item) item.classList.remove('dragging');
-            dragIdx = null;
-            // 모든 over 클래스 제거
-            list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-        });
+        const getItemAtY = (y) => {
+            const items = list.querySelectorAll('.expense-item:not(.dragging)');
+            for (const item of items) {
+                const rect = item.getBoundingClientRect();
+                if (y >= rect.top && y <= rect.bottom) return item;
+            }
+            return null;
+        };
 
-        list.addEventListener('dragover', (e) => {
+        const onStart = (e) => {
+            const handle = e.target.closest('.expense-drag-handle');
+            if (!handle) return;
             e.preventDefault();
-            const item = e.target.closest('.expense-item');
-            if (!item) return;
-            // 모든 over 제거 후 현재만 추가
-            list.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
-            item.classList.add('drag-over');
-        });
 
-        list.addEventListener('drop', (e) => {
+            dragItem = handle.closest('.expense-item');
+            if (!dragItem) return;
+            dragIdx = parseInt(dragItem.dataset.idx);
+            startY = getY(e);
+            currentY = startY;
+
+            // 플레이스홀더 생성
+            placeholder = document.createElement('div');
+            placeholder.className = 'expense-drag-placeholder';
+            placeholder.style.height = dragItem.offsetHeight + 'px';
+            dragItem.parentNode.insertBefore(placeholder, dragItem);
+
+            // 드래그 아이템 스타일
+            const rect = dragItem.getBoundingClientRect();
+            dragItem.classList.add('dragging');
+            dragItem.style.position = 'fixed';
+            dragItem.style.left = rect.left + 'px';
+            dragItem.style.width = rect.width + 'px';
+            dragItem.style.top = rect.top + 'px';
+            dragItem.style.zIndex = '1000';
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        };
+
+        const onMove = (e) => {
+            if (!dragItem) return;
             e.preventDefault();
-            const item = e.target.closest('.expense-item');
-            if (!item || dragIdx === null) return;
-            const dropIdx = parseInt(item.dataset.idx);
-            if (dragIdx === dropIdx) return;
+            currentY = getY(e);
+            const diff = currentY - startY;
+            const origTop = parseFloat(dragItem.style.top);
+            dragItem.style.transform = `translateY(${diff}px)`;
+
+            // 플레이스홀더 위치 갱신
+            const target = getItemAtY(currentY);
+            if (target && target !== placeholder) {
+                const targetRect = target.getBoundingClientRect();
+                const mid = targetRect.top + targetRect.height / 2;
+                if (currentY < mid) {
+                    list.insertBefore(placeholder, target);
+                } else {
+                    list.insertBefore(placeholder, target.nextSibling);
+                }
+            }
+        };
+
+        const onEnd = () => {
+            if (!dragItem) return;
+
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+
+            // 새 위치 계산
+            const items = list.querySelectorAll('.expense-item:not(.dragging), .expense-drag-placeholder');
+            let newIdx = 0;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i] === placeholder) { newIdx = i; break; }
+            }
+            // dragging 아이템이 placeholder 앞에 있으면 보정
+            const allItems = [...items];
+            let actualNewIdx = 0;
+            for (let i = 0; i < allItems.length; i++) {
+                if (allItems[i] === placeholder) break;
+                if (!allItems[i].classList.contains('dragging')) actualNewIdx++;
+            }
+
+            // 스타일 복원
+            dragItem.classList.remove('dragging');
+            dragItem.style.position = '';
+            dragItem.style.left = '';
+            dragItem.style.width = '';
+            dragItem.style.top = '';
+            dragItem.style.zIndex = '';
+            dragItem.style.transform = '';
+
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
 
             // 배열 재정렬
-            const moved = this.expenses.splice(dragIdx, 1)[0];
-            this.expenses.splice(dropIdx, 0, moved);
-            this.saveExpenses();
+            if (dragIdx !== actualNewIdx && dragIdx !== null) {
+                const moved = this.expenses.splice(dragIdx, 1)[0];
+                this.expenses.splice(actualNewIdx, 0, moved);
+                this.saveExpenses();
+            }
+
+            dragItem = null;
+            dragIdx = null;
+            placeholder = null;
+
             this.renderExpenses();
-        });
+        };
+
+        list.addEventListener('mousedown', onStart);
+        list.addEventListener('touchstart', onStart, { passive: false });
+
+        this._dragCleanup = () => {
+            list.removeEventListener('mousedown', onStart);
+            list.removeEventListener('touchstart', onStart);
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onEnd);
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onEnd);
+        };
     }
 
     // Update statistics
