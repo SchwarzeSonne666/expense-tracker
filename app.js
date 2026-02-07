@@ -3,12 +3,15 @@ const ChipPicker = {
     _modal: null,
     _grid: null,
     _title: null,
+    _editBtn: null,
     _callback: null,
+    _onEdit: null,
 
     init() {
         this._modal = document.getElementById('chipPickerModal');
         this._grid = document.getElementById('chipPickerGrid');
         this._title = document.getElementById('chipPickerTitle');
+        this._editBtn = document.getElementById('chipPickerEditBtn');
         if (!this._modal) return;
 
         // Close on backdrop click
@@ -22,11 +25,21 @@ const ChipPicker = {
                 this.close();
             }
         });
+
+        // Edit button click
+        if (this._editBtn) {
+            this._editBtn.addEventListener('click', () => {
+                const onEdit = this._onEdit;
+                this.close();
+                if (onEdit) onEdit();
+            });
+        }
     },
 
     open(title, items, callback, opts = {}) {
         if (!this._modal) return;
         this._callback = callback;
+        this._onEdit = opts.onEdit || null;
         this._title.textContent = title;
 
         if (items.length === 0) {
@@ -41,6 +54,11 @@ const ChipPicker = {
                 const escaped = label.replace(/&/g, '&amp;').replace(/</g, '&lt;');
                 return `<div class="chip-item${activeClass}${fullWidth}" data-value="${value}">${escaped}</div>`;
             }).join('');
+        }
+
+        // Show/hide edit button
+        if (this._editBtn) {
+            this._editBtn.style.display = this._onEdit ? 'block' : 'none';
         }
 
         this._modal.style.display = 'flex';
@@ -59,6 +77,7 @@ const ChipPicker = {
     close() {
         if (this._modal) this._modal.style.display = 'none';
         this._callback = null;
+        this._onEdit = null;
         this._grid.onclick = null;
     }
 };
@@ -699,12 +718,12 @@ class ExpenseTracker {
     }
 
     // Setup custom dropdown behavior (chip picker modal)
-    setupCustomDropdown(input, listEl, getItems, title) {
+    setupCustomDropdown(input, listEl, getItems, title, opts = {}) {
         const openPicker = () => {
             ChipPicker.open(title || '선택', getItems(), (val) => {
                 input.value = val;
                 input.dispatchEvent(new Event('change'));
-            });
+            }, { onEdit: opts.onEdit || null });
         };
         input.addEventListener('click', openPicker);
     }
@@ -766,15 +785,15 @@ class ExpenseTracker {
 
         // Category management modal
         const modal = document.getElementById('categoryModal');
-        const manageCategoriesBtn = document.getElementById('manageCategoriesBtn');
         const closeModal = document.getElementById('closeModal');
         const addCategoryBtn = document.getElementById('addCategoryBtn');
         const newCategoryInput = document.getElementById('newCategoryInput');
 
-        manageCategoriesBtn.addEventListener('click', () => {
+        // openCategoryModal — called from ChipPicker edit button
+        this._openCategoryModal = () => {
             modal.style.display = 'flex';
             this.renderCategoryManageList();
-        });
+        };
 
         closeModal.addEventListener('click', () => {
             modal.style.display = 'none';
@@ -815,15 +834,15 @@ class ExpenseTracker {
 
         // Memo management modal
         const memoModal = document.getElementById('memoModal');
-        const manageMemosBtn = document.getElementById('manageMemosBtn');
         const closeMemoModal = document.getElementById('closeMemoModal');
         const addMemoBtn = document.getElementById('addMemoBtn');
         const newMemoInput = document.getElementById('newMemoInput');
 
-        manageMemosBtn.addEventListener('click', () => {
+        // openMemoModal — called from ChipPicker edit button
+        this._openMemoModal = () => {
             memoModal.style.display = 'flex';
             this.renderMemoManageList();
-        });
+        };
 
         closeMemoModal.addEventListener('click', () => {
             memoModal.style.display = 'none';
@@ -863,7 +882,8 @@ class ExpenseTracker {
             document.getElementById('expenseCategory'),
             document.getElementById('categoryDropdownList'),
             () => this.categories,
-            '카테고리'
+            '카테고리',
+            { onEdit: () => this._openCategoryModal() }
         );
 
         // Custom dropdown logic for memo
@@ -871,7 +891,8 @@ class ExpenseTracker {
             document.getElementById('expenseMemo'),
             document.getElementById('memoDropdownList'),
             () => this.memos,
-            '결제수단'
+            '결제수단',
+            { onEdit: () => this._openMemoModal() }
         );
 
         // Cancel edit button
@@ -1413,19 +1434,19 @@ class DailyLedger {
     }
 
     setupDailyCategoryManagement() {
-        const manageBtn = document.getElementById('manageDailyCategoriesBtn');
         const modal = document.getElementById('dailyCategoryModal');
         const closeBtn = document.getElementById('closeDailyCategoryModal');
         const addBtn = document.getElementById('addDailyCategoryBtn');
         const input = document.getElementById('newDailyCategoryInput');
         const listManage = document.getElementById('dailyCategoryListManage');
 
-        if (!manageBtn || !modal) return;
+        if (!modal) return;
 
-        manageBtn.addEventListener('click', () => {
+        // openDailyCategoryModal — called from ChipPicker edit button
+        this._openDailyCategoryModal = () => {
             modal.style.display = 'flex';
             if (typeof tracker !== 'undefined') tracker.renderDailyCategoryManageList();
-        });
+        };
 
         closeBtn.addEventListener('click', () => {
             modal.style.display = 'none';
@@ -1489,7 +1510,7 @@ class DailyLedger {
         input.addEventListener('click', () => {
             ChipPicker.open('카테고리', getItems(), (val) => {
                 input.value = val;
-            });
+            }, { onEdit: () => this._openDailyCategoryModal && this._openDailyCategoryModal() });
         });
     }
 
@@ -1509,7 +1530,7 @@ class DailyLedger {
         input.addEventListener('click', () => {
             ChipPicker.open('결제수단', getItems(), (val) => {
                 input.value = val;
-            });
+            }, { onEdit: () => { if (typeof tracker !== 'undefined') tracker._openMemoModal(); } });
         });
     }
 
