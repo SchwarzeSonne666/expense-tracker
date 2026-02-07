@@ -1038,6 +1038,7 @@ class DailyLedger {
             const data = snapshot.val();
             this.items = data || {};
             this.render();
+            this.renderFixedItems();
             this.renderInstallments();
             this.updateSummary();
         }, (error) => {
@@ -1292,9 +1293,10 @@ class DailyLedger {
                 return (b[1].createdAt || '').localeCompare(a[1].createdAt || '');
             });
 
-            // 할부 항목 필터 — 할부 현황에 표시되므로 목록에서 제외
+            // 할부/고정지출 항목 필터 — 별도 섹션에 표시되므로 목록에서 제외
             const filtered = itemEntries.filter(([, item]) => {
                 if (!item.cardRef && item.installment && item.installment > 1) return false;
+                if (item.fixedExpense) return false;
                 return true;
             });
 
@@ -1356,6 +1358,53 @@ class DailyLedger {
         }
 
         listEl.innerHTML = html || '<div class="daily-empty">이번 달 기록이 없습니다</div>';
+    }
+
+    renderFixedItems() {
+        const section = document.getElementById('fixedStatusSection');
+        const listEl = document.getElementById('fixedStatusList');
+        if (!section || !listEl) return;
+
+        const fixedItems = [];
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (item && item.fixedExpense) {
+                    fixedItems.push({ dd, itemId, ...item });
+                }
+            }
+        }
+
+        if (fixedItems.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        const total = fixedItems.reduce((s, i) => s + (i.amount || 0), 0);
+
+        let html = '';
+        for (const fi of fixedItems) {
+            const catColor = (fi.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(fi.category) : '#667eea';
+            const catHtml = fi.category
+                ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(fi.category)}</span>`
+                : '';
+            html += `
+                <div class="fixed-status-item">
+                    ${catHtml}
+                    <span class="fixed-status-name">${this.escapeHtml(fi.name)}</span>
+                    <span class="fixed-status-method">${fi.method ? this.escapeHtml(fi.method) : ''}</span>
+                    <span class="fixed-status-amount">${this.formatCurrency(fi.amount)}</span>
+                </div>`;
+        }
+        html += `
+            <div class="fixed-status-total">
+                <span>합계</span>
+                <span>${this.formatCurrency(total)}</span>
+            </div>`;
+        listEl.innerHTML = html;
     }
 
     renderInstallments() {
@@ -1516,18 +1565,33 @@ class DailyLedger {
         const btn = document.getElementById('applyFixedBtn');
         if (!btn) return;
         const applied = this.hasFixedApplied();
-        btn.textContent = applied ? '반영됨' : '반영';
-        btn.disabled = applied;
+        btn.textContent = applied ? '재반영' : '반영';
         btn.classList.toggle('applied', applied);
     }
 
-    // 고정지출을 이번 달 1일에 개별 항목으로 기록
-    applyFixed() {
+    // 기존 고정지출 항목 삭제
+    async removeFixedItems() {
         if (!this.firebaseReady) return;
-        if (this.hasFixedApplied()) {
-            if (typeof tracker !== 'undefined') tracker.showToast('이미 고정지출이 반영되어 있습니다.', 'error');
-            return;
+        const mm = String(this.month).padStart(2, '0');
+        const updates = {};
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (item && item.fixedExpense) {
+                    updates[`${dd}/${itemId}`] = null;
+                }
+            }
         }
+        if (Object.keys(updates).length > 0) {
+            await this.getMonthRef().update(updates);
+        }
+    }
+
+    // 고정지출을 이번 달 1일에 개별 항목으로 기록 (재반영 시 기존 삭제 후 새로 기록)
+    async applyFixed() {
+        if (!this.firebaseReady) return;
 
         const expenses = (typeof tracker !== 'undefined' && tracker.expenses)
             ? tracker.expenses.filter(e => e.active !== false)
@@ -1537,6 +1601,9 @@ class DailyLedger {
             if (typeof tracker !== 'undefined') tracker.showToast('반영할 고정지출 항목이 없습니다.', 'error');
             return;
         }
+
+        // 기존 고정지출 항목 삭제
+        await this.removeFixedItems();
 
         const mm = String(this.month).padStart(2, '0');
         const createdAt = new Date().toISOString();

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=59">
+    <link rel="stylesheet" href="styles.css?v=60">
 </head>
 
 <body>
@@ -53,6 +53,12 @@
                         <span class="daily-summary-label">잔액</span>
                         <span class="daily-summary-value" id="dailyBalance">₩0</span>
                     </div>
+                </div>
+
+                <!-- Fixed Expense Status Section -->
+                <div class="fixed-status-section" id="fixedStatusSection" style="display:none">
+                    <div class="fixed-status-header">고정지출 현황</div>
+                    <div class="fixed-status-list" id="fixedStatusList"></div>
                 </div>
 
                 <!-- Installment Section -->
@@ -286,7 +292,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=41"></script>
+    <script src="app.js?v=42"></script>
 </body>
 
 </html>
