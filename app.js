@@ -381,7 +381,7 @@ class ExpenseTracker {
         if (expense) {
             this.editingId = id;
             document.getElementById('expenseName').value = expense.name;
-            document.getElementById('expenseAmount').value = parseInt(expense.amount).toLocaleString('ko-KR');
+            document.getElementById('expenseAmount').value = String(parseInt(expense.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             document.getElementById('expenseCategory').value = expense.category;
             document.getElementById('expenseMemo').value = expense.memo || '';
 
@@ -606,7 +606,7 @@ class ExpenseTracker {
             fixedAmountInput.addEventListener('input', () => {
                 const raw = fixedAmountInput.value.replace(/[^0-9]/g, '');
                 if (raw) {
-                    fixedAmountInput.value = parseInt(raw).toLocaleString('ko-KR');
+                    fixedAmountInput.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 } else {
                     fixedAmountInput.value = '';
                 }
@@ -1190,7 +1190,7 @@ class DailyLedger {
             amountInput.addEventListener('input', () => {
                 const raw = amountInput.value.replace(/[^0-9]/g, '');
                 if (raw) {
-                    amountInput.value = parseInt(raw).toLocaleString('ko-KR');
+                    amountInput.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 } else {
                     amountInput.value = '';
                 }
