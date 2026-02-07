@@ -15,7 +15,6 @@ class ExpenseTracker {
         this.updateStats();
         this.renderCategoryOptions();
         this.renderMemoOptions();
-        this.renderDateGrid();
         this.attachEventListeners();
     }
 
@@ -116,104 +115,6 @@ class ExpenseTracker {
         } catch (error) {
             console.error('Firebase sync error:', error);
         }
-    }
-
-    // Render date picker with tabs and chips
-    renderDateGrid() {
-        this.currentDateRange = '1-10';
-        this.renderDateChips('1-10');
-        this.setupDatePicker();
-    }
-
-    // Render date chips for a given range
-    renderDateChips(range) {
-        const chipsContainer = document.getElementById('dateChips');
-        const [start, end] = range.split('-').map(Number);
-        const selected = parseInt(document.getElementById('expenseDate').value);
-
-        let html = '';
-        for (let d = start; d <= end; d++) {
-            const isSelected = d === selected;
-            html += `<button type="button" class="date-chip${isSelected ? ' selected' : ''}" data-day="${d}">${d}</button>`;
-        }
-        chipsContainer.innerHTML = html;
-    }
-
-    // Setup date picker behavior
-    setupDatePicker() {
-        const picker = document.getElementById('datePicker');
-        const trigger = document.getElementById('datePickerTrigger');
-        const popup = document.getElementById('datePickerPopup');
-        const tabs = document.getElementById('dateTabs');
-        const chips = document.getElementById('dateChips');
-
-        // Toggle popup
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.querySelectorAll('.dropdown-list.show').forEach(el => el.classList.remove('show'));
-            picker.classList.toggle('open');
-
-            // Switch to tab that contains selected date
-            const val = parseInt(document.getElementById('expenseDate').value);
-            if (val) {
-                let range = '1-10';
-                if (val >= 11 && val <= 20) range = '11-20';
-                else if (val >= 21) range = '21-31';
-                if (range !== this.currentDateRange) {
-                    this.currentDateRange = range;
-                    tabs.querySelectorAll('.date-tab').forEach(t => t.classList.toggle('active', t.dataset.range === range));
-                    this.renderDateChips(range);
-                }
-            }
-        });
-
-        // Tab switching
-        tabs.addEventListener('click', (e) => {
-            const tab = e.target.closest('.date-tab');
-            if (tab) {
-                tabs.querySelectorAll('.date-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                this.currentDateRange = tab.dataset.range;
-                this.renderDateChips(tab.dataset.range);
-            }
-        });
-
-        // Chip selection
-        chips.addEventListener('click', (e) => {
-            const chip = e.target.closest('.date-chip');
-            if (chip) {
-                this.selectDate(parseInt(chip.dataset.day));
-                picker.classList.remove('open');
-            }
-        });
-
-        // Close on outside click
-        document.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.date-picker')) {
-                picker.classList.remove('open');
-            }
-        });
-    }
-
-    // Select a date
-    selectDate(day) {
-        document.getElementById('expenseDate').value = day;
-        const trigger = document.getElementById('datePickerTrigger');
-        document.getElementById('datePickerText').textContent = `매월 ${day}일`;
-        trigger.classList.add('has-value');
-        // Update chips highlight
-        document.querySelectorAll('.date-chip').forEach(c => {
-            c.classList.toggle('selected', parseInt(c.dataset.day) === day);
-        });
-    }
-
-    // Clear date selection
-    clearDate() {
-        document.getElementById('expenseDate').value = '';
-        document.getElementById('datePickerText').textContent = '결제일 선택';
-        document.getElementById('datePickerTrigger').classList.remove('has-value');
-        document.getElementById('datePicker').classList.remove('open');
-        document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('selected'));
     }
 
     // Load expenses from localStorage
@@ -400,13 +301,12 @@ class ExpenseTracker {
     }
 
     // Add new expense
-    addExpense(name, amount, category, paymentDate, memo = '') {
+    addExpense(name, amount, category, memo = '') {
         const expense = {
             id: Date.now(),
             name,
             amount: parseFloat(amount),
             category: category.trim(),
-            paymentDate: parseInt(paymentDate),
             memo: memo.trim(),
             createdAt: new Date().toISOString()
         };
@@ -426,7 +326,7 @@ class ExpenseTracker {
     }
 
     // Update expense
-    updateExpense(id, name, amount, category, paymentDate, memo = '') {
+    updateExpense(id, name, amount, category, memo = '') {
         const expenseIndex = this.expenses.findIndex(expense => expense.id === id);
         if (expenseIndex !== -1) {
             this.expenses[expenseIndex] = {
@@ -434,7 +334,6 @@ class ExpenseTracker {
                 name,
                 amount: parseFloat(amount),
                 category: category.trim(),
-                paymentDate: parseInt(paymentDate),
                 memo: memo.trim()
             };
             this.saveExpenses();
@@ -451,7 +350,6 @@ class ExpenseTracker {
             document.getElementById('expenseName').value = expense.name;
             document.getElementById('expenseAmount').value = expense.amount;
             document.getElementById('expenseCategory').value = expense.category;
-            this.selectDate(expense.paymentDate);
             document.getElementById('expenseMemo').value = expense.memo || '';
 
             // Update button text and visual mode
@@ -470,7 +368,6 @@ class ExpenseTracker {
     cancelEdit() {
         this.editingId = null;
         document.getElementById('expenseForm').reset();
-        this.clearDate();
         const submitBtn = document.querySelector('.btn-primary');
         submitBtn.textContent = '+ 추가하기';
         const formCard = document.getElementById('formCard');
@@ -556,10 +453,7 @@ class ExpenseTracker {
             return;
         }
 
-        // Sort by payment date
-        const sortedExpenses = [...this.expenses].sort((a, b) => a.paymentDate - b.paymentDate);
-
-        expenseList.innerHTML = sortedExpenses.map(expense => {
+        expenseList.innerHTML = this.expenses.map(expense => {
             const color = this.getCategoryColor(expense.category);
             const escapedName = this.escapeHtml(expense.name);
             const escapedCategory = this.escapeHtml(expense.category);
@@ -570,7 +464,7 @@ class ExpenseTracker {
             <div class="expense-name">${escapedName}</div>
             <div class="expense-meta">
               <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
-              <span>매월 ${expense.paymentDate}일 결제${escapedMemo}</span>
+              ${escapedMemo ? `<span>${escapedMemo.replace(' · ', '')}</span>` : ''}
             </div>
           </div>
           <div class="expense-amount">${this.formatCurrency(expense.amount)}</div>
@@ -669,13 +563,12 @@ class ExpenseTracker {
             const name = document.getElementById('expenseName').value.trim();
             const amount = document.getElementById('expenseAmount').value;
             const category = document.getElementById('expenseCategory').value.trim();
-            const paymentDate = document.getElementById('expenseDate').value;
             const memo = document.getElementById('expenseMemo').value.trim();
 
-            if (name && amount && category && paymentDate) {
+            if (name && amount && category) {
                 if (this.editingId) {
                     // Update existing expense
-                    this.updateExpense(this.editingId, name, amount, category, paymentDate, memo);
+                    this.updateExpense(this.editingId, name, amount, category, memo);
                     this.editingId = null;
                     document.getElementById('formCard').classList.remove('card--editing');
                     document.getElementById('editBanner').style.display = 'none';
@@ -688,7 +581,7 @@ class ExpenseTracker {
                     }, 1500);
                 } else {
                     // Add new expense
-                    this.addExpense(name, amount, category, paymentDate, memo);
+                    this.addExpense(name, amount, category, memo);
                     this.showToast('새 지출이 추가되었습니다.', 'success');
 
                     const submitBtn = form.querySelector('.btn-primary');
@@ -699,10 +592,6 @@ class ExpenseTracker {
                 }
 
                 form.reset();
-                document.getElementById('expenseDate').value = '';
-                document.querySelectorAll('.date-btn').forEach(btn => btn.classList.remove('selected'));
-            } else if (!paymentDate) {
-                this.showToast('결제일을 선택해주세요.', 'error');
             }
         });
 
