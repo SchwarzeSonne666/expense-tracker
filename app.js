@@ -1619,12 +1619,10 @@ class DailyLedger {
         }
 
         const goals = this.getCardGoals();
-        // 삼성카드 제외
-        const excludeCards = ['삼성카드'];
-        // 목표가 있는 카드 + 사용액이 있는 카드 모두 표시 (제외 목록 필터)
-        const allCards = new Set([...Object.keys(goals), ...Object.keys(cardTotals)].filter(c => !excludeCards.includes(c)));
+        // 목표가 설정된 카드만 표시
+        const allCards = Object.keys(goals);
 
-        if (allCards.size === 0) {
+        if (allCards.length === 0) {
             section.style.display = 'none';
             return;
         }
