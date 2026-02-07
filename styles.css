@@ -1168,7 +1168,7 @@ input::placeholder {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 80px;
+  width: 140px;
   flex-shrink: 0;
 }
 
