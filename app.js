@@ -1029,6 +1029,8 @@ class DailyLedger {
         if (this.listener) {
             this.listener.off();
         }
+        // 전월 이월 잔액 로드
+        this.loadCarryover();
         this.listener = this.getMonthRef();
         this.listener.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -1345,6 +1347,51 @@ class DailyLedger {
         } catch (_) { return 0; }
     }
 
+    // 특정 월의 수입/지출 합계 계산 (Promise)
+    calcMonthTotals(year, month) {
+        return new Promise((resolve) => {
+            if (!this.firebaseReady) return resolve({ income: 0, expense: 0 });
+            const mm = String(month).padStart(2, '0');
+            window.db.ref(`daily/${year}/${mm}`).once('value', (snapshot) => {
+                const data = snapshot.val();
+                let income = 0, expense = 0;
+                if (data) {
+                    for (const dd of Object.keys(data)) {
+                        const dayItems = data[dd];
+                        if (!dayItems || typeof dayItems !== 'object') continue;
+                        for (const itemId of Object.keys(dayItems)) {
+                            const item = dayItems[itemId];
+                            if (!item || item.cardRef) continue;
+                            if (item.type === 'income') income += (item.amount || 0);
+                            else expense += (item.amount || 0);
+                        }
+                    }
+                }
+                resolve({ income, expense });
+            }, () => resolve({ income: 0, expense: 0 }));
+        });
+    }
+
+    // 전월 이월 잔액 로드 (재귀: balances에 저장된 값 사용)
+    async loadCarryover() {
+        if (!this.firebaseReady) { this._carryover = 0; return; }
+        const prev = this.getNextMonth(this.year, this.month, -1);
+        const prevMM = String(prev.month).padStart(2, '0');
+        try {
+            const snap = await window.db.ref(`balances/${prev.year}/${prevMM}`).once('value');
+            this._carryover = snap.val() || 0;
+        } catch (_) {
+            this._carryover = 0;
+        }
+    }
+
+    // 현재 월 잔액을 Firebase에 저장
+    saveBalance(balance) {
+        if (!this.firebaseReady) return;
+        const mm = String(this.month).padStart(2, '0');
+        window.db.ref(`balances/${this.year}/${mm}`).set(balance);
+    }
+
     updateSummary() {
         let totalIncome = 0;
         let totalExpense = 0;
@@ -1365,16 +1412,23 @@ class DailyLedger {
         }
 
         const fixedTotal = this.getFixedTotal();
+        const carryover = this._carryover || 0;
+        const balance = carryover + totalIncome - totalExpense - fixedTotal;
 
+        const carryoverEl = document.getElementById('dailyCarryover');
         const incomeEl = document.getElementById('dailyIncome');
         const fixedEl = document.getElementById('dailyFixed');
         const expenseEl = document.getElementById('dailyExpense');
         const balanceEl = document.getElementById('dailyBalance');
 
+        if (carryoverEl) carryoverEl.textContent = this.formatCurrency(carryover);
         if (incomeEl) incomeEl.textContent = this.formatCurrency(totalIncome);
         if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
-        if (balanceEl) balanceEl.textContent = this.formatCurrency(totalIncome - totalExpense - fixedTotal);
+        if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
+
+        // 현재 월 잔액 저장 (다음달 이월용)
+        this.saveBalance(balance);
     }
 
     attachEvents() {

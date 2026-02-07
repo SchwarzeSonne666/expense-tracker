@@ -311,6 +311,7 @@ h1 {
   font-weight: 700;
 }
 
+.daily-summary-row.carryover .daily-summary-value { color: var(--text-muted); }
 .daily-summary-row.income .daily-summary-value { color: var(--success); }
 .daily-summary-row.fixed .daily-summary-value { color: var(--warning); }
 .daily-summary-row.expense .daily-summary-value { color: var(--danger); }
