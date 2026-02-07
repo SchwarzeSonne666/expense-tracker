@@ -317,6 +317,79 @@ h1 {
 .daily-summary-row.expense .daily-summary-value { color: var(--danger); }
 .daily-summary-row.balance .daily-summary-value { color: var(--accent-primary); }
 
+/* Installment Section */
+.installment-section {
+  margin-bottom: 0.5rem;
+  border: 1px solid rgba(237, 137, 54, 0.15);
+  border-radius: var(--radius-sm);
+  background: rgba(237, 137, 54, 0.03);
+  padding: 0.4rem;
+}
+
+.installment-header {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--warning);
+  margin-bottom: 0.3rem;
+}
+
+.installment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.installment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+}
+
+.installment-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.installment-progress {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--warning);
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: 32px;
+}
+
+.installment-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.installment-bar-fill {
+  height: 100%;
+  background: var(--warning);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.installment-amount {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Daily List */
 .daily-list {
   flex: 1;

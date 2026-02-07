@@ -1036,6 +1036,7 @@ class DailyLedger {
             const data = snapshot.val();
             this.items = data || {};
             this.render();
+            this.renderInstallments();
             this.updateSummary();
         }, (error) => {
             console.error('DailyLedger Firebase error:', error);
@@ -1341,6 +1342,52 @@ class DailyLedger {
             html += `</div>`;
         }
 
+        listEl.innerHTML = html;
+    }
+
+    renderInstallments() {
+        const section = document.getElementById('installmentSection');
+        const listEl = document.getElementById('installmentList');
+        if (!section || !listEl) return;
+
+        // 현재 월 데이터에서 할부 항목(cardDeferred + installment > 1) 수집
+        const installments = [];
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (!item || item.cardRef) continue;
+                if (item.installment && item.installment > 1) {
+                    installments.push({ dd, itemId, ...item });
+                }
+            }
+        }
+
+        if (installments.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        // 이름별 그룹핑 (같은 할부 건은 installmentStart+name으로 묶기)
+        let html = '';
+        for (const inst of installments) {
+            const catColor = (inst.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(inst.category) : '#667eea';
+            const catHtml = inst.category
+                ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(inst.category)}</span>`
+                : '';
+            const progress = Math.round((inst.installmentMonth / inst.installment) * 100);
+            html += `
+                <div class="installment-item">
+                    ${catHtml}
+                    <span class="installment-name">${this.escapeHtml(inst.name)}</span>
+                    <span class="installment-progress">${inst.installmentMonth}/${inst.installment}</span>
+                    <div class="installment-bar"><div class="installment-bar-fill" style="width:${progress}%"></div></div>
+                    <span class="installment-amount">${this.formatCurrency(inst.amount)}</span>
+                </div>`;
+        }
         listEl.innerHTML = html;
     }
 
