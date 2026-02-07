@@ -906,11 +906,6 @@ class ExpenseTracker {
         const fixedBody = document.getElementById('fixedExpenseBody');
         const fixedArrow = document.getElementById('fixedToggleArrow');
         if (fixedToggle && fixedBody && fixedArrow) {
-            // 모바일(968px 이하)에서는 기본 접힘
-            if (window.innerWidth <= 968) {
-                fixedBody.classList.add('collapsed');
-                fixedArrow.textContent = '▶';
-            }
             fixedToggle.addEventListener('click', () => {
                 const collapsed = fixedBody.classList.toggle('collapsed');
                 fixedArrow.textContent = collapsed ? '▶' : '▼';

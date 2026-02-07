@@ -1824,28 +1824,30 @@ input::placeholder {
     padding: 0.2rem 0.35rem;
   }
 
-  .expense-name {
-    width: 80px;
-    font-size: 0.72rem;
-  }
-
   .expense-memo-tag {
     display: none;
   }
 
-  .expense-amount {
-    font-size: 0.75rem;
+  /* 가계부 항목 가로 넘침 방지 */
+  .daily-item,
+  .expense-item {
+    overflow: hidden;
+    max-width: 100%;
   }
 
-  /* 가계부 일일 항목 가로 넘침 방지 */
   .daily-item-name {
     width: auto;
     min-width: 0;
     flex: 1;
   }
 
+  .daily-item-category {
+    width: 36px;
+    font-size: 0.55rem;
+    padding: 0.05rem 0.25rem;
+  }
+
   .daily-item-method {
-    min-width: 0;
     display: none;
   }
 
@@ -1853,6 +1855,26 @@ input::placeholder {
   .daily-item-card-ref-tag,
   .daily-item-ref-detail {
     display: none;
+  }
+
+  .daily-item-amount {
+    font-size: 0.75rem;
+  }
+
+  .expense-name {
+    width: auto;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .expense-category {
+    width: 36px;
+    font-size: 0.55rem;
+    padding: 0.05rem 0.25rem;
+  }
+
+  .expense-amount {
+    font-size: 0.72rem;
   }
 
   .daily-add-row {
