@@ -490,9 +490,11 @@ class ExpenseTracker {
         const totalExpense = document.getElementById('totalExpense');
         totalExpense.textContent = this.formatCurrency(this.getTotalAmount());
         // 가계부 요약에도 고정지출 반영
-        if (typeof dailyLedger !== 'undefined') {
-            dailyLedger.updateSummary();
-        }
+        try {
+            if (typeof dailyLedger !== 'undefined' && dailyLedger) {
+                dailyLedger.updateSummary();
+            }
+        } catch (_) {}
     }
 
     // Setup custom dropdown behavior
@@ -971,24 +973,33 @@ class DailyLedger {
         listEl.innerHTML = html;
     }
 
+    getFixedTotal() {
+        try {
+            return (typeof tracker !== 'undefined' && tracker.expenses)
+                ? tracker.expenses.reduce((sum, e) => sum + (e.amount || 0), 0)
+                : 0;
+        } catch (_) { return 0; }
+    }
+
     updateSummary() {
         let totalIncome = 0;
         let totalExpense = 0;
 
         for (const dd of Object.keys(this.items)) {
             const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
             for (const itemId of Object.keys(dayItems)) {
                 const item = dayItems[itemId];
+                if (!item) continue;
                 if (item.type === 'income') {
-                    totalIncome += item.amount;
+                    totalIncome += (item.amount || 0);
                 } else {
-                    totalExpense += item.amount;
+                    totalExpense += (item.amount || 0);
                 }
             }
         }
 
-        // 월간 고정지출 합계
-        const fixedTotal = (typeof tracker !== 'undefined') ? tracker.getTotalAmount() : 0;
+        const fixedTotal = this.getFixedTotal();
 
         const incomeEl = document.getElementById('dailyIncome');
         const fixedEl = document.getElementById('dailyFixed');
