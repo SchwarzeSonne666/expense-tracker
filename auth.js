@@ -91,25 +91,15 @@
 
         input.focus();
 
-        // Enter key (desktop + mobile)
+        // Enter key
         input.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter') { error.style.opacity = '0'; return; }
             e.preventDefault();
             attemptLogin();
         });
 
-        // Button click (mobile primary)
-        btn.addEventListener('click', () => {
-            attemptLogin();
-        });
-
-        // Also handle 'Go' button on mobile keyboards via form submit simulation
-        input.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-                e.preventDefault();
-                attemptLogin();
-            }
-        });
+        // Button click
+        btn.addEventListener('click', () => attemptLogin());
 
         input.addEventListener('focus', () => { input.style.borderColor = '#667eea'; });
         input.addEventListener('blur', () => { input.style.borderColor = 'rgba(255,255,255,0.12)'; });
