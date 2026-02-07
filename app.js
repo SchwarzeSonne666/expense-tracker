@@ -1016,6 +1016,8 @@ class DailyLedger {
             return;
         }
         this.firebaseReady = true;
+        // 1회성: corrupted balances 데이터 삭제
+        this.cleanupBalances();
         this.loadMonth();
     }
 
@@ -1424,30 +1426,63 @@ class DailyLedger {
         });
     }
 
-    // 전월 이월 잔액 로드 (재귀: balances에 저장된 값 사용)
+    // 전월 이월 잔액 로드 (과거 모든 달의 수입-지출 누적으로 계산)
     async loadCarryover() {
         if (!this.firebaseReady) { this._carryover = 0; return; }
-        const prev = this.getNextMonth(this.year, this.month, -1);
-        const prevMM = String(prev.month).padStart(2, '0');
         try {
-            const snap = await window.db.ref(`balances/${prev.year}/${prevMM}`).once('value');
-            this._carryover = snap.val() || 0;
-        } catch (_) {
+            // daily 전체 데이터를 한 번에 읽어서 현재 달 이전까지 누적
+            const snap = await window.db.ref('daily').once('value');
+            const allData = snap.val() || {};
+            let cumulative = 0;
+
+            for (const yr of Object.keys(allData)) {
+                const yearData = allData[yr];
+                if (!yearData || typeof yearData !== 'object') continue;
+                for (const mm of Object.keys(yearData)) {
+                    const y = parseInt(yr);
+                    const m = parseInt(mm);
+                    // 현재 보고 있는 달 이상이면 skip
+                    if (y > this.year || (y === this.year && m >= this.month)) continue;
+
+                    const monthData = yearData[mm];
+                    if (!monthData || typeof monthData !== 'object') continue;
+                    for (const dd of Object.keys(monthData)) {
+                        const dayItems = monthData[dd];
+                        if (!dayItems || typeof dayItems !== 'object') continue;
+                        for (const itemId of Object.keys(dayItems)) {
+                            const item = dayItems[itemId];
+                            if (!item || item.cardRef) continue;
+                            if (item.type === 'income') {
+                                cumulative += (item.amount || 0);
+                            } else {
+                                cumulative -= (item.amount || 0);
+                            }
+                        }
+                    }
+                }
+            }
+            this._carryover = cumulative;
+        } catch (err) {
+            console.error('loadCarryover error:', err);
             this._carryover = 0;
         }
-    }
-
-    // 현재 월 잔액을 Firebase에 저장
-    saveBalance(balance) {
-        if (!this.firebaseReady) return;
-        const mm = String(this.month).padStart(2, '0');
-        window.db.ref(`balances/${this.year}/${mm}`).set(balance);
     }
 
     // 현재 보고 있는 월이 실제 오늘의 월인지 확인
     isCurrentMonth() {
         const now = new Date();
         return this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
+    }
+
+    // Firebase에서 corrupted balances 데이터 삭제 (1회성)
+    async cleanupBalances() {
+        if (!this.firebaseReady) return;
+        try {
+            await window.db.ref('balances').remove();
+            console.log('Corrupted balances data cleaned up');
+        } catch (err) {
+            console.error('Failed to cleanup balances:', err);
+        }
     }
 
     updateSummary() {
@@ -1485,11 +1520,6 @@ class DailyLedger {
         if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
         if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
-
-        // 현재 달에서만 잔액 저장 (과거/미래 달 조회 시 덮어쓰기 방지)
-        if (this.isCurrentMonth()) {
-            this.saveBalance(balance);
-        }
     }
 
     attachEvents() {
