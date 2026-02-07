@@ -972,18 +972,53 @@ class DailyLedger {
         }
     }
 
-    addItem(type, day, name, amount, method) {
+    addItem(type, day, name, amount, method, installment) {
         if (!this.firebaseReady) return;
         const dd = String(day).padStart(2, '0');
         const ref = this.getMonthRef().child(dd).push();
+        const totalAmount = parseFloat(amount);
         const data = {
             type: type,
             name: name,
-            amount: parseFloat(amount),
+            amount: totalAmount,
             createdAt: new Date().toISOString()
         };
         if (method) data.method = method;
+        if (installment && installment > 1) {
+            data.installment = installment;
+            data.installmentTotal = totalAmount;
+            data.installmentMonth = 1; // 이번이 1회차
+            data.installmentStart = `${this.year}-${String(this.month).padStart(2, '0')}`;
+            // amount를 월 분할금으로 저장
+            data.amount = Math.round(totalAmount / installment);
+        }
         ref.set(data);
+
+        // 할부인 경우 나머지 달에도 자동 등록
+        if (installment && installment > 1) {
+            const monthlyAmount = Math.round(totalAmount / installment);
+            for (let i = 2; i <= installment; i++) {
+                let futureMonth = this.month + (i - 1);
+                let futureYear = this.year;
+                while (futureMonth > 12) {
+                    futureMonth -= 12;
+                    futureYear++;
+                }
+                const futureMM = String(futureMonth).padStart(2, '0');
+                const futureRef = window.db.ref(`daily/${futureYear}/${futureMM}/${dd}`).push();
+                futureRef.set({
+                    type: type,
+                    name: name,
+                    amount: monthlyAmount,
+                    method: method || '',
+                    installment: installment,
+                    installmentTotal: totalAmount,
+                    installmentMonth: i,
+                    installmentStart: `${this.year}-${String(this.month).padStart(2, '0')}`,
+                    createdAt: data.createdAt
+                });
+            }
+        }
     }
 
     deleteItem(day, itemId) {
@@ -1047,11 +1082,20 @@ class DailyLedger {
                 const escapedName = this.escapeHtml(item.name);
                 const methodTag = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
 
+                let installmentTag = '';
+                let installmentDetail = '';
+                if (item.installment && item.installment > 1) {
+                    installmentTag = `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
+                    installmentDetail = `<span class="daily-item-installment-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
+                }
+
                 html += `
                     <div class="daily-item">
                         <span class="daily-item-name">${escapedName}</span>
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
-                        ${methodTag}
+                        <div class="daily-item-tags">
+                            ${methodTag}${installmentTag}${installmentDetail}
+                        </div>
                         <button class="daily-item-delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
                     </div>`;
             }
@@ -1124,8 +1168,9 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
-        // Method dropdown
+        // Method dropdown & Installment dropdown
         this.setupMethodDropdown();
+        this.setupInstallmentDropdown();
 
         // Enter key on inputs
         const inputs = [
@@ -1213,15 +1258,61 @@ class DailyLedger {
         });
     }
 
+    setupInstallmentDropdown() {
+        const btn = document.getElementById('dailyInstallmentBtn');
+        const listEl = document.getElementById('dailyInstallmentList');
+        if (!btn || !listEl) return;
+
+        this.selectedInstallment = 1; // 기본 일시불
+
+        const options = [
+            { value: 1, label: '일시불' },
+            { value: 3, label: '3개월' },
+            { value: 6, label: '6개월' },
+            { value: 12, label: '12개월' },
+            { value: 24, label: '24개월' }
+        ];
+
+        const renderList = () => {
+            listEl.innerHTML = options.map(opt => {
+                const selected = opt.value === this.selectedInstallment ? ' active' : '';
+                return `<div class="dropdown-item${selected}" data-value="${opt.value}"><span class="dropdown-item-dot"></span>${opt.label}</div>`;
+            }).join('');
+            listEl.classList.add('show');
+        };
+
+        btn.addEventListener('click', () => {
+            renderList();
+        });
+
+        listEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                this.selectedInstallment = parseInt(item.dataset.value);
+                btn.textContent = this.selectedInstallment === 1 ? '일시불' : `${this.selectedInstallment}개월`;
+                listEl.classList.remove('show');
+            }
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.daily-installment-wrapper')) {
+                listEl.classList.remove('show');
+            }
+        });
+    }
+
     handleAdd() {
         const nameInput = document.getElementById('dailyName');
         const amountInput = document.getElementById('dailyAmount');
         const methodInput = document.getElementById('dailyMethod');
+        const installmentBtn = document.getElementById('dailyInstallmentBtn');
 
         const day = this.selectedDay;
         const name = nameInput.value.trim();
         const amount = parseFloat(amountInput.value);
         const method = methodInput ? methodInput.value.trim() : '';
+        const installment = this.selectedInstallment || 1;
 
         if (!day || day < 1 || day > 31) {
             return;
@@ -1235,12 +1326,14 @@ class DailyLedger {
             return;
         }
 
-        this.addItem(this.currentType, day, name, amount, method);
+        this.addItem(this.currentType, day, name, amount, method, installment);
 
-        // Clear name, amount, method — keep day
+        // Clear name, amount, method, reset installment — keep day
         nameInput.value = '';
         amountInput.value = '';
         if (methodInput) methodInput.value = '';
+        this.selectedInstallment = 1;
+        if (installmentBtn) installmentBtn.textContent = '일시불';
         nameInput.focus();
     }
 }
