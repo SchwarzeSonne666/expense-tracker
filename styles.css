@@ -514,7 +514,7 @@ h1 {
 
 .daily-category-list.show {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -590,7 +590,7 @@ h1 {
 
 .daily-installment-list.show {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -622,7 +622,7 @@ h1 {
 
 .daily-method-list.show {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -800,7 +800,7 @@ input::placeholder {
 
 .chip-dropdown.show {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -863,7 +863,7 @@ input::placeholder {
 
 .dropdown-list.show {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
