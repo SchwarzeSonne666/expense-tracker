@@ -1544,6 +1544,7 @@ class DailyLedger {
         const options = [
             { value: 1, label: '일시불', fullWidth: true },
             { value: 3, label: '3개월' },
+            { value: 5, label: '5개월' },
             { value: 6, label: '6개월' },
             { value: 12, label: '12개월' },
             { value: 24, label: '24개월' }
