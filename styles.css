@@ -1147,7 +1147,6 @@ input::placeholder {
 
 .expense-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  transform: translateX(4px);
 }
 
 .expense-name {
