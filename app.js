@@ -2111,32 +2111,52 @@ class DailyLedger {
         }
 
         if (this._editingDay && this._editingId) {
-            // 수정 모드: 기존 항목 업데이트
+            // 수정 모드: 기존 항목 삭제 후 새로 등록 (카드/할부 속성 재계산)
             const dd = this._editingDay;
             const id = this._editingId;
             const existing = this.items[dd] && this.items[dd][id];
 
-            const updateData = {
-                type: this.currentType,
-                name: name,
-                amount: amount
-            };
-            if (category) updateData.category = category;
-            if (method) updateData.method = method;
+            // 기존 항목 삭제
+            const mm = String(this.month).padStart(2, '0');
+            window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).remove();
 
-            // 기존 속성 보존
-            if (existing) {
-                if (existing.createdAt) updateData.createdAt = existing.createdAt;
-                if (existing.cardRef) updateData.cardRef = true;
-                if (existing.cardDeferred) updateData.cardDeferred = true;
+            // cardRef 항목 수정 시 → cardRef는 조회용이므로 단순 업데이트
+            if (existing && existing.cardRef) {
+                const updateData = {
+                    type: this.currentType,
+                    name: name,
+                    amount: amount,
+                    cardRef: true,
+                    createdAt: existing.createdAt || new Date().toISOString()
+                };
+                if (category) updateData.category = category;
+                if (method) updateData.method = method;
+                if (existing.installment) updateData.installment = existing.installment;
+                if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
+                window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
+            }
+            // cardDeferred 항목 수정 시 → 할부 속성 보존하며 업데이트
+            else if (existing && existing.cardDeferred) {
+                const updateData = {
+                    type: this.currentType,
+                    name: name,
+                    amount: amount,
+                    cardDeferred: true,
+                    createdAt: existing.createdAt || new Date().toISOString()
+                };
+                if (category) updateData.category = category;
+                if (method) updateData.method = method;
                 if (existing.installmentStart) updateData.installmentStart = existing.installmentStart;
                 if (existing.installmentMonth) updateData.installmentMonth = existing.installmentMonth;
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
+                window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
+            }
+            // 일반 항목 수정 → 새로 addItem (카드면 이월 처리됨)
+            else {
+                this.addItem(this.currentType, parseInt(dd), name, category, amount, method, installment);
             }
 
-            const mm = String(this.month).padStart(2, '0');
-            window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).set(updateData);
             this.cancelEdit();
             if (typeof tracker !== 'undefined') tracker.showToast('항목이 수정되었습니다.', 'success');
         } else {
