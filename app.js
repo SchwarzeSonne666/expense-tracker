@@ -331,6 +331,22 @@ class ExpenseTracker {
 
     // Delete daily category
     deleteDailyCategory(name) {
+        // 가계부 항목에서 사용 중인지 확인
+        try {
+            if (typeof dailyLedger !== 'undefined' && dailyLedger.items) {
+                for (const dd of Object.keys(dailyLedger.items)) {
+                    const dayItems = dailyLedger.items[dd];
+                    if (!dayItems) continue;
+                    for (const itemId of Object.keys(dayItems)) {
+                        if (dayItems[itemId] && dayItems[itemId].category === name) {
+                            this.showToast(`"${name}" 카테고리를 사용하는 항목이 있어 삭제할 수 없습니다.`, 'error');
+                            return false;
+                        }
+                    }
+                }
+            }
+        } catch (_) {}
+
         this.dailyCategories = this.dailyCategories.filter(c => c !== name);
         this.saveDailyCategories();
         return true;
@@ -346,13 +362,36 @@ class ExpenseTracker {
             return;
         }
 
+        // 가계부 항목에서 사용 중인 카테고리 확인
+        let usedCategories = new Set();
+        try {
+            if (typeof dailyLedger !== 'undefined' && dailyLedger.items) {
+                for (const dd of Object.keys(dailyLedger.items)) {
+                    const dayItems = dailyLedger.items[dd];
+                    if (!dayItems) continue;
+                    for (const itemId of Object.keys(dayItems)) {
+                        const item = dayItems[itemId];
+                        if (item && item.category) usedCategories.add(item.category);
+                    }
+                }
+            }
+        } catch (_) {}
+
         listContainer.innerHTML = this.dailyCategories.map((cat, index) => {
+            const hasItems = usedCategories.has(cat);
             const escaped = this.escapeHtml(cat);
             return `
         <div class="category-item">
           <span class="category-item-name">${escaped}</span>
-          <button class="btn-icon delete" data-daily-cat-index="${index}" title="삭제">×</button>
-        </div>`;
+          <button
+            class="btn-icon delete ${hasItems ? 'disabled' : ''}"
+            data-daily-cat-index="${index}"
+            ${hasItems ? 'disabled title="이 카테고리를 사용하는 항목이 있습니다"' : 'title="삭제"'}
+          >
+            ×
+          </button>
+        </div>
+      `;
         }).join('');
     }
 
