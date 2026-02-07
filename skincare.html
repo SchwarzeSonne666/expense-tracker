@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="skincare.css?v=26">
+    <link rel="stylesheet" href="skincare.css?v=27">
 </head>
 
 <body class="sc-page">
@@ -54,31 +54,34 @@
             <!-- populated by JS -->
         </section>
 
-        <!-- Weekly Calendar -->
-        <section class="sc-section">
-            <h3 class="sc-section-title">주간 캘린더</h3>
-            <div class="sc-calendar" id="weeklyCalendar"></div>
-        </section>
+        <!-- Weekly Calendar + Spot Care (2-column) -->
+        <div class="sc-two-col">
+            <!-- Weekly Calendar -->
+            <section class="sc-section">
+                <h3 class="sc-section-title">주간 캘린더</h3>
+                <div class="sc-calendar" id="weeklyCalendar"></div>
+            </section>
 
-        <!-- Spot Care -->
-        <section class="sc-section">
-            <div class="sc-section-header">
-                <h3 class="sc-section-title" style="border:none;margin:0;padding:0;">스팟 케어</h3>
-                <div class="sc-section-actions">
-                    <button class="sc-copy-btn" id="copySpotBtn" title="스팟 케어 복사">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        복사
-                    </button>
-                    <button class="sc-copy-btn" id="importSpotBtn" title="스팟 케어 가져오기">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        가져오기
-                    </button>
+            <!-- Spot Care -->
+            <section class="sc-section">
+                <div class="sc-section-header">
+                    <h3 class="sc-section-title" style="border:none;margin:0;padding:0;">스팟 케어</h3>
+                    <div class="sc-section-actions">
+                        <button class="sc-copy-btn" id="copySpotBtn" title="스팟 케어 복사">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            복사
+                        </button>
+                        <button class="sc-copy-btn" id="importSpotBtn" title="스팟 케어 가져오기">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            가져오기
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="sc-spot-grid" id="spotCareGrid">
-                <!-- populated by JS -->
-            </div>
-        </section>
+                <div class="sc-spot-grid" id="spotCareGrid">
+                    <!-- populated by JS -->
+                </div>
+            </section>
+        </div>
 
         <!-- Product List -->
         <section class="sc-section">

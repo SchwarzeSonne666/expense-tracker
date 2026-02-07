@@ -217,6 +217,22 @@ body.sc-page .container {
   line-height: 1.5;
 }
 
+/* Two-Column Layout (Calendar + Spot Care) */
+.sc-two-col {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--spacing-sm);
+  margin-bottom: 1.25rem;
+}
+
+.sc-two-col .sc-section {
+  margin-bottom: 0;
+}
+
+.sc-two-col .sc-spot-grid {
+  grid-template-columns: 1fr;
+}
+
 /* Section */
 .sc-section {
   margin-bottom: 1.25rem;
@@ -617,6 +633,12 @@ body.sc-page .container {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .sc-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .sc-calendar {
     grid-template-columns: repeat(7, 1fr);
