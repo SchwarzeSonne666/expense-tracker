@@ -1013,8 +1013,6 @@ input::placeholder {
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 500px;
-  max-height: 80vh;
-  overflow: hidden;
   box-shadow: var(--shadow-lg);
   animation: slideInUp 0.3s ease;
 }
@@ -1057,8 +1055,6 @@ input::placeholder {
 
 .modal-body {
   padding: var(--spacing-lg);
-  overflow-y: auto;
-  max-height: calc(80vh - 100px);
 }
 
 /* Category Management */
