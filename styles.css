@@ -1200,6 +1200,27 @@ input::placeholder {
   font-size: 0.85rem;
 }
 
+/* Toggle button (active/paused) */
+.expense-actions .btn-icon.toggle {
+  font-size: 0.55rem;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: color var(--transition-fast);
+}
+
+.expense-actions .btn-icon.toggle.active {
+  color: var(--accent-primary);
+}
+
+/* Paused (inactive) expense item */
+.expense-item.paused {
+  opacity: 0.45;
+}
+
+.expense-item.paused .expense-amount {
+  text-decoration: line-through;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
