@@ -165,30 +165,10 @@ h1 {
 .expense-list-card {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .expense-list-card .expense-list {
   flex: 1;
-  overflow-y: auto;
-  max-height: calc(100vh - 160px);
-}
-
-.expense-list-card .expense-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.expense-list-card .expense-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.expense-list-card .expense-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
-}
-
-.expense-list-card .expense-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Main Content Grid */
@@ -203,7 +183,6 @@ h1 {
 .daily-ledger-card {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 80px);
 }
 
 .daily-month-nav {
@@ -277,17 +256,12 @@ h1 {
 /* Daily List */
 .daily-list {
   flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
   min-height: 100px;
 }
-
-.daily-list::-webkit-scrollbar { width: 4px; }
-.daily-list::-webkit-scrollbar-track { background: transparent; }
-.daily-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 
 .daily-day-group {
   margin-bottom: 0.25rem;
@@ -1076,8 +1050,6 @@ input::placeholder {
   flex-direction: column;
   gap: var(--spacing-xs);
   margin-top: var(--spacing-sm);
-  max-height: 300px;
-  overflow-y: auto;
 }
 
 .category-item {
@@ -1426,14 +1398,6 @@ input::placeholder {
 
   .daily-ledger-card {
     max-height: none;
-  }
-
-  .daily-list {
-    max-height: 350px;
-  }
-
-  .expense-list-card .expense-list {
-    max-height: 400px;
   }
 }
 

@@ -553,19 +553,6 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
-  max-height: 250px;
-  overflow-y: auto;
-}
-
-.sc-preview-area::-webkit-scrollbar {
-  width: 4px;
-}
-.sc-preview-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-.sc-preview-area::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
 }
 
 .sc-preview-title {
