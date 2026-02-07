@@ -841,6 +841,13 @@ h1 {
   flex-shrink: 0;
 }
 
+/* 전월 카드값 그룹 행 */
+.daily-item.prev-card-group {
+  background: rgba(102, 126, 234, 0.06);
+  border: 1px solid rgba(102, 126, 234, 0.12);
+  border-radius: var(--radius-sm);
+}
+
 /* 카드 사용 내역 참조 (당월 조회용, 합산 제외) */
 .daily-item.card-ref {
   opacity: 0.45;

@@ -1474,13 +1474,39 @@ class DailyLedger {
                 return true;
             });
 
+            // 전월 카드값 일시불 항목 그룹핑 (cardDeferred + 일시불)
+            const prevCardItems = [];
+            const normalItems = [];
+            for (const entry of filtered) {
+                const item = entry[1];
+                if (item.cardDeferred && !(item.installment && item.installment > 1)) {
+                    prevCardItems.push(entry);
+                } else {
+                    normalItems.push(entry);
+                }
+            }
+
+            const hasPrevCard = prevCardItems.length > 0;
             // 표시할 항목이 없는 날은 건너뛰기
-            if (filtered.length === 0) continue;
+            if (normalItems.length === 0 && !hasPrevCard) continue;
 
             html += `<div class="daily-day-group">`;
             html += `<div class="daily-day-header">${dayNum}일 (${dow})</div>`;
 
-            for (const [itemId, item] of filtered) {
+            // 전월 카드값 요약 행
+            if (hasPrevCard) {
+                const prevCardTotal = prevCardItems.reduce((sum, [, it]) => sum + (it.amount || 0), 0);
+                const countLabel = prevCardItems.length > 1 ? `${prevCardItems.length}건` : '1건';
+                html += `
+                    <div class="daily-item prev-card-group">
+                        <span class="daily-item-category" style="background:rgba(102,126,234,0.15);color:var(--accent-primary)">카드</span>
+                        <span class="daily-item-name">전월 카드값</span>
+                        <span class="daily-item-method">${countLabel}</span>
+                        <span class="daily-item-amount expense">-${this.formatCurrency(prevCardTotal)}</span>
+                    </div>`;
+            }
+
+            for (const [itemId, item] of normalItems) {
                 const isIncome = item.type === 'income';
                 const isCardRef = item.cardRef === true;
                 const isFixed = item.fixedExpense === true;
@@ -1505,10 +1531,6 @@ class DailyLedger {
                     } else {
                         badgeHtml += '<span class="daily-item-installment">일시불</span>';
                         badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
-                    }
-                } else if (item.cardDeferred) {
-                    if (!(item.installment && item.installment > 1)) {
-                        badgeHtml += '<span class="daily-item-installment">일시불</span>';
                     }
                 }
 
