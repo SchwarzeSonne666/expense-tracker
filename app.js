@@ -972,7 +972,7 @@ class DailyLedger {
         }
     }
 
-    addItem(type, day, name, amount, method, installment) {
+    addItem(type, day, name, category, amount, method, installment) {
         if (!this.firebaseReady) return;
         const dd = String(day).padStart(2, '0');
         const ref = this.getMonthRef().child(dd).push();
@@ -983,6 +983,7 @@ class DailyLedger {
             amount: totalAmount,
             createdAt: new Date().toISOString()
         };
+        if (category) data.category = category;
         if (method) data.method = method;
         if (installment && installment > 1) {
             data.installment = installment;
@@ -1010,6 +1011,7 @@ class DailyLedger {
                     type: type,
                     name: name,
                     amount: monthlyAmount,
+                    category: category || '',
                     method: method || '',
                     installment: installment,
                     installmentTotal: totalAmount,
@@ -1080,6 +1082,13 @@ class DailyLedger {
                 const sign = isIncome ? '+' : '-';
                 const typeClass = isIncome ? 'income' : 'expense';
                 const escapedName = this.escapeHtml(item.name);
+
+                let categoryTag = '';
+                if (item.category) {
+                    const catColor = (typeof tracker !== 'undefined') ? tracker.getCategoryColor(item.category) : '#667eea';
+                    categoryTag = `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(item.category)}</span>`;
+                }
+
                 const methodTag = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
 
                 let installmentTag = '';
@@ -1094,7 +1103,7 @@ class DailyLedger {
                         <span class="daily-item-name">${escapedName}</span>
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
                         <div class="daily-item-tags">
-                            ${methodTag}${installmentTag}${installmentDetail}
+                            ${categoryTag}${methodTag}${installmentTag}${installmentDetail}
                         </div>
                         <button class="daily-item-delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
                     </div>`;
@@ -1168,13 +1177,15 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
-        // Method dropdown & Installment dropdown
+        // Category, Method, Installment dropdowns
+        this.setupCategoryDropdown();
         this.setupMethodDropdown();
         this.setupInstallmentDropdown();
 
         // Enter key on inputs
         const inputs = [
             document.getElementById('dailyName'),
+            document.getElementById('dailyCategory'),
             document.getElementById('dailyAmount'),
             document.getElementById('dailyMethod')
         ];
@@ -1201,6 +1212,56 @@ class DailyLedger {
                 }
             });
         }
+    }
+
+    setupCategoryDropdown() {
+        const input = document.getElementById('dailyCategory');
+        const listEl = document.getElementById('dailyCategoryList');
+        if (!input || !listEl) return;
+
+        const getItems = () => {
+            try {
+                if (typeof tracker !== 'undefined' && tracker.categories) {
+                    return tracker.categories;
+                }
+            } catch (_) {}
+            return ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
+        };
+
+        const renderList = () => {
+            const items = getItems();
+            if (items.length === 0) {
+                listEl.innerHTML = '<div class="dropdown-empty">등록된 카테고리가 없습니다</div>';
+            } else {
+                listEl.innerHTML = items.map(item => {
+                    const escaped = this.escapeHtml(item);
+                    return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+                }).join('');
+            }
+            listEl.classList.add('show');
+        };
+
+        input.addEventListener('click', renderList);
+        input.addEventListener('focus', renderList);
+
+        listEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                input.value = item.dataset.value;
+                listEl.classList.remove('show');
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => listEl.classList.remove('show'), 150);
+        });
+
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.daily-category-wrapper')) {
+                listEl.classList.remove('show');
+            }
+        });
     }
 
     setupMethodDropdown() {
@@ -1304,12 +1365,14 @@ class DailyLedger {
 
     handleAdd() {
         const nameInput = document.getElementById('dailyName');
+        const categoryInput = document.getElementById('dailyCategory');
         const amountInput = document.getElementById('dailyAmount');
         const methodInput = document.getElementById('dailyMethod');
         const installmentBtn = document.getElementById('dailyInstallmentBtn');
 
         const day = this.selectedDay;
         const name = nameInput.value.trim();
+        const category = categoryInput ? categoryInput.value.trim() : '';
         const amount = parseFloat(amountInput.value);
         const method = methodInput ? methodInput.value.trim() : '';
         const installment = this.selectedInstallment || 1;
@@ -1326,10 +1389,11 @@ class DailyLedger {
             return;
         }
 
-        this.addItem(this.currentType, day, name, amount, method, installment);
+        this.addItem(this.currentType, day, name, category, amount, method, installment);
 
-        // Clear name, amount, method, reset installment — keep day
+        // Clear name, category, amount, method, reset installment — keep day
         nameInput.value = '';
+        if (categoryInput) categoryInput.value = '';
         amountInput.value = '';
         if (methodInput) methodInput.value = '';
         this.selectedInstallment = 1;

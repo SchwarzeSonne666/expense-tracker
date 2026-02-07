@@ -481,8 +481,57 @@ h1 {
   border: 1px solid var(--accent-primary);
 }
 
-.daily-name-input { flex: 0.6; min-width: 0; }
-.daily-amount-input { width: 140px !important; }
+.daily-name-input { flex: 1; min-width: 0; }
+.daily-amount-input { flex: 0.5; min-width: 0; }
+
+/* Daily Category Dropdown */
+.daily-category-wrapper {
+  position: relative;
+  flex: 0.5;
+  min-width: 0;
+}
+
+.daily-category-input {
+  width: 100% !important;
+  font-size: 0.78rem !important;
+  cursor: pointer;
+}
+
+.daily-category-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+
+.daily-category-list.show {
+  display: block;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+.daily-category-list .dropdown-item {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+/* Daily Item Category Tag */
+.daily-item-category {
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.06rem 0.35rem;
+  border-radius: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 /* Hide number input spinners */
 .daily-amount-input::-webkit-outer-spin-button,
