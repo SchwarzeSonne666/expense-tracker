@@ -354,6 +354,27 @@ class ExpenseTracker {
         }
     }
 
+    // Open the add/edit modal
+    openFixedModal(isEdit = false) {
+        const modal = document.getElementById('fixedAddModal');
+        const title = document.getElementById('fixedModalTitle');
+        const submitBtn = document.getElementById('fixedFormSubmitBtn');
+        if (modal) {
+            modal.style.display = 'flex';
+            title.textContent = isEdit ? '고정지출 수정' : '새 고정지출 추가';
+            submitBtn.textContent = isEdit ? '수정하기' : '추가';
+        }
+    }
+
+    // Close the add/edit modal
+    closeFixedModal() {
+        const modal = document.getElementById('fixedAddModal');
+        if (modal) modal.style.display = 'none';
+        this.editingId = null;
+        document.getElementById('expenseForm').reset();
+        document.getElementById('fixedFormSubmitBtn').textContent = '추가';
+    }
+
     // Load expense into form for editing
     editExpense(id) {
         const expense = this.expenses.find(expense => expense.id === id);
@@ -364,31 +385,13 @@ class ExpenseTracker {
             document.getElementById('expenseCategory').value = expense.category;
             document.getElementById('expenseMemo').value = expense.memo || '';
 
-            // Open the details element to show the form
-            const details = document.querySelector('.fixed-add-details');
-            if (details) details.open = true;
-
-            // Update button text and visual mode
-            const submitBtn = document.querySelector('#expenseForm .btn-primary');
-            submitBtn.textContent = '수정하기';
-            const fixedCard = document.querySelector('.fixed-expense-card');
-            fixedCard.classList.add('card--editing');
-            document.getElementById('editBanner').style.display = 'flex';
-
-            // Scroll to form
-            fixedCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            this.openFixedModal(true);
         }
     }
 
     // Cancel editing
     cancelEdit() {
-        this.editingId = null;
-        document.getElementById('expenseForm').reset();
-        const submitBtn = document.querySelector('#expenseForm .btn-primary');
-        submitBtn.textContent = '추가';
-        const fixedCard = document.querySelector('.fixed-expense-card');
-        fixedCard.classList.remove('card--editing');
-        document.getElementById('editBanner').style.display = 'none';
+        this.closeFixedModal();
     }
 
     // Get total expense amount (active only)
@@ -586,6 +589,23 @@ class ExpenseTracker {
 
     // Attach event listeners
     attachEventListeners() {
+        // Fixed add modal open/close
+        const openModalBtn = document.getElementById('openFixedAddModal');
+        const closeModalBtn = document.getElementById('closeFixedAddModal');
+        const fixedAddModal = document.getElementById('fixedAddModal');
+
+        if (openModalBtn) {
+            openModalBtn.addEventListener('click', () => this.openFixedModal(false));
+        }
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => this.closeFixedModal());
+        }
+        if (fixedAddModal) {
+            fixedAddModal.addEventListener('click', (e) => {
+                if (e.target === fixedAddModal) this.closeFixedModal();
+            });
+        }
+
         const form = document.getElementById('expenseForm');
 
         form.addEventListener('submit', (e) => {
@@ -598,31 +618,14 @@ class ExpenseTracker {
 
             if (name && amount && category) {
                 if (this.editingId) {
-                    // Update existing expense
                     this.updateExpense(this.editingId, name, amount, category, memo);
-                    this.editingId = null;
-                    document.querySelector('.fixed-expense-card').classList.remove('card--editing');
-                    document.getElementById('editBanner').style.display = 'none';
-
-                    const submitBtn = form.querySelector('.btn-primary');
-                    submitBtn.textContent = '수정 완료';
                     this.showToast('지출이 수정되었습니다.', 'success');
-                    setTimeout(() => {
-                        submitBtn.textContent = '추가';
-                    }, 1500);
                 } else {
-                    // Add new expense
                     this.addExpense(name, amount, category, memo);
                     this.showToast('새 지출이 추가되었습니다.', 'success');
-
-                    const submitBtn = form.querySelector('.btn-primary');
-                    submitBtn.textContent = '추가 완료';
-                    setTimeout(() => {
-                        submitBtn.textContent = '추가';
-                    }, 1500);
                 }
 
-                form.reset();
+                this.closeFixedModal();
             }
         });
 
@@ -755,9 +758,12 @@ class ExpenseTracker {
         });
 
         // Cancel edit button
-        document.getElementById('cancelEditBtn').addEventListener('click', () => {
-            this.cancelEdit();
-        });
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', () => {
+                this.cancelEdit();
+            });
+        }
 
         // Confirm delete dialog
         const confirmDialog = document.getElementById('confirmDialog');

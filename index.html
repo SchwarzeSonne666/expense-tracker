@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=35">
+    <link rel="stylesheet" href="styles.css?v=36">
 </head>
 
 <body>
@@ -93,11 +93,6 @@
 
             <!-- Fixed Expense (고정지출) -->
             <section class="card fixed-expense-card">
-                <div id="editBanner" class="edit-banner" style="display:none;">
-                    <span>수정 중</span>
-                    <button type="button" class="btn-cancel-edit" id="cancelEditBtn">취소</button>
-                </div>
-
                 <!-- Expense List -->
                 <div class="expense-list-header">
                     <h2 class="card-title">월간 고정지출</h2>
@@ -110,9 +105,19 @@
                     <!-- Expenses will be dynamically inserted here -->
                 </div>
 
-                <!-- Add Form (collapsible) -->
-                <details class="fixed-add-details">
-                    <summary class="fixed-add-summary">+ 새 고정지출 추가</summary>
+                <!-- Add Button -->
+                <button type="button" class="btn btn-primary fixed-add-open-btn" id="openFixedAddModal">+ 새 고정지출 추가</button>
+            </section>
+        </main>
+
+        <!-- Fixed Expense Add/Edit Modal -->
+        <div id="fixedAddModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="fixedModalTitle">새 고정지출 추가</h2>
+                    <button class="modal-close" id="closeFixedAddModal">&times;</button>
+                </div>
+                <div class="modal-body">
                     <form id="expenseForm" class="fixed-add-form">
                         <div class="form-group">
                             <input type="text" id="expenseName" placeholder="항목명 (예: 넷플릭스)" required>
@@ -139,11 +144,11 @@
                                 <button type="button" class="btn-manage-categories" id="manageMemosBtn" title="메모 관리">⚙</button>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">추가</button>
+                        <button type="submit" class="btn btn-primary" id="fixedFormSubmitBtn">추가</button>
                     </form>
-                </details>
-            </section>
-        </main>
+                </div>
+            </div>
+        </div>
 
         <!-- Category Management Modal -->
         <div id="categoryModal" class="modal">
@@ -236,7 +241,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=14"></script>
+    <script src="app.js?v=15"></script>
 </body>
 
 </html>
