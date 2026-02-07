@@ -489,6 +489,10 @@ class ExpenseTracker {
     updateStats() {
         const totalExpense = document.getElementById('totalExpense');
         totalExpense.textContent = this.formatCurrency(this.getTotalAmount());
+        // 가계부 요약에도 고정지출 반영
+        if (typeof dailyLedger !== 'undefined') {
+            dailyLedger.updateSummary();
+        }
     }
 
     // Setup custom dropdown behavior
@@ -983,13 +987,18 @@ class DailyLedger {
             }
         }
 
+        // 월간 고정지출 합계
+        const fixedTotal = (typeof tracker !== 'undefined') ? tracker.getTotalAmount() : 0;
+
         const incomeEl = document.getElementById('dailyIncome');
+        const fixedEl = document.getElementById('dailyFixed');
         const expenseEl = document.getElementById('dailyExpense');
         const balanceEl = document.getElementById('dailyBalance');
 
         if (incomeEl) incomeEl.textContent = this.formatCurrency(totalIncome);
+        if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
-        if (balanceEl) balanceEl.textContent = this.formatCurrency(totalIncome - totalExpense);
+        if (balanceEl) balanceEl.textContent = this.formatCurrency(totalIncome - totalExpense - fixedTotal);
     }
 
     attachEvents() {

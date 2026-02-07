@@ -270,6 +270,7 @@ h1 {
 }
 
 .daily-summary-row.income .daily-summary-value { color: var(--success); }
+.daily-summary-row.fixed .daily-summary-value { color: var(--warning); }
 .daily-summary-row.expense .daily-summary-value { color: var(--danger); }
 .daily-summary-row.balance .daily-summary-value { color: var(--accent-primary); }
 
