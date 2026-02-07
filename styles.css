@@ -245,6 +245,9 @@ h1 {
   color: var(--text-muted);
   font-weight: 500;
   flex-shrink: 0;
+  min-width: 2rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 컴팩트 모드 */
@@ -302,6 +305,9 @@ h1 {
   color: var(--text-secondary);
   margin-left: auto;
   flex-shrink: 0;
+  min-width: 4.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 통계 행 */
@@ -321,6 +327,7 @@ h1 {
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-stat-label {
@@ -359,6 +366,7 @@ h1 {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-variant-numeric: tabular-nums;
 }
 
 .expense-list-card {
@@ -451,6 +459,8 @@ h1 {
 .daily-summary-value {
   font-size: 0.82rem;
   font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .daily-summary-row.carryover .daily-summary-value { color: var(--text-muted); }
@@ -545,6 +555,7 @@ h1 {
   color: var(--warning);
   white-space: nowrap;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
   width: 32px;
 }
 
@@ -570,6 +581,8 @@ h1 {
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Card Usage Section */
@@ -622,6 +635,8 @@ h1 {
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .card-usage-sep {
@@ -632,6 +647,8 @@ h1 {
 .card-usage-goal {
   font-size: 0.62rem;
   color: var(--text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .card-usage-bar {
@@ -713,6 +730,8 @@ h1 {
   white-space: nowrap;
   flex-shrink: 0;
   margin-left: auto;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .daily-item-amount.income { color: var(--success); }
@@ -1609,6 +1628,8 @@ input::placeholder {
   white-space: nowrap;
   flex-shrink: 0;
   margin-left: auto;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .expense-actions {
