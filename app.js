@@ -1384,27 +1384,7 @@ class DailyLedger {
 
         section.style.display = 'block';
         const total = fixedItems.reduce((s, i) => s + (i.amount || 0), 0);
-
-        let html = '';
-        for (const fi of fixedItems) {
-            const catColor = (fi.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(fi.category) : '#667eea';
-            const catHtml = fi.category
-                ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(fi.category)}</span>`
-                : '';
-            html += `
-                <div class="fixed-status-item">
-                    ${catHtml}
-                    <span class="fixed-status-name">${this.escapeHtml(fi.name)}</span>
-                    <span class="fixed-status-method">${fi.method ? this.escapeHtml(fi.method) : ''}</span>
-                    <span class="fixed-status-amount">${this.formatCurrency(fi.amount)}</span>
-                </div>`;
-        }
-        html += `
-            <div class="fixed-status-total">
-                <span>합계</span>
-                <span>${this.formatCurrency(total)}</span>
-            </div>`;
-        listEl.innerHTML = html;
+        listEl.innerHTML = `<span class="fixed-status-total-amount">${this.formatCurrency(total)}</span>`;
     }
 
     renderInstallments() {

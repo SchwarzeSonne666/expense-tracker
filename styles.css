@@ -365,65 +365,24 @@ h1 {
   border: 1px solid rgba(102, 126, 234, 0.15);
   border-radius: var(--radius-sm);
   background: rgba(102, 126, 234, 0.03);
-  padding: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .fixed-status-header {
   font-size: 0.7rem;
   font-weight: 700;
   color: var(--accent-primary);
-  margin-bottom: 0.3rem;
-}
-
-.fixed-status-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.fixed-status-item {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.1rem 0;
-}
-
-.fixed-status-name {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-primary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
 }
 
-.fixed-status-method {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.fixed-status-amount {
-  font-size: 0.72rem;
+.fixed-status-total-amount {
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--danger);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.fixed-status-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.25rem;
-  padding-top: 0.25rem;
-  border-top: 1px solid rgba(102, 126, 234, 0.15);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--accent-primary);
+  margin-left: auto;
 }
 
 /* Installment Section */
