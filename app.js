@@ -1177,6 +1177,19 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
+        // Amount comma formatting
+        const amountInput = document.getElementById('dailyAmount');
+        if (amountInput) {
+            amountInput.addEventListener('input', () => {
+                const raw = amountInput.value.replace(/[^0-9]/g, '');
+                if (raw) {
+                    amountInput.value = parseInt(raw).toLocaleString('ko-KR');
+                } else {
+                    amountInput.value = '';
+                }
+            });
+        }
+
         // Category, Method, Installment dropdowns
         this.setupCategoryDropdown();
         this.setupMethodDropdown();
@@ -1231,11 +1244,11 @@ class DailyLedger {
         const renderList = () => {
             const items = getItems();
             if (items.length === 0) {
-                listEl.innerHTML = '<div class="dropdown-empty">등록된 카테고리가 없습니다</div>';
+                listEl.innerHTML = '<div class="dropdown-empty">없음</div>';
             } else {
                 listEl.innerHTML = items.map(item => {
                     const escaped = this.escapeHtml(item);
-                    return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
                 }).join('');
             }
             listEl.classList.add('show');
@@ -1246,7 +1259,7 @@ class DailyLedger {
 
         listEl.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            const item = e.target.closest('.dropdown-item');
+            const item = e.target.closest('.chip-item');
             if (item) {
                 input.value = item.dataset.value;
                 listEl.classList.remove('show');
@@ -1270,7 +1283,6 @@ class DailyLedger {
         if (!input || !listEl) return;
 
         const getItems = () => {
-            // Reuse tracker's memo list as payment methods
             try {
                 if (typeof tracker !== 'undefined' && tracker.memos) {
                     return tracker.memos;
@@ -1282,36 +1294,32 @@ class DailyLedger {
         const renderList = () => {
             const items = getItems();
             if (items.length === 0) {
-                listEl.innerHTML = '<div class="dropdown-empty">등록된 결제수단이 없습니다</div>';
+                listEl.innerHTML = '<div class="dropdown-empty">없음</div>';
             } else {
                 listEl.innerHTML = items.map(item => {
                     const escaped = this.escapeHtml(item);
-                    return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
                 }).join('');
             }
             listEl.classList.add('show');
         };
 
-        // Click to open (readonly input)
         input.addEventListener('click', renderList);
         input.addEventListener('focus', renderList);
 
-        // Select item
         listEl.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            const item = e.target.closest('.dropdown-item');
+            const item = e.target.closest('.chip-item');
             if (item) {
                 input.value = item.dataset.value;
                 listEl.classList.remove('show');
             }
         });
 
-        // Close on blur
         input.addEventListener('blur', () => {
             setTimeout(() => listEl.classList.remove('show'), 150);
         });
 
-        // Close when clicking outside
         document.addEventListener('mousedown', (e) => {
             if (!e.target.closest('.daily-method-wrapper')) {
                 listEl.classList.remove('show');
@@ -1324,7 +1332,7 @@ class DailyLedger {
         const listEl = document.getElementById('dailyInstallmentList');
         if (!btn || !listEl) return;
 
-        this.selectedInstallment = 1; // 기본 일시불
+        this.selectedInstallment = 1;
 
         const options = [
             { value: 1, label: '일시불' },
@@ -1337,7 +1345,7 @@ class DailyLedger {
         const renderList = () => {
             listEl.innerHTML = options.map(opt => {
                 const selected = opt.value === this.selectedInstallment ? ' active' : '';
-                return `<div class="dropdown-item${selected}" data-value="${opt.value}"><span class="dropdown-item-dot"></span>${opt.label}</div>`;
+                return `<div class="chip-item${selected}" data-value="${opt.value}">${opt.label}</div>`;
             }).join('');
             listEl.classList.add('show');
         };
@@ -1348,7 +1356,7 @@ class DailyLedger {
 
         listEl.addEventListener('mousedown', (e) => {
             e.preventDefault();
-            const item = e.target.closest('.dropdown-item');
+            const item = e.target.closest('.chip-item');
             if (item) {
                 this.selectedInstallment = parseInt(item.dataset.value);
                 btn.textContent = this.selectedInstallment === 1 ? '일시불' : `${this.selectedInstallment}개월`;
@@ -1373,7 +1381,8 @@ class DailyLedger {
         const day = this.selectedDay;
         const name = nameInput.value.trim();
         const category = categoryInput ? categoryInput.value.trim() : '';
-        const amount = parseFloat(amountInput.value);
+        const rawAmount = amountInput.value.replace(/[^0-9]/g, '');
+        const amount = parseFloat(rawAmount);
         const method = methodInput ? methodInput.value.trim() : '';
         const installment = this.selectedInstallment || 1;
 
