@@ -1619,8 +1619,10 @@ class DailyLedger {
         }
 
         const goals = this.getCardGoals();
-        // 목표가 있는 카드 + 사용액이 있는 카드 모두 표시
-        const allCards = new Set([...Object.keys(goals), ...Object.keys(cardTotals)]);
+        // 삼성카드 제외
+        const excludeCards = ['삼성카드'];
+        // 목표가 있는 카드 + 사용액이 있는 카드 모두 표시 (제외 목록 필터)
+        const allCards = new Set([...Object.keys(goals), ...Object.keys(cardTotals)].filter(c => !excludeCards.includes(c)));
 
         if (allCards.size === 0) {
             section.style.display = 'none';
@@ -1628,15 +1630,15 @@ class DailyLedger {
         }
 
         section.style.display = 'block';
-        const colors = ['#ed64a6', '#667eea', '#38b2ac', '#f6ad55', '#4299e1'];
+        const cardColors = { '현대카드': '#4299e1', '네이버카드': '#48bb78' };
+        const defaultColors = ['#f6ad55', '#ed64a6', '#667eea', '#38b2ac'];
         let colorIdx = 0;
 
         let html = '';
         for (const card of allCards) {
             const used = cardTotals[card] || 0;
             const goal = goals[card] || 0;
-            const color = colors[colorIdx % colors.length];
-            colorIdx++;
+            const color = cardColors[card] || defaultColors[colorIdx++ % defaultColors.length];
 
             if (goal > 0) {
                 const pct = Math.min(Math.round((used / goal) * 100), 100);
