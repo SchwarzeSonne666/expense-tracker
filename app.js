@@ -1758,6 +1758,8 @@ class DailyLedger {
             // 수정 모드: 기존 항목 업데이트
             const dd = this._editingDay;
             const id = this._editingId;
+            const existing = this.items[dd] && this.items[dd][id];
+
             const updateData = {
                 type: this.currentType,
                 name: name,
@@ -1765,9 +1767,17 @@ class DailyLedger {
             };
             if (category) updateData.category = category;
             if (method) updateData.method = method;
-            // createdAt 유지
-            const existing = this.items[dd] && this.items[dd][id];
-            if (existing && existing.createdAt) updateData.createdAt = existing.createdAt;
+
+            // 기존 속성 보존
+            if (existing) {
+                if (existing.createdAt) updateData.createdAt = existing.createdAt;
+                if (existing.cardRef) updateData.cardRef = true;
+                if (existing.cardDeferred) updateData.cardDeferred = true;
+                if (existing.installmentStart) updateData.installmentStart = existing.installmentStart;
+                if (existing.installmentMonth) updateData.installmentMonth = existing.installmentMonth;
+                if (existing.installment) updateData.installment = existing.installment;
+                if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
+            }
 
             const mm = String(this.month).padStart(2, '0');
             window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).set(updateData);
