@@ -360,7 +360,7 @@ class ExpenseTracker {
         if (expense) {
             this.editingId = id;
             document.getElementById('expenseName').value = expense.name;
-            document.getElementById('expenseAmount').value = expense.amount;
+            document.getElementById('expenseAmount').value = parseInt(expense.amount).toLocaleString('ko-KR');
             document.getElementById('expenseCategory').value = expense.category;
             document.getElementById('expenseMemo').value = expense.memo || '';
 
@@ -592,7 +592,7 @@ class ExpenseTracker {
             e.preventDefault();
 
             const name = document.getElementById('expenseName').value.trim();
-            const amount = document.getElementById('expenseAmount').value;
+            const amount = document.getElementById('expenseAmount').value.replace(/[^0-9]/g, '');
             const category = document.getElementById('expenseCategory').value.trim();
             const memo = document.getElementById('expenseMemo').value.trim();
 
@@ -625,6 +625,19 @@ class ExpenseTracker {
                 form.reset();
             }
         });
+
+        // Fixed expense amount comma formatting
+        const fixedAmountInput = document.getElementById('expenseAmount');
+        if (fixedAmountInput) {
+            fixedAmountInput.addEventListener('input', () => {
+                const raw = fixedAmountInput.value.replace(/[^0-9]/g, '');
+                if (raw) {
+                    fixedAmountInput.value = parseInt(raw).toLocaleString('ko-KR');
+                } else {
+                    fixedAmountInput.value = '';
+                }
+            });
+        }
 
         // Category management modal
         const modal = document.getElementById('categoryModal');

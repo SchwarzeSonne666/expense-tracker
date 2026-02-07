@@ -513,8 +513,8 @@ h1 {
 }
 
 .daily-category-list.show {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -530,6 +530,7 @@ h1 {
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
+  text-align: center;
 }
 
 .daily-category-list .chip-item:hover {
@@ -666,8 +667,8 @@ h1 {
 }
 
 .daily-method-list.show {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 4px;
   animation: dropdownFadeIn 0.15s ease;
 }
@@ -683,6 +684,7 @@ h1 {
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.04);
   color: var(--text-secondary);
+  text-align: center;
 }
 
 .daily-method-list .chip-item:hover {
