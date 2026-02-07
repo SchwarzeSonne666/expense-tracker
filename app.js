@@ -681,8 +681,8 @@ class ExpenseTracker {
             const toggleTitle = isActive ? '중지' : '활성화';
             return `
         <div class="expense-item${pausedClass}" style="border-left-color: ${color}">
-          <span class="expense-name">${escapedName}</span>
           <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
+          <span class="expense-name">${escapedName}</span>
           <span class="expense-memo-tag">${escapedMemo}</span>
           <span class="expense-amount">${this.formatCurrency(expense.amount)}</span>
           <div class="expense-actions">

@@ -1149,17 +1149,6 @@ input::placeholder {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.expense-name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  flex-shrink: 1;
-}
-
 .expense-category {
   display: inline-block;
   padding: 0.08rem 0.4rem;
@@ -1168,16 +1157,29 @@ input::placeholder {
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 36px;
+  width: 46px;
   text-align: center;
+}
+
+.expense-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .expense-memo-tag {
   font-size: 0.6rem;
   color: var(--text-muted);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 70px;
   flex-shrink: 0;
-  min-width: 40px;
 }
 
 .expense-amount {
