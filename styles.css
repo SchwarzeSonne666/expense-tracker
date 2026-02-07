@@ -1781,6 +1781,7 @@ input::placeholder {
   .daily-ledger-card {
     max-height: none;
     overflow: visible;
+    max-width: 100%;
   }
 }
 
@@ -1879,6 +1880,89 @@ input::placeholder {
 
   .daily-add-row {
     flex-wrap: wrap;
+  }
+
+  /* 월간 요약 박스 넘침 방지 */
+  .daily-summary {
+    gap: 0.2rem;
+  }
+
+  .daily-summary-row {
+    padding: 0.3rem 0.15rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .daily-summary-value {
+    font-size: 0.62rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
+  .daily-summary-label {
+    font-size: 0.52rem;
+  }
+
+  /* 카드 실적 넘침 방지 */
+  .card-usage-section,
+  .installment-section {
+    overflow: hidden;
+  }
+
+  .card-usage-top {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .card-usage-name {
+    font-size: 0.65rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-usage-amounts {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+  }
+
+  .card-usage-used {
+    font-size: 0.62rem;
+  }
+
+  .card-usage-goal {
+    font-size: 0.55rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 할부 현황 넘침 방지 */
+  .installment-item {
+    gap: 0.25rem;
+  }
+
+  .installment-name {
+    width: auto;
+    min-width: 0;
+    flex: 1;
+    font-size: 0.65rem;
+  }
+
+  .installment-progress {
+    width: auto;
+    font-size: 0.55rem;
+  }
+
+  .installment-bar {
+    min-width: 20px;
+  }
+
+  .installment-amount {
+    font-size: 0.62rem;
   }
 }
 
