@@ -352,15 +352,19 @@ class ExpenseTracker {
             document.getElementById('expenseCategory').value = expense.category;
             document.getElementById('expenseMemo').value = expense.memo || '';
 
+            // Open the details element to show the form
+            const details = document.querySelector('.fixed-add-details');
+            if (details) details.open = true;
+
             // Update button text and visual mode
-            const submitBtn = document.querySelector('.btn-primary');
+            const submitBtn = document.querySelector('#expenseForm .btn-primary');
             submitBtn.textContent = '수정하기';
-            const formCard = document.getElementById('formCard');
-            formCard.classList.add('card--editing');
+            const fixedCard = document.querySelector('.fixed-expense-card');
+            fixedCard.classList.add('card--editing');
             document.getElementById('editBanner').style.display = 'flex';
 
             // Scroll to form
-            formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            fixedCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
@@ -368,10 +372,10 @@ class ExpenseTracker {
     cancelEdit() {
         this.editingId = null;
         document.getElementById('expenseForm').reset();
-        const submitBtn = document.querySelector('.btn-primary');
-        submitBtn.textContent = '+ 추가하기';
-        const formCard = document.getElementById('formCard');
-        formCard.classList.remove('card--editing');
+        const submitBtn = document.querySelector('#expenseForm .btn-primary');
+        submitBtn.textContent = '추가';
+        const fixedCard = document.querySelector('.fixed-expense-card');
+        fixedCard.classList.remove('card--editing');
         document.getElementById('editBanner').style.display = 'none';
     }
 
@@ -570,14 +574,14 @@ class ExpenseTracker {
                     // Update existing expense
                     this.updateExpense(this.editingId, name, amount, category, memo);
                     this.editingId = null;
-                    document.getElementById('formCard').classList.remove('card--editing');
+                    document.querySelector('.fixed-expense-card').classList.remove('card--editing');
                     document.getElementById('editBanner').style.display = 'none';
 
                     const submitBtn = form.querySelector('.btn-primary');
                     submitBtn.textContent = '수정 완료';
                     this.showToast('지출이 수정되었습니다.', 'success');
                     setTimeout(() => {
-                        submitBtn.textContent = '+ 추가하기';
+                        submitBtn.textContent = '추가';
                     }, 1500);
                 } else {
                     // Add new expense
@@ -587,7 +591,7 @@ class ExpenseTracker {
                     const submitBtn = form.querySelector('.btn-primary');
                     submitBtn.textContent = '추가 완료';
                     setTimeout(() => {
-                        submitBtn.textContent = '+ 추가하기';
+                        submitBtn.textContent = '추가';
                     }, 1500);
                 }
 
@@ -792,5 +796,287 @@ class ExpenseTracker {
     }
 }
 
+// ===== Daily Ledger (가계부) =====
+class DailyLedger {
+    constructor() {
+        const now = new Date();
+        this.year = now.getFullYear();
+        this.month = now.getMonth() + 1; // 1-based
+        this.currentType = 'expense';
+        this.firebaseReady = false;
+        this.listener = null;
+        this.items = {};
+        this.init();
+    }
+
+    init() {
+        this.initFirebase();
+        this.attachEvents();
+        this.updateMonthLabel();
+        this.setDefaultDay();
+    }
+
+    initFirebase() {
+        if (typeof window.db === 'undefined') {
+            console.warn('Firebase not available for DailyLedger');
+            return;
+        }
+        this.firebaseReady = true;
+        this.loadMonth();
+    }
+
+    getMonthRef() {
+        const mm = String(this.month).padStart(2, '0');
+        return window.db.ref(`daily/${this.year}/${mm}`);
+    }
+
+    loadMonth() {
+        // Detach previous listener
+        if (this.listener) {
+            this.listener.off();
+        }
+        this.listener = this.getMonthRef();
+        this.listener.on('value', (snapshot) => {
+            const data = snapshot.val();
+            this.items = data || {};
+            this.render();
+            this.updateSummary();
+        }, (error) => {
+            console.error('DailyLedger Firebase error:', error);
+        });
+    }
+
+    updateMonthLabel() {
+        const label = document.getElementById('currentMonthLabel');
+        if (label) label.textContent = `${this.year}년 ${this.month}월`;
+    }
+
+    setDefaultDay() {
+        const dayInput = document.getElementById('dailyDay');
+        if (dayInput) {
+            const now = new Date();
+            // Use effective date (06:00 boundary)
+            let day = now.getDate();
+            if (now.getHours() < 6) {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                day = yesterday.getDate();
+            }
+            dayInput.value = day;
+        }
+    }
+
+    changeMonth(delta) {
+        this.month += delta;
+        if (this.month > 12) {
+            this.month = 1;
+            this.year++;
+        } else if (this.month < 1) {
+            this.month = 12;
+            this.year--;
+        }
+        this.updateMonthLabel();
+        if (this.firebaseReady) {
+            this.loadMonth();
+        }
+    }
+
+    addItem(type, day, name, amount) {
+        if (!this.firebaseReady) return;
+        const dd = String(day).padStart(2, '0');
+        const ref = this.getMonthRef().child(dd).push();
+        ref.set({
+            type: type,
+            name: name,
+            amount: parseFloat(amount),
+            createdAt: new Date().toISOString()
+        });
+    }
+
+    deleteItem(day, itemId) {
+        if (!this.firebaseReady) return;
+        const dd = String(day).padStart(2, '0');
+        this.getMonthRef().child(dd).child(itemId).remove();
+    }
+
+    // Get day of week (한글)
+    getDayOfWeek(day) {
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        const date = new Date(this.year, this.month - 1, day);
+        return days[date.getDay()];
+    }
+
+    // Format currency
+    formatCurrency(amount) {
+        return new Intl.NumberFormat('ko-KR', {
+            style: 'currency',
+            currency: 'KRW'
+        }).format(amount);
+    }
+
+    // Escape HTML
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    render() {
+        const listEl = document.getElementById('dailyList');
+        if (!listEl) return;
+
+        // Collect all days, sort descending
+        const dayKeys = Object.keys(this.items).sort((a, b) => parseInt(b) - parseInt(a));
+
+        if (dayKeys.length === 0) {
+            listEl.innerHTML = '<div class="daily-empty">이번 달 기록이 없습니다</div>';
+            return;
+        }
+
+        let html = '';
+        for (const dd of dayKeys) {
+            const dayNum = parseInt(dd);
+            const dow = this.getDayOfWeek(dayNum);
+            const dayItems = this.items[dd];
+
+            html += `<div class="daily-day-group">`;
+            html += `<div class="daily-day-header">${dayNum}일 (${dow})</div>`;
+
+            // Sort items within day by createdAt descending
+            const itemEntries = Object.entries(dayItems).sort((a, b) => {
+                return (b[1].createdAt || '').localeCompare(a[1].createdAt || '');
+            });
+
+            for (const [itemId, item] of itemEntries) {
+                const isIncome = item.type === 'income';
+                const sign = isIncome ? '+' : '-';
+                const typeClass = isIncome ? 'income' : 'expense';
+                const escapedName = this.escapeHtml(item.name);
+
+                html += `
+                    <div class="daily-item">
+                        <span class="daily-item-name">${escapedName}</span>
+                        <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
+                        <button class="daily-item-delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
+                    </div>`;
+            }
+
+            html += `</div>`;
+        }
+
+        listEl.innerHTML = html;
+    }
+
+    updateSummary() {
+        let totalIncome = 0;
+        let totalExpense = 0;
+
+        for (const dd of Object.keys(this.items)) {
+            const dayItems = this.items[dd];
+            for (const itemId of Object.keys(dayItems)) {
+                const item = dayItems[itemId];
+                if (item.type === 'income') {
+                    totalIncome += item.amount;
+                } else {
+                    totalExpense += item.amount;
+                }
+            }
+        }
+
+        const incomeEl = document.getElementById('dailyIncome');
+        const expenseEl = document.getElementById('dailyExpense');
+        const balanceEl = document.getElementById('dailyBalance');
+
+        if (incomeEl) incomeEl.textContent = this.formatCurrency(totalIncome);
+        if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
+        if (balanceEl) balanceEl.textContent = this.formatCurrency(totalIncome - totalExpense);
+    }
+
+    attachEvents() {
+        // Month navigation
+        const prevBtn = document.getElementById('prevMonth');
+        const nextBtn = document.getElementById('nextMonth');
+        if (prevBtn) prevBtn.addEventListener('click', () => this.changeMonth(-1));
+        if (nextBtn) nextBtn.addEventListener('click', () => this.changeMonth(1));
+
+        // Type toggle
+        const typeBtns = document.querySelectorAll('.daily-type-btn');
+        typeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                typeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentType = btn.dataset.type;
+            });
+        });
+
+        // Add button
+        const addBtn = document.getElementById('addDailyBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => this.handleAdd());
+        }
+
+        // Enter key on inputs
+        const inputs = [
+            document.getElementById('dailyDay'),
+            document.getElementById('dailyName'),
+            document.getElementById('dailyAmount')
+        ];
+        inputs.forEach(input => {
+            if (input) {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.handleAdd();
+                    }
+                });
+            }
+        });
+
+        // Delete items (event delegation)
+        const listEl = document.getElementById('dailyList');
+        if (listEl) {
+            listEl.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.daily-item-delete');
+                if (deleteBtn) {
+                    const day = deleteBtn.dataset.day;
+                    const id = deleteBtn.dataset.id;
+                    this.deleteItem(parseInt(day), id);
+                }
+            });
+        }
+    }
+
+    handleAdd() {
+        const dayInput = document.getElementById('dailyDay');
+        const nameInput = document.getElementById('dailyName');
+        const amountInput = document.getElementById('dailyAmount');
+
+        const day = parseInt(dayInput.value);
+        const name = nameInput.value.trim();
+        const amount = parseFloat(amountInput.value);
+
+        if (!day || day < 1 || day > 31) {
+            dayInput.focus();
+            return;
+        }
+        if (!name) {
+            nameInput.focus();
+            return;
+        }
+        if (!amount || amount <= 0) {
+            amountInput.focus();
+            return;
+        }
+
+        this.addItem(this.currentType, day, name, amount);
+
+        // Clear name and amount, keep day
+        nameInput.value = '';
+        amountInput.value = '';
+        nameInput.focus();
+    }
+}
+
 // Initialize the app
 const tracker = new ExpenseTracker();
+const dailyLedger = new DailyLedger();

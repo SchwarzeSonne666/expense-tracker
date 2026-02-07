@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=25">
 </head>
 
 <body>
@@ -21,69 +21,63 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Add Expense Form -->
-            <aside class="card" id="formCard">
+            <!-- Daily Ledger (가계부) -->
+            <section class="card daily-ledger-card">
+                <!-- Month Navigator -->
+                <div class="daily-month-nav">
+                    <button class="daily-nav-btn" id="prevMonth">◀</button>
+                    <span class="daily-month-label" id="currentMonthLabel">2026년 2월</span>
+                    <button class="daily-nav-btn" id="nextMonth">▶</button>
+                </div>
+
+                <!-- Monthly Summary -->
+                <div class="daily-summary">
+                    <div class="daily-summary-row income">
+                        <span class="daily-summary-label">수입</span>
+                        <span class="daily-summary-value" id="dailyIncome">₩0</span>
+                    </div>
+                    <div class="daily-summary-row expense">
+                        <span class="daily-summary-label">지출</span>
+                        <span class="daily-summary-value" id="dailyExpense">₩0</span>
+                    </div>
+                    <div class="daily-summary-row balance">
+                        <span class="daily-summary-label">잔액</span>
+                        <span class="daily-summary-value" id="dailyBalance">₩0</span>
+                    </div>
+                </div>
+
+                <!-- Daily Items List -->
+                <div class="daily-list" id="dailyList">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <!-- Inline Add Form -->
+                <div class="daily-add-form">
+                    <div class="daily-add-row">
+                        <div class="daily-type-toggle">
+                            <button type="button" class="daily-type-btn active" data-type="expense">지출</button>
+                            <button type="button" class="daily-type-btn" data-type="income">수입</button>
+                        </div>
+                        <input type="number" id="dailyDay" class="daily-day-input" min="1" max="31" placeholder="일">
+                    </div>
+                    <div class="daily-add-row">
+                        <input type="text" id="dailyName" class="daily-name-input" placeholder="항목명">
+                        <input type="number" id="dailyAmount" class="daily-amount-input" placeholder="금액" min="0">
+                    </div>
+                    <button type="button" class="btn btn-primary daily-add-btn" id="addDailyBtn">+ 추가</button>
+                </div>
+            </section>
+
+            <!-- Fixed Expense (고정지출) -->
+            <section class="card fixed-expense-card">
                 <div id="editBanner" class="edit-banner" style="display:none;">
                     <span>수정 중</span>
                     <button type="button" class="btn-cancel-edit" id="cancelEditBtn">취소</button>
                 </div>
-                <h2 class="card-title">새 지출 추가</h2>
-                <form id="expenseForm">
-                    <div class="form-group">
-                        <label for="expenseName">지출 항목명</label>
-                        <input type="text" id="expenseName" placeholder="예: 넷플릭스 구독료" required>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="expenseAmount">금액 (원)</label>
-                        <input type="number" id="expenseAmount" placeholder="15000" min="0" step="1" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="expenseCategory">카테고리</label>
-                        <div class="category-input-wrapper">
-                            <div class="custom-dropdown" id="categoryDropdown">
-                                <input type="text" id="expenseCategory" placeholder="카테고리 입력 또는 선택"
-                                    autocomplete="off" required>
-                                <div class="dropdown-list" id="categoryDropdownList">
-                                    <!-- Categories will be dynamically populated -->
-                                </div>
-                            </div>
-                            <button type="button" class="btn-manage-categories" id="manageCategoriesBtn"
-                                title="카테고리 관리">
-                                ⚙
-                            </button>
-                        </div>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="expenseMemo">메모 (선택)</label>
-                        <div class="category-input-wrapper">
-                            <div class="custom-dropdown" id="memoDropdown">
-                                <input type="text" id="expenseMemo" placeholder="메모 입력 또는 선택"
-                                    autocomplete="off">
-                                <div class="dropdown-list" id="memoDropdownList">
-                                    <!-- Memos will be dynamically populated -->
-                                </div>
-                            </div>
-                            <button type="button" class="btn-manage-categories" id="manageMemosBtn"
-                                title="메모 관리">
-                                ⚙
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        + 추가하기
-                    </button>
-                </form>
-            </aside>
-
-            <!-- Expense List -->
-            <section class="card expense-list-card">
+                <!-- Expense List -->
                 <div class="expense-list-header">
-                    <h2 class="card-title">월간 고정지출 목록</h2>
+                    <h2 class="card-title">월간 고정지출</h2>
                     <div class="total-badge">
                         <span class="total-badge-label">합계</span>
                         <span class="total-badge-value" id="totalExpense">₩0</span>
@@ -92,6 +86,39 @@
                 <div id="expenseList" class="expense-list">
                     <!-- Expenses will be dynamically inserted here -->
                 </div>
+
+                <!-- Add Form (collapsible) -->
+                <details class="fixed-add-details">
+                    <summary class="fixed-add-summary">+ 새 고정지출 추가</summary>
+                    <form id="expenseForm" class="fixed-add-form">
+                        <div class="form-group">
+                            <input type="text" id="expenseName" placeholder="항목명 (예: 넷플릭스)" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="expenseAmount" placeholder="금액 (원)" min="0" step="1" required>
+                        </div>
+                        <div class="form-group">
+                            <div class="category-input-wrapper">
+                                <div class="custom-dropdown" id="categoryDropdown">
+                                    <input type="text" id="expenseCategory" placeholder="카테고리"
+                                        autocomplete="off" required>
+                                    <div class="dropdown-list" id="categoryDropdownList"></div>
+                                </div>
+                                <button type="button" class="btn-manage-categories" id="manageCategoriesBtn" title="카테고리 관리">⚙</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="category-input-wrapper">
+                                <div class="custom-dropdown" id="memoDropdown">
+                                    <input type="text" id="expenseMemo" placeholder="메모 (선택)" autocomplete="off">
+                                    <div class="dropdown-list" id="memoDropdownList"></div>
+                                </div>
+                                <button type="button" class="btn-manage-categories" id="manageMemosBtn" title="메모 관리">⚙</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">추가</button>
+                    </form>
+                </details>
             </section>
         </main>
 
@@ -186,7 +213,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
 </body>
 
 </html>
