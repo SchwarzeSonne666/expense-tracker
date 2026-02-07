@@ -1547,6 +1547,7 @@ class DailyLedger {
             { value: 5, label: '5개월' },
             { value: 6, label: '6개월' },
             { value: 12, label: '12개월' },
+            { value: 18, label: '18개월' },
             { value: 24, label: '24개월' }
         ];
 
