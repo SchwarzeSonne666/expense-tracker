@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=46">
+    <link rel="stylesheet" href="styles.css?v=47">
 </head>
 
 <body>
@@ -222,9 +222,11 @@
     <!-- Chip Picker Modal (shared by all chip dropdowns) -->
     <div id="chipPickerModal" class="modal chip-picker-modal">
         <div class="chip-picker-content">
-            <div class="chip-picker-title" id="chipPickerTitle">선택</div>
+            <div class="chip-picker-header">
+                <div class="chip-picker-title" id="chipPickerTitle">선택</div>
+                <button type="button" class="chip-picker-edit-btn" id="chipPickerEditBtn" style="display:none">⚙</button>
+            </div>
             <div class="chip-picker-grid" id="chipPickerGrid"></div>
-            <button type="button" class="chip-picker-edit-btn" id="chipPickerEditBtn" style="display:none">편집</button>
         </div>
     </div>
 
