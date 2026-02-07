@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="styles.css?v=70">
+    <link rel="stylesheet" href="styles.css?v=71">
 </head>
 
 <body>
@@ -292,12 +292,12 @@
             messagingSenderId: "524213396258",
             appId: "1:524213396258:web:9e37696ba06c84a2b6bb7b"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.database();
     </script>
 
     <script src="auth.js?v=4"></script>
-    <script src="app.js?v=54"></script>
+    <script src="app.js?v=55"></script>
 </body>
 
 </html>

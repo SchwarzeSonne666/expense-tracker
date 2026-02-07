@@ -1100,7 +1100,7 @@ class ExpenseTracker {
         // Confirm delete dialog
         const confirmDialog = document.getElementById('confirmDialog');
         document.getElementById('confirmOk').addEventListener('click', () => {
-            if (this._pendingDeleteId != null) {
+            if (this._pendingDeleteId !== null && this._pendingDeleteId !== undefined) {
                 this.deleteExpense(this._pendingDeleteId);
                 this.showToast('지출이 삭제되었습니다.', 'success');
                 this._pendingDeleteId = null;
@@ -1349,7 +1349,8 @@ class DailyLedger {
             console.error('DailyLedger: Firebase not ready');
             return;
         }
-        const totalAmount = parseFloat(amount);
+        const totalAmount = parseFloat(amount) || 0;
+        if (totalAmount <= 0) return;
         const isCard = this.isCardMethod(method);
         const createdAt = new Date().toISOString();
 
@@ -1459,6 +1460,7 @@ class DailyLedger {
             const dayNum = parseInt(dd);
             const dow = this.getDayOfWeek(dayNum);
             const dayItems = this.items[dd];
+            if (!dayItems || typeof dayItems !== 'object') continue;
 
             // Sort items within day by createdAt descending
             const itemEntries = Object.entries(dayItems).sort((a, b) => {
@@ -1565,7 +1567,7 @@ class DailyLedger {
             const catHtml = inst.category
                 ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(inst.category)}</span>`
                 : '';
-            const progress = Math.round((inst.installmentMonth / inst.installment) * 100);
+            const progress = inst.installment > 0 ? Math.round((inst.installmentMonth / inst.installment) * 100) : 0;
             html += `
                 <div class="installment-item">
                     ${catHtml}
@@ -1586,22 +1588,8 @@ class DailyLedger {
         const listEl = document.getElementById('cardUsageList');
         if (!section || !listEl) return;
 
-        // 카드별 사용액 집계 (cardDeferred 항목 — 실제 청구 기준)
+        // 카드별 사용액 집계 (cardRef 항목 = 당월 사용 기준, 실적 산정)
         const cardTotals = {};
-        for (const dd of Object.keys(this.items)) {
-            const dayItems = this.items[dd];
-            if (!dayItems || typeof dayItems !== 'object') continue;
-            for (const itemId of Object.keys(dayItems)) {
-                const item = dayItems[itemId];
-                if (!item || item.cardRef) continue;
-                if (item.cardDeferred && item.method) {
-                    const card = item.method;
-                    cardTotals[card] = (cardTotals[card] || 0) + (item.amount || 0);
-                }
-            }
-        }
-
-        // cardRef 항목도 집계 (당월 사용 기준 — 다음달 청구될 금액)
         for (const dd of Object.keys(this.items)) {
             const dayItems = this.items[dd];
             if (!dayItems || typeof dayItems !== 'object') continue;
@@ -1610,6 +1598,7 @@ class DailyLedger {
                 if (!item || !item.cardRef) continue;
                 if (item.method) {
                     const card = item.method;
+                    // 할부: 원금 기준, 일시불: 결제 금액
                     const amt = (item.installmentTotal && item.installment > 1) ? item.installmentTotal : (item.amount || 0);
                     cardTotals[card] = (cardTotals[card] || 0) + amt;
                 }

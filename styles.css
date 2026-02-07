@@ -1484,15 +1484,6 @@ input::placeholder {
   color: var(--accent-primary);
 }
 
-/* Paused (inactive) expense item */
-.expense-item.paused {
-  opacity: 0.45;
-}
-
-.expense-item.paused .expense-amount {
-  text-decoration: line-through;
-}
-
 /* Empty State */
 .empty-state {
   text-align: center;
