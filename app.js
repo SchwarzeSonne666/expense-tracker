@@ -1305,17 +1305,21 @@ class DailyLedger {
                     badgeHtml += `<span class="daily-item-installment">${instLabel}</span>`;
                 }
                 if (isCardRef) {
-                    badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
-                    if (item.installment && item.installment > 1 && item.installmentTotal) {
+                    if (item.installment && item.installment > 1) {
+                        badgeHtml += `<span class="daily-item-card-ref-tag">다음달 ${item.installment}개월</span>`;
                         badgeHtml += `<span class="daily-item-ref-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
+                    } else {
+                        badgeHtml += '<span class="daily-item-card-ref-tag">다음달 일시불</span>';
                     }
                 } else if (item.cardDeferred) {
-                    badgeHtml += '<span class="daily-item-card-deferred">카드</span>';
+                    if (!(item.installment && item.installment > 1)) {
+                        badgeHtml += '<span class="daily-item-card-deferred">카드 일시불</span>';
+                    } else {
+                        badgeHtml += '<span class="daily-item-card-deferred">카드</span>';
+                    }
                 }
 
-                const actionsHtml = isCardRef
-                    ? `<div class="daily-item-actions"><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`
-                    : `<div class="daily-item-actions"><button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`;
+                const actionsHtml = `<div class="daily-item-actions"><button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`;
 
                 html += `
                     <div class="daily-item${cardRefClass}">
@@ -1609,9 +1613,6 @@ class DailyLedger {
         const dayItems = this.items[dd];
         if (!dayItems || !dayItems[itemId]) return;
         const item = dayItems[itemId];
-
-        // cardRef 항목은 편집 불가
-        if (item.cardRef) return;
 
         this._editingDay = dd;
         this._editingId = itemId;
