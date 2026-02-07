@@ -1749,6 +1749,7 @@ class DailyLedger {
         let totalIncome = 0;
         let totalExpense = 0;
         let fixedTotal = 0;
+        let cardDeferredTotal = 0;
 
         for (const dd of Object.keys(this.items)) {
             const dayItems = this.items[dd];
@@ -1763,6 +1764,10 @@ class DailyLedger {
                     totalIncome += (item.amount || 0);
                 } else {
                     totalExpense += (item.amount || 0);
+                    // 카드 이월 결제 합산 (cardDeferred 일시불)
+                    if (item.cardDeferred && !(item.installment && item.installment > 1)) {
+                        cardDeferredTotal += (item.amount || 0);
+                    }
                 }
             }
         }
@@ -1773,12 +1778,14 @@ class DailyLedger {
         const carryoverEl = document.getElementById('dailyCarryover');
         const incomeEl = document.getElementById('dailyIncome');
         const fixedEl = document.getElementById('dailyFixed');
+        const cardDeferredEl = document.getElementById('dailyCardDeferred');
         const expenseEl = document.getElementById('dailyExpense');
         const balanceEl = document.getElementById('dailyBalance');
 
         if (carryoverEl) carryoverEl.textContent = this.formatCurrency(carryover);
         if (incomeEl) incomeEl.textContent = this.formatCurrency(totalIncome);
         if (fixedEl) fixedEl.textContent = this.formatCurrency(fixedTotal);
+        if (cardDeferredEl) cardDeferredEl.textContent = this.formatCurrency(cardDeferredTotal);
         if (expenseEl) expenseEl.textContent = this.formatCurrency(totalExpense);
         if (balanceEl) balanceEl.textContent = this.formatCurrency(balance);
 
