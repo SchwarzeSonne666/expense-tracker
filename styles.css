@@ -1752,22 +1752,9 @@ input::placeholder {
 
 /* Tablets (968px and below) */
 @media (max-width: 968px) {
-  body {
-    overflow: auto;
-    height: auto;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding-bottom: 2rem;
-  }
-
-  .container {
-    flex: none;
-    min-height: auto;
-  }
-
   .main-content {
     grid-template-columns: 1fr;
-    flex: none;
+    overflow-y: auto;
   }
 
   h1 {
