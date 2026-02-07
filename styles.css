@@ -662,6 +662,13 @@ h1 {
   flex-shrink: 0;
 }
 
+.daily-item-ref-detail {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .daily-method-wrapper.disabled,
 .daily-installment-wrapper.disabled {
   opacity: 0.3;

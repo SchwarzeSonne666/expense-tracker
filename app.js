@@ -1306,9 +1306,16 @@ class DailyLedger {
                 }
                 if (isCardRef) {
                     badgeHtml += '<span class="daily-item-card-ref-tag">다음달</span>';
+                    if (item.installment && item.installment > 1 && item.installmentTotal) {
+                        badgeHtml += `<span class="daily-item-ref-detail">원금 ${this.formatCurrency(item.installmentTotal)}</span>`;
+                    }
                 } else if (item.cardDeferred) {
                     badgeHtml += '<span class="daily-item-card-deferred">카드</span>';
                 }
+
+                const actionsHtml = isCardRef
+                    ? `<div class="daily-item-actions"><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`
+                    : `<div class="daily-item-actions"><button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button><button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button></div>`;
 
                 html += `
                     <div class="daily-item${cardRefClass}">
@@ -1317,10 +1324,7 @@ class DailyLedger {
                         ${methodHtml}
                         ${badgeHtml}
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
-                        <div class="daily-item-actions">
-                            <button class="btn-icon edit" data-edit-day="${dd}" data-edit-id="${itemId}" title="수정">✎</button>
-                            <button class="btn-icon delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
-                        </div>
+                        ${actionsHtml}
                     </div>`;
             }
 
