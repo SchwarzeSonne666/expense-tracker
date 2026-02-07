@@ -1314,7 +1314,7 @@ class DailyLedger {
                     if (item.installment && item.installment > 1) {
                         badgeHtml += `<span class="daily-item-installment">${item.installmentMonth}/${item.installment}개월</span>`;
                     } else {
-                        badgeHtml += '<span class="daily-item-card-deferred">카드 일시불</span>';
+                        badgeHtml += '<span class="daily-item-installment">일시불</span>';
                     }
                 }
 
