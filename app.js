@@ -1130,7 +1130,12 @@ class DailyLedger {
         const maxDays = this.getDaysInMonth();
         if (this.selectedDay > maxDays) {
             this.selectedDay = maxDays;
-            this.updateDayButton();
+        }
+        this.updateDayButton();
+        // 날짜 그리드가 열려있으면 다시 렌더링
+        const grid = document.getElementById('dailyDayGrid');
+        if (grid && grid.classList.contains('show')) {
+            this.renderDayGrid();
         }
         if (this.firebaseReady) {
             this.loadMonth();
