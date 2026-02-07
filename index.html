@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=47">
+    <link rel="stylesheet" href="styles.css?v=48">
 </head>
 
 <body>
@@ -90,20 +90,29 @@
 
             <!-- Fixed Expense (고정지출) -->
             <section class="card fixed-expense-card">
-                <!-- Expense List -->
-                <div class="expense-list-header">
-                    <h2 class="card-title">월간 고정지출</h2>
+                <!-- Collapsible Header -->
+                <div class="expense-list-header" id="fixedExpenseToggle">
+                    <div class="expense-list-header-left">
+                        <span class="fixed-toggle-arrow" id="fixedToggleArrow">▼</span>
+                        <h2 class="card-title">월간 고정지출</h2>
+                    </div>
                     <div class="total-badge">
                         <span class="total-badge-label">합계</span>
                         <span class="total-badge-value" id="totalExpense">₩0</span>
                     </div>
                 </div>
-                <div id="expenseList" class="expense-list">
-                    <!-- Expenses will be dynamically inserted here -->
+                <div class="fixed-expense-body" id="fixedExpenseBody">
+                    <div id="expenseList" class="expense-list">
+                        <!-- Expenses will be dynamically inserted here -->
+                    </div>
+                    <!-- Add Button -->
+                    <button type="button" class="btn btn-primary fixed-add-open-btn" id="openFixedAddModal">+ 새 고정지출 추가</button>
                 </div>
 
-                <!-- Add Button -->
-                <button type="button" class="btn btn-primary fixed-add-open-btn" id="openFixedAddModal">+ 새 고정지출 추가</button>
+                <!-- Chart Area (placeholder) -->
+                <div class="chart-area" id="chartArea">
+                    <div class="chart-placeholder">그래프 영역</div>
+                </div>
             </section>
         </main>
 
@@ -266,7 +275,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=23"></script>
+    <script src="app.js?v=24"></script>
 </body>
 
 </html>

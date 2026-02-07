@@ -674,31 +674,21 @@ class ExpenseTracker {
             const color = this.getCategoryColor(expense.category);
             const escapedName = this.escapeHtml(expense.name);
             const escapedCategory = this.escapeHtml(expense.category);
-            const escapedMemo = expense.memo ? ` · ${this.escapeHtml(expense.memo)}` : '';
+            const escapedMemo = expense.memo ? this.escapeHtml(expense.memo) : '';
             const isActive = expense.active !== false;
             const pausedClass = isActive ? '' : ' paused';
             const toggleIcon = isActive ? '●' : '○';
             const toggleTitle = isActive ? '중지' : '활성화';
             return `
         <div class="expense-item${pausedClass}" style="border-left-color: ${color}">
-          <div class="expense-info">
-            <div class="expense-name">${escapedName}</div>
-            <div class="expense-meta">
-              <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
-              ${escapedMemo ? `<span>${escapedMemo.replace(' · ', '')}</span>` : ''}
-            </div>
-          </div>
-          <div class="expense-amount">${this.formatCurrency(expense.amount)}</div>
+          <span class="expense-name">${escapedName}</span>
+          <span class="expense-category" style="background: ${color}33; color: ${color}">${escapedCategory}</span>
+          <span class="expense-memo-tag">${escapedMemo}</span>
+          <span class="expense-amount">${this.formatCurrency(expense.amount)}</span>
           <div class="expense-actions">
-            <button class="btn-icon toggle ${isActive ? 'active' : ''}" data-toggle-id="${expense.id}" title="${toggleTitle}">
-              ${toggleIcon}
-            </button>
-            <button class="btn-icon edit" data-edit-id="${expense.id}" title="수정">
-              ✎
-            </button>
-            <button class="btn-icon delete" data-delete-id="${expense.id}" title="삭제">
-              ×
-            </button>
+            <button class="btn-icon toggle ${isActive ? 'active' : ''}" data-toggle-id="${expense.id}" title="${toggleTitle}">${toggleIcon}</button>
+            <button class="btn-icon edit" data-edit-id="${expense.id}" title="수정">✎</button>
+            <button class="btn-icon delete" data-delete-id="${expense.id}" title="삭제">×</button>
           </div>
         </div>
       `;
@@ -730,6 +720,17 @@ class ExpenseTracker {
 
     // Attach event listeners
     attachEventListeners() {
+        // Fixed expense collapse/expand toggle
+        const fixedToggle = document.getElementById('fixedExpenseToggle');
+        const fixedBody = document.getElementById('fixedExpenseBody');
+        const fixedArrow = document.getElementById('fixedToggleArrow');
+        if (fixedToggle && fixedBody && fixedArrow) {
+            fixedToggle.addEventListener('click', () => {
+                const collapsed = fixedBody.classList.toggle('collapsed');
+                fixedArrow.textContent = collapsed ? '▶' : '▼';
+            });
+        }
+
         // Fixed add modal open/close
         const openModalBtn = document.getElementById('openFixedAddModal');
         const closeModalBtn = document.getElementById('closeFixedAddModal');
