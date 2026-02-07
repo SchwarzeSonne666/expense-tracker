@@ -56,20 +56,29 @@ body {
     radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
   color: var(--text-primary);
   line-height: 1.4;
-  min-height: 100vh;
-  padding: var(--spacing-md);
+  height: 100vh;
+  height: 100dvh;
+  padding: var(--spacing-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* Header */
 header {
   text-align: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-xs);
   animation: fadeInDown 0.6s ease;
+  flex-shrink: 0;
 }
 
 /* Nav Tabs */
@@ -87,9 +96,9 @@ header {
 .nav-tab {
   flex: 1;
   text-align: center;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 10px;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
@@ -128,7 +137,8 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  flex-shrink: 0;
 }
 
 .expense-list-header .card-title {
@@ -175,14 +185,18 @@ h1 {
 .main-content {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-sm);
   animation: fadeInUp 0.6s ease 0.2s both;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ===== Daily Ledger (가계부) ===== */
 .daily-ledger-card {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .daily-month-nav {
@@ -190,7 +204,8 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.4rem;
+  flex-shrink: 0;
 }
 
 .daily-nav-btn {
@@ -220,8 +235,9 @@ h1 {
 
 .daily-summary {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: 0.35rem;
+  margin-bottom: 0.4rem;
+  flex-shrink: 0;
 }
 
 .daily-summary-row {
@@ -259,9 +275,14 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  min-height: 100px;
+  margin-bottom: 0.5rem;
+  min-height: 60px;
+  overflow-y: auto;
 }
+
+.daily-list::-webkit-scrollbar { width: 3px; }
+.daily-list::-webkit-scrollbar-track { background: transparent; }
+.daily-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 
 .daily-day-group {
   margin-bottom: 0.25rem;
@@ -330,7 +351,8 @@ h1 {
 /* Daily Add Form */
 .daily-add-form {
   border-top: 1px solid rgba(255,255,255,0.08);
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
+  flex-shrink: 0;
 }
 
 .daily-add-row {
@@ -665,18 +687,26 @@ h1 {
 .fixed-expense-card {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .fixed-expense-card .expense-list {
   flex: 1;
-  overflow-y: visible;
+  overflow-y: auto;
+  min-height: 0;
 }
 
+.fixed-expense-card .expense-list::-webkit-scrollbar { width: 3px; }
+.fixed-expense-card .expense-list::-webkit-scrollbar-track { background: transparent; }
+.fixed-expense-card .expense-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
 .fixed-add-open-btn {
-  margin-top: 0.75rem;
-  padding: 0.5rem !important;
-  font-size: 0.78rem !important;
+  margin-top: 0.5rem;
+  padding: 0.4rem !important;
+  font-size: 0.75rem !important;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .fixed-add-form .form-group {
@@ -700,7 +730,7 @@ h1 {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   box-shadow: var(--shadow-md);
 }
 
@@ -1125,7 +1155,7 @@ input::placeholder {
 .expense-list {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .expense-item {
@@ -1133,7 +1163,7 @@ input::placeholder {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-left: 3px solid var(--accent-primary);
   border-radius: var(--radius-sm);
-  padding: 0.35rem 0.5rem;
+  padding: 0.25rem 0.4rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1417,6 +1447,7 @@ input::placeholder {
 
   .daily-ledger-card {
     max-height: none;
+    overflow: visible;
   }
 }
 
