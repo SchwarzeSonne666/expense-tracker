@@ -417,13 +417,11 @@ h1 {
 .fixed-expense-card {
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 80px);
 }
 
 .fixed-expense-card .expense-list {
   flex: 1;
-  overflow-y: auto;
-  max-height: none;
+  overflow-y: visible;
 }
 
 .fixed-add-details {
@@ -1172,14 +1170,6 @@ input::placeholder {
 
   .daily-list {
     max-height: 350px;
-  }
-
-  .fixed-expense-card {
-    max-height: none;
-  }
-
-  .fixed-expense-card .expense-list {
-    max-height: 400px;
   }
 
   .expense-list-card .expense-list {
