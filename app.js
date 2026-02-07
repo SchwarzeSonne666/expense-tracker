@@ -1174,6 +1174,7 @@ class DailyLedger {
                 typeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.currentType = btn.dataset.type;
+                this.toggleMethodInstallment(btn.dataset.type);
             });
         });
 
@@ -1231,6 +1232,30 @@ class DailyLedger {
                 }
             });
         }
+    }
+
+    // 수입/지출 전환 시 결제수단·할부 활성/비활성
+    toggleMethodInstallment(type) {
+        const methodInput = document.getElementById('dailyMethod');
+        const installmentBtn = document.getElementById('dailyInstallmentBtn');
+        const methodWrapper = document.querySelector('.daily-method-wrapper');
+        const installmentWrapper = document.querySelector('.daily-installment-wrapper');
+
+        const isIncome = type === 'income';
+
+        if (methodInput) {
+            methodInput.disabled = isIncome;
+            if (isIncome) methodInput.value = '';
+        }
+        if (installmentBtn) {
+            installmentBtn.disabled = isIncome;
+            if (isIncome) {
+                this.selectedInstallment = 1;
+                installmentBtn.textContent = '일시불';
+            }
+        }
+        if (methodWrapper) methodWrapper.classList.toggle('disabled', isIncome);
+        if (installmentWrapper) installmentWrapper.classList.toggle('disabled', isIncome);
     }
 
     setupCategoryDropdown() {
@@ -1389,8 +1414,8 @@ class DailyLedger {
         const category = categoryInput ? categoryInput.value.trim() : '';
         const rawAmount = amountInput.value.replace(/[^0-9]/g, '');
         const amount = parseFloat(rawAmount);
-        const method = methodInput ? methodInput.value.trim() : '';
-        const installment = this.selectedInstallment || 1;
+        const method = (this.currentType === 'income') ? '' : (methodInput ? methodInput.value.trim() : '');
+        const installment = (this.currentType === 'income') ? 1 : (this.selectedInstallment || 1);
 
         if (!day || day < 1 || day > 31) {
             return;

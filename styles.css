@@ -649,6 +649,12 @@ h1 {
   flex-shrink: 0;
 }
 
+.daily-method-wrapper.disabled,
+.daily-installment-wrapper.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .daily-add-btn {
   margin-top: 0.25rem;
   padding: 0.45rem !important;
