@@ -69,6 +69,7 @@ class ExpenseTracker {
         this.expenses = this.loadExpenses();
         this.categories = this.loadCategories();
         this.memos = this.loadMemos();
+        this.dailyCategories = this.loadDailyCategories();
         this.editingId = null; // Track which expense is being edited
         this.firebaseReady = false;
         this.init();
@@ -94,11 +95,13 @@ class ExpenseTracker {
         this.expensesRef = window.db.ref('expenses');
         this.categoriesRef = window.db.ref('categories');
         this.memosRef = window.db.ref('memos');
+        this.dailyCategoriesRef = window.db.ref('dailyCategories');
 
         // Save local data BEFORE Firebase listeners overwrite them
         const localExpenses = [...this.expenses];
         const localCategories = [...this.categories];
         const localMemos = [...this.memos];
+        const localDailyCategories = [...this.dailyCategories];
 
         // Start listeners (works regardless of sync result)
         const startListeners = () => {
@@ -142,10 +145,22 @@ class ExpenseTracker {
             }, (error) => {
                 console.error('Firebase memos listener error:', error);
             });
+
+            this.dailyCategoriesRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    this.dailyCategories = Array.isArray(data) ? data : Object.values(data);
+                } else {
+                    this.dailyCategories = ['식비', '교통', '쇼핑', '의료', '여가', '카페', '기타'];
+                }
+                localStorage.setItem('dailyCategories', JSON.stringify(this.dailyCategories));
+            }, (error) => {
+                console.error('Firebase dailyCategories listener error:', error);
+            });
         };
 
         // First sync local data, then start listeners
-        this.syncLocalToFirebase(localExpenses, localCategories, localMemos)
+        this.syncLocalToFirebase(localExpenses, localCategories, localMemos, localDailyCategories)
             .then(startListeners)
             .catch((err) => {
                 console.error('Sync failed, starting listeners anyway:', err);
@@ -154,7 +169,7 @@ class ExpenseTracker {
     }
 
     // One-time sync: push localStorage data to Firebase if Firebase is empty
-    async syncLocalToFirebase(localExpenses, localCategories, localMemos) {
+    async syncLocalToFirebase(localExpenses, localCategories, localMemos, localDailyCategories) {
         try {
             const expSnap = await this.expensesRef.once('value');
             if (!expSnap.val() && localExpenses.length > 0) {
@@ -176,6 +191,12 @@ class ExpenseTracker {
             if (!memoSnap.val() && localMemos.length > 0) {
                 await this.memosRef.set(localMemos);
                 console.log('Local memos uploaded to Firebase:', localMemos.length);
+            }
+
+            const dailyCatSnap = await this.dailyCategoriesRef.once('value');
+            if (!dailyCatSnap.val() && localDailyCategories.length > 0) {
+                await this.dailyCategoriesRef.set(localDailyCategories);
+                console.log('Local dailyCategories uploaded to Firebase:', localDailyCategories.length);
             }
         } catch (error) {
             console.error('Firebase sync error:', error);
@@ -280,6 +301,58 @@ class ExpenseTracker {
           </button>
         </div>
       `;
+        }).join('');
+    }
+
+    // Load daily categories from localStorage
+    loadDailyCategories() {
+        const stored = localStorage.getItem('dailyCategories');
+        return stored ? JSON.parse(stored) : ['식비', '교통', '쇼핑', '의료', '여가', '카페', '기타'];
+    }
+
+    // Save daily categories
+    saveDailyCategories() {
+        localStorage.setItem('dailyCategories', JSON.stringify(this.dailyCategories));
+        if (this.firebaseReady) {
+            this.dailyCategoriesRef.set(this.dailyCategories);
+        }
+    }
+
+    // Add daily category
+    addDailyCategory(name) {
+        const trimmed = name.trim();
+        if (trimmed && !this.dailyCategories.includes(trimmed)) {
+            this.dailyCategories.push(trimmed);
+            this.saveDailyCategories();
+            return true;
+        }
+        return false;
+    }
+
+    // Delete daily category
+    deleteDailyCategory(name) {
+        this.dailyCategories = this.dailyCategories.filter(c => c !== name);
+        this.saveDailyCategories();
+        return true;
+    }
+
+    // Render daily category management list
+    renderDailyCategoryManageList() {
+        const listContainer = document.getElementById('dailyCategoryListManage');
+        if (!listContainer) return;
+
+        if (this.dailyCategories.length === 0) {
+            listContainer.innerHTML = '<p class="empty-category-text">등록된 카테고리가 없습니다.</p>';
+            return;
+        }
+
+        listContainer.innerHTML = this.dailyCategories.map((cat, index) => {
+            const escaped = this.escapeHtml(cat);
+            return `
+        <div class="category-item">
+          <span class="category-item-name">${escaped}</span>
+          <button class="btn-icon delete" data-daily-cat-index="${index}" title="삭제">×</button>
+        </div>`;
         }).join('');
     }
 
@@ -792,11 +865,16 @@ class ExpenseTracker {
         });
 
         // ESC key to close modals/dialogs
+        const dailyCategoryModal = document.getElementById('dailyCategoryModal');
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (confirmDialog.style.display === 'flex') {
                     this._pendingDeleteId = null;
                     confirmDialog.style.display = 'none';
+                } else if (dailyCategoryModal && dailyCategoryModal.style.display === 'flex') {
+                    dailyCategoryModal.style.display = 'none';
+                    const dcInput = document.getElementById('newDailyCategoryInput');
+                    if (dcInput) dcInput.value = '';
                 } else if (memoModal.style.display === 'flex') {
                     memoModal.style.display = 'none';
                     newMemoInput.value = '';
@@ -1231,6 +1309,9 @@ class DailyLedger {
             });
         }
 
+        // Daily Category management modal
+        this.setupDailyCategoryManagement();
+
         // Category, Method, Installment dropdowns
         this.setupCategoryDropdown();
         this.setupMethodDropdown();
@@ -1292,17 +1373,78 @@ class DailyLedger {
         if (installmentWrapper) installmentWrapper.classList.toggle('disabled', isIncome);
     }
 
+    setupDailyCategoryManagement() {
+        const manageBtn = document.getElementById('manageDailyCategoriesBtn');
+        const modal = document.getElementById('dailyCategoryModal');
+        const closeBtn = document.getElementById('closeDailyCategoryModal');
+        const addBtn = document.getElementById('addDailyCategoryBtn');
+        const input = document.getElementById('newDailyCategoryInput');
+        const listManage = document.getElementById('dailyCategoryListManage');
+
+        if (!manageBtn || !modal) return;
+
+        manageBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            if (typeof tracker !== 'undefined') tracker.renderDailyCategoryManageList();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            input.value = '';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                input.value = '';
+            }
+        });
+
+        addBtn.addEventListener('click', () => {
+            const name = input.value.trim();
+            if (name && typeof tracker !== 'undefined') {
+                if (tracker.addDailyCategory(name)) {
+                    input.value = '';
+                    tracker.renderDailyCategoryManageList();
+                    addBtn.textContent = '완료';
+                    setTimeout(() => { addBtn.textContent = '추가'; }, 1000);
+                } else {
+                    tracker.showToast('이미 존재하는 카테고리입니다.', 'error');
+                }
+            }
+        });
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addBtn.click();
+        });
+
+        // Delete delegation
+        if (listManage) {
+            listManage.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-daily-cat-index]');
+                if (btn && !btn.disabled && typeof tracker !== 'undefined') {
+                    const index = parseInt(btn.dataset.dailyCatIndex);
+                    const name = tracker.dailyCategories[index];
+                    if (name) {
+                        tracker.deleteDailyCategory(name);
+                        tracker.renderDailyCategoryManageList();
+                    }
+                }
+            });
+        }
+    }
+
     setupCategoryDropdown() {
         const input = document.getElementById('dailyCategory');
         if (!input) return;
 
         const getItems = () => {
             try {
-                if (typeof tracker !== 'undefined' && tracker.categories) {
-                    return tracker.categories;
+                if (typeof tracker !== 'undefined' && tracker.dailyCategories) {
+                    return tracker.dailyCategories;
                 }
             } catch (_) {}
-            return ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
+            return ['식비', '교통', '쇼핑', '의료', '여가', '카페', '기타'];
         };
 
         input.addEventListener('click', () => {

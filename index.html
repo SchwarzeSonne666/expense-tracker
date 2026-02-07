@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=44">
+    <link rel="stylesheet" href="styles.css?v=45">
 </head>
 
 <body>
@@ -73,6 +73,7 @@
                         <input type="text" id="dailyName" class="daily-name-input" placeholder="항목명">
                         <div class="daily-category-wrapper">
                             <input type="text" id="dailyCategory" class="daily-category-input" placeholder="카테고리" autocomplete="off" readonly>
+                            <button type="button" class="btn-manage-daily-cat" id="manageDailyCategoriesBtn" title="카테고리 관리">⚙</button>
                         </div>
                     </div>
                     <div class="daily-add-row">
@@ -202,6 +203,29 @@
         </div>
     </div>
 
+    <!-- Daily Category Management Modal -->
+    <div id="dailyCategoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>가계부 카테고리 관리</h2>
+                <button class="modal-close" id="closeDailyCategoryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newDailyCategoryInput">새 카테고리 추가</label>
+                    <div class="category-add-wrapper">
+                        <input type="text" id="newDailyCategoryInput" placeholder="카테고리 이름 입력">
+                        <button type="button" class="btn btn-add-category" id="addDailyCategoryBtn">추가</button>
+                    </div>
+                </div>
+                <div class="category-list-section">
+                    <label>등록된 카테고리</label>
+                    <div id="dailyCategoryListManage" class="category-manage-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Chip Picker Modal (shared by all chip dropdowns) -->
     <div id="chipPickerModal" class="modal chip-picker-modal">
         <div class="chip-picker-content">
@@ -246,7 +270,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=20"></script>
+    <script src="app.js?v=21"></script>
 </body>
 
 </html>

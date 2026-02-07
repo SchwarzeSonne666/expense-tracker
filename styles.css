@@ -484,6 +484,27 @@ h1 {
 .daily-category-wrapper {
   flex: 0.5;
   min-width: 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.btn-manage-daily-cat {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem 0.55rem;
+  font-size: 0.78rem;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-manage-daily-cat:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
 }
 
 .daily-category-input {
