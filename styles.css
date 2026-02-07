@@ -480,9 +480,8 @@ h1 {
 .daily-name-input { flex: 1; min-width: 0; }
 .daily-amount-input { flex: 0.5; min-width: 0; }
 
-/* Daily Category Dropdown */
+/* Daily Category */
 .daily-category-wrapper {
-  position: relative;
   flex: 0.5;
   min-width: 0;
 }
@@ -491,28 +490,6 @@ h1 {
   width: 100% !important;
   font-size: 0.78rem !important;
   cursor: pointer;
-}
-
-.daily-category-list {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem;
-  z-index: 100;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
-  min-width: 200px;
-}
-
-.daily-category-list.show {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 4px;
-  animation: dropdownFadeIn 0.15s ease;
 }
 
 /* Daily Item Category Tag */
@@ -535,15 +512,13 @@ h1 {
   -moz-appearance: textfield;
 }
 
-/* Daily Method & Installment Dropdowns */
+/* Daily Method & Installment */
 .daily-method-wrapper {
-  position: relative;
   flex: 0.35;
   min-width: 0;
 }
 
 .daily-installment-wrapper {
-  position: relative;
   flex: 0.25;
   min-width: 0;
 }
@@ -569,58 +544,10 @@ h1 {
   background: rgba(255,255,255,0.08);
 }
 
-.daily-installment-list {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  left: auto;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem;
-  z-index: 100;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
-}
-
-.daily-installment-list.show {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 4px;
-  animation: dropdownFadeIn 0.15s ease;
-}
-
-.daily-installment-list .chip-item:first-child {
-  grid-column: 1 / -1;
-}
-
 .daily-method-input {
   width: 100% !important;
   font-size: 0.78rem !important;
   cursor: pointer;
-}
-
-.daily-method-list {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-sm);
-  padding: 0.4rem;
-  z-index: 100;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
-  min-width: 180px;
-}
-
-.daily-method-list.show {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 4px;
-  animation: dropdownFadeIn 0.15s ease;
 }
 
 
@@ -1291,6 +1218,46 @@ input::placeholder {
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* ===== Chip Picker Modal ===== */
+.chip-picker-modal {
+  z-index: 1100;
+}
+
+.chip-picker-content {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  width: 260px;
+  box-shadow: var(--shadow-lg);
+  animation: slideInUp 0.2s ease;
+}
+
+.chip-picker-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  text-align: center;
+}
+
+.chip-picker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.chip-picker-grid .chip-item {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.chip-picker-grid .chip-item.full-width {
+  grid-column: 1 / -1;
 }
 
 /* Toast Notifications */

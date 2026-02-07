@@ -1,3 +1,68 @@
+// ===== Shared Chip Picker Modal =====
+const ChipPicker = {
+    _modal: null,
+    _grid: null,
+    _title: null,
+    _callback: null,
+
+    init() {
+        this._modal = document.getElementById('chipPickerModal');
+        this._grid = document.getElementById('chipPickerGrid');
+        this._title = document.getElementById('chipPickerTitle');
+        if (!this._modal) return;
+
+        // Close on backdrop click
+        this._modal.addEventListener('click', (e) => {
+            if (e.target === this._modal) this.close();
+        });
+
+        // Close on ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this._modal.style.display === 'flex') {
+                this.close();
+            }
+        });
+    },
+
+    open(title, items, callback, opts = {}) {
+        if (!this._modal) return;
+        this._callback = callback;
+        this._title.textContent = title;
+
+        if (items.length === 0) {
+            this._grid.innerHTML = '<div class="dropdown-empty">항목 없음</div>';
+        } else {
+            this._grid.innerHTML = items.map(item => {
+                const isObj = typeof item === 'object';
+                const label = isObj ? item.label : item;
+                const value = isObj ? item.value : item;
+                const activeClass = (opts.activeValue !== undefined && String(opts.activeValue) === String(value)) ? ' active' : '';
+                const fullWidth = (isObj && item.fullWidth) ? ' full-width' : '';
+                const escaped = label.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                return `<div class="chip-item${activeClass}${fullWidth}" data-value="${value}">${escaped}</div>`;
+            }).join('');
+        }
+
+        this._modal.style.display = 'flex';
+
+        // Listen for chip click
+        this._grid.onclick = (e) => {
+            const chip = e.target.closest('.chip-item');
+            if (chip) {
+                const val = chip.dataset.value;
+                if (this._callback) this._callback(val);
+                this.close();
+            }
+        };
+    },
+
+    close() {
+        if (this._modal) this._modal.style.display = 'none';
+        this._callback = null;
+        this._grid.onclick = null;
+    }
+};
+
 // Expense Tracker Application with Firebase Sync
 class ExpenseTracker {
     constructor() {
@@ -521,41 +586,15 @@ class ExpenseTracker {
         } catch (_) {}
     }
 
-    // Setup custom dropdown behavior (chip grid style)
-    setupCustomDropdown(input, listEl, getItems) {
-        const showFiltered = () => {
-            const val = input.value.toLowerCase();
-            const items = getItems();
-            const filtered = val ? items.filter(item => item.toLowerCase().includes(val)) : items;
-
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="dropdown-empty">일치하는 항목 없음</div>';
-            } else {
-                listEl.innerHTML = filtered.map(item => {
-                    const escaped = this.escapeHtml(item);
-                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
-                }).join('');
-            }
-            listEl.classList.add('show');
-        };
-
-        input.addEventListener('focus', showFiltered);
-        input.addEventListener('input', showFiltered);
-
-        listEl.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const item = e.target.closest('.chip-item');
-            if (item) {
-                input.value = item.dataset.value;
-                listEl.classList.remove('show');
+    // Setup custom dropdown behavior (chip picker modal)
+    setupCustomDropdown(input, listEl, getItems, title) {
+        const openPicker = () => {
+            ChipPicker.open(title || '선택', getItems(), (val) => {
+                input.value = val;
                 input.dispatchEvent(new Event('change'));
-            }
-        });
-
-        // Close on blur (delayed to allow mousedown on list)
-        input.addEventListener('blur', () => {
-            setTimeout(() => listEl.classList.remove('show'), 150);
-        });
+            });
+        };
+        input.addEventListener('click', openPicker);
     }
 
     // Attach event listeners
@@ -711,22 +750,17 @@ class ExpenseTracker {
         this.setupCustomDropdown(
             document.getElementById('expenseCategory'),
             document.getElementById('categoryDropdownList'),
-            () => this.categories
+            () => this.categories,
+            '카테고리'
         );
 
         // Custom dropdown logic for memo
         this.setupCustomDropdown(
             document.getElementById('expenseMemo'),
             document.getElementById('memoDropdownList'),
-            () => this.memos
+            () => this.memos,
+            '결제수단'
         );
-
-        // Close all dropdowns on outside click
-        document.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.custom-dropdown')) {
-                document.querySelectorAll('.dropdown-list.show').forEach(el => el.classList.remove('show'));
-            }
-        });
 
         // Cancel edit button
         const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -1260,8 +1294,7 @@ class DailyLedger {
 
     setupCategoryDropdown() {
         const input = document.getElementById('dailyCategory');
-        const listEl = document.getElementById('dailyCategoryList');
-        if (!input || !listEl) return;
+        if (!input) return;
 
         const getItems = () => {
             try {
@@ -1272,46 +1305,16 @@ class DailyLedger {
             return ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
         };
 
-        const renderList = () => {
-            const items = getItems();
-            if (items.length === 0) {
-                listEl.innerHTML = '<div class="dropdown-empty">없음</div>';
-            } else {
-                listEl.innerHTML = items.map(item => {
-                    const escaped = this.escapeHtml(item);
-                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
-                }).join('');
-            }
-            listEl.classList.add('show');
-        };
-
-        input.addEventListener('click', renderList);
-        input.addEventListener('focus', renderList);
-
-        listEl.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const item = e.target.closest('.chip-item');
-            if (item) {
-                input.value = item.dataset.value;
-                listEl.classList.remove('show');
-            }
-        });
-
-        input.addEventListener('blur', () => {
-            setTimeout(() => listEl.classList.remove('show'), 150);
-        });
-
-        document.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.daily-category-wrapper')) {
-                listEl.classList.remove('show');
-            }
+        input.addEventListener('click', () => {
+            ChipPicker.open('카테고리', getItems(), (val) => {
+                input.value = val;
+            });
         });
     }
 
     setupMethodDropdown() {
         const input = document.getElementById('dailyMethod');
-        const listEl = document.getElementById('dailyMethodList');
-        if (!input || !listEl) return;
+        if (!input) return;
 
         const getItems = () => {
             try {
@@ -1322,83 +1325,32 @@ class DailyLedger {
             return ['카드 자동결제', '계좌이체', '현금납부'];
         };
 
-        const renderList = () => {
-            const items = getItems();
-            if (items.length === 0) {
-                listEl.innerHTML = '<div class="dropdown-empty">없음</div>';
-            } else {
-                listEl.innerHTML = items.map(item => {
-                    const escaped = this.escapeHtml(item);
-                    return `<div class="chip-item" data-value="${escaped}">${escaped}</div>`;
-                }).join('');
-            }
-            listEl.classList.add('show');
-        };
-
-        input.addEventListener('click', renderList);
-        input.addEventListener('focus', renderList);
-
-        listEl.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const item = e.target.closest('.chip-item');
-            if (item) {
-                input.value = item.dataset.value;
-                listEl.classList.remove('show');
-            }
-        });
-
-        input.addEventListener('blur', () => {
-            setTimeout(() => listEl.classList.remove('show'), 150);
-        });
-
-        document.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.daily-method-wrapper')) {
-                listEl.classList.remove('show');
-            }
+        input.addEventListener('click', () => {
+            ChipPicker.open('결제수단', getItems(), (val) => {
+                input.value = val;
+            });
         });
     }
 
     setupInstallmentDropdown() {
         const btn = document.getElementById('dailyInstallmentBtn');
-        const listEl = document.getElementById('dailyInstallmentList');
-        if (!btn || !listEl) return;
+        if (!btn) return;
 
         this.selectedInstallment = 1;
 
         const options = [
-            { value: 1, label: '일시불' },
+            { value: 1, label: '일시불', fullWidth: true },
             { value: 3, label: '3개월' },
             { value: 6, label: '6개월' },
             { value: 12, label: '12개월' },
             { value: 24, label: '24개월' }
         ];
 
-        const renderList = () => {
-            listEl.innerHTML = options.map(opt => {
-                const selected = opt.value === this.selectedInstallment ? ' active' : '';
-                return `<div class="chip-item${selected}" data-value="${opt.value}">${opt.label}</div>`;
-            }).join('');
-            listEl.classList.add('show');
-        };
-
         btn.addEventListener('click', () => {
-            renderList();
-        });
-
-        listEl.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            const item = e.target.closest('.chip-item');
-            if (item) {
-                this.selectedInstallment = parseInt(item.dataset.value);
+            ChipPicker.open('할부', options, (val) => {
+                this.selectedInstallment = parseInt(val);
                 btn.textContent = this.selectedInstallment === 1 ? '일시불' : `${this.selectedInstallment}개월`;
-                listEl.classList.remove('show');
-            }
-        });
-
-        document.addEventListener('mousedown', (e) => {
-            if (!e.target.closest('.daily-installment-wrapper')) {
-                listEl.classList.remove('show');
-            }
+            }, { activeValue: this.selectedInstallment });
         });
     }
 
@@ -1443,5 +1395,6 @@ class DailyLedger {
 }
 
 // Initialize the app
+ChipPicker.init();
 const tracker = new ExpenseTracker();
 const dailyLedger = new DailyLedger();

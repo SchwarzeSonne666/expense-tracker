@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=43">
+    <link rel="stylesheet" href="styles.css?v=44">
 </head>
 
 <body>
@@ -73,18 +73,15 @@
                         <input type="text" id="dailyName" class="daily-name-input" placeholder="항목명">
                         <div class="daily-category-wrapper">
                             <input type="text" id="dailyCategory" class="daily-category-input" placeholder="카테고리" autocomplete="off" readonly>
-                            <div class="daily-category-list" id="dailyCategoryList"></div>
                         </div>
                     </div>
                     <div class="daily-add-row">
                         <input type="text" id="dailyAmount" class="daily-amount-input" placeholder="금액" inputmode="numeric">
                         <div class="daily-method-wrapper">
                             <input type="text" id="dailyMethod" class="daily-method-input" placeholder="결제수단" autocomplete="off" readonly>
-                            <div class="daily-method-list" id="dailyMethodList"></div>
                         </div>
                         <div class="daily-installment-wrapper">
                             <button type="button" class="daily-installment-btn" id="dailyInstallmentBtn">일시불</button>
-                            <div class="daily-installment-list" id="dailyInstallmentList"></div>
                         </div>
                     </div>
                     <button type="button" class="btn btn-primary daily-add-btn" id="addDailyBtn">+ 추가</button>
@@ -205,6 +202,14 @@
         </div>
     </div>
 
+    <!-- Chip Picker Modal (shared by all chip dropdowns) -->
+    <div id="chipPickerModal" class="modal chip-picker-modal">
+        <div class="chip-picker-content">
+            <div class="chip-picker-title" id="chipPickerTitle">선택</div>
+            <div class="chip-picker-grid" id="chipPickerGrid"></div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
@@ -241,7 +246,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=19"></script>
+    <script src="app.js?v=20"></script>
 </body>
 
 </html>
