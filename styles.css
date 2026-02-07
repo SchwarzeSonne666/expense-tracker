@@ -318,21 +318,19 @@ h1 {
 .daily-summary-row.balance .daily-summary-value { color: var(--accent-primary); }
 
 /* 고정지출 반영 버튼 */
-.daily-summary-row.fixed {
-  position: relative;
-}
 .daily-fixed-apply-btn {
-  display: block;
-  margin: 4px auto 0;
-  padding: 1px 8px;
-  font-size: 0.55rem;
+  display: inline;
+  margin-left: 2px;
+  padding: 0px 4px;
+  font-size: 0.5rem;
   font-weight: 600;
   color: var(--warning);
   background: rgba(237,137,54,0.1);
   border: 1px solid rgba(237,137,54,0.3);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   cursor: pointer;
   transition: all 0.15s;
+  vertical-align: middle;
 }
 .daily-fixed-apply-btn:hover:not(:disabled) {
   background: rgba(237,137,54,0.2);
