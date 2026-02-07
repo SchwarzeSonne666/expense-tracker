@@ -234,10 +234,6 @@ body.sc-page .container {
   margin-bottom: 0;
 }
 
-.sc-two-col-right .sc-spot-grid {
-  grid-template-columns: 1fr;
-}
-
 /* Section */
 .sc-section {
   margin-bottom: 1.25rem;
@@ -324,16 +320,19 @@ body.sc-page .container {
 
 /* Spot Care */
 .sc-spot-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .sc-spot-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   background: var(--bg-card);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-sm);
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   transition: all var(--transition-fast);
 }
 
@@ -342,28 +341,41 @@ body.sc-page .container {
 }
 
 .sc-spot-icon {
-  font-size: 1.2rem;
-  margin-bottom: 0.3rem;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .sc-spot-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .sc-spot-product {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: var(--accent-primary);
-  margin-bottom: 0.2rem;
-  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.sc-spot-product > div {
+  display: inline;
+}
+
+.sc-spot-product > div + div::before {
+  content: ', ';
 }
 
 .sc-spot-how {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* ===== Product List — Category Groups ===== */
@@ -638,7 +650,7 @@ body.sc-page .container {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 968px) {
   .sc-two-col {
     grid-template-columns: 1fr;
   }
@@ -646,22 +658,35 @@ body.sc-page .container {
 
 @media (max-width: 640px) {
   .sc-calendar {
-    grid-template-columns: repeat(7, 1fr);
     gap: 3px;
   }
 
-  .sc-spot-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  .sc-cal-label {
+    font-size: 0.58rem;
+  }
+
+  .sc-cal-am,
+  .sc-cal-pm {
+    font-size: 0.5rem;
+  }
+
+  .sc-spot-card {
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+  }
+
+  .sc-spot-how {
+    white-space: normal;
+    flex-basis: 100%;
+    text-align: left;
   }
 
   .sc-product-info {
     flex-direction: column;
     gap: 1px;
   }
-}
 
-@media (max-width: 480px) {
-  .sc-spot-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  .sc-today-day {
+    font-size: 1.3rem;
   }
 }
