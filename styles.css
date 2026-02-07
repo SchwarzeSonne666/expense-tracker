@@ -404,8 +404,60 @@ h1 {
   font-size: 0.82rem !important;
 }
 
-.daily-name-input { flex: 1; }
-.daily-amount-input { width: 100px !important; }
+.daily-name-input { flex: 0.6; min-width: 0; }
+.daily-amount-input { width: 140px !important; }
+
+/* Daily Method Dropdown */
+.daily-method-wrapper {
+  position: relative;
+  flex: 0.5;
+  min-width: 0;
+}
+
+.daily-method-input {
+  width: 100% !important;
+  font-size: 0.78rem !important;
+  cursor: pointer;
+}
+
+.daily-method-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+
+.daily-method-list.show {
+  display: block;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+.daily-method-list .dropdown-item {
+  padding: 0.4rem 0.65rem;
+  font-size: 0.78rem;
+}
+
+/* Daily Item Method Tag */
+.daily-item-method {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 .daily-add-btn {
   margin-top: 0.25rem;

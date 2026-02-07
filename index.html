@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="맥북용 가계부 월간 고정지출 관리 프로그램">
     <title>월간 고정지출 관리 | 가계부</title>
-    <link rel="stylesheet" href="styles.css?v=28">
+    <link rel="stylesheet" href="styles.css?v=29">
 </head>
 
 <body>
@@ -67,6 +67,10 @@
                     <div class="daily-add-row">
                         <input type="text" id="dailyName" class="daily-name-input" placeholder="항목명">
                         <input type="number" id="dailyAmount" class="daily-amount-input" placeholder="금액" min="0">
+                        <div class="daily-method-wrapper">
+                            <input type="text" id="dailyMethod" class="daily-method-input" placeholder="결제수단" autocomplete="off" readonly>
+                            <div class="daily-method-list" id="dailyMethodList"></div>
+                        </div>
                     </div>
                     <button type="button" class="btn btn-primary daily-add-btn" id="addDailyBtn">+ 추가</button>
                 </div>
@@ -217,7 +221,7 @@
     </script>
 
     <script src="auth.js?v=3"></script>
-    <script src="app.js?v=8"></script>
+    <script src="app.js?v=9"></script>
 </body>
 
 </html>

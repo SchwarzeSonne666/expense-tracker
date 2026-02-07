@@ -911,16 +911,18 @@ class DailyLedger {
         }
     }
 
-    addItem(type, day, name, amount) {
+    addItem(type, day, name, amount, method) {
         if (!this.firebaseReady) return;
         const dd = String(day).padStart(2, '0');
         const ref = this.getMonthRef().child(dd).push();
-        ref.set({
+        const data = {
             type: type,
             name: name,
             amount: parseFloat(amount),
             createdAt: new Date().toISOString()
-        });
+        };
+        if (method) data.method = method;
+        ref.set(data);
     }
 
     deleteItem(day, itemId) {
@@ -982,11 +984,13 @@ class DailyLedger {
                 const sign = isIncome ? '+' : '-';
                 const typeClass = isIncome ? 'income' : 'expense';
                 const escapedName = this.escapeHtml(item.name);
+                const methodTag = item.method ? `<span class="daily-item-method">${this.escapeHtml(item.method)}</span>` : '';
 
                 html += `
                     <div class="daily-item">
                         <span class="daily-item-name">${escapedName}</span>
                         <span class="daily-item-amount ${typeClass}">${sign}${this.formatCurrency(item.amount)}</span>
+                        ${methodTag}
                         <button class="daily-item-delete" data-day="${dd}" data-id="${itemId}" title="삭제">×</button>
                     </div>`;
             }
@@ -1059,11 +1063,15 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
+        // Method dropdown
+        this.setupMethodDropdown();
+
         // Enter key on inputs
         const inputs = [
             document.getElementById('dailyDay'),
             document.getElementById('dailyName'),
-            document.getElementById('dailyAmount')
+            document.getElementById('dailyAmount'),
+            document.getElementById('dailyMethod')
         ];
         inputs.forEach(input => {
             if (input) {
@@ -1090,14 +1098,71 @@ class DailyLedger {
         }
     }
 
+    setupMethodDropdown() {
+        const input = document.getElementById('dailyMethod');
+        const listEl = document.getElementById('dailyMethodList');
+        if (!input || !listEl) return;
+
+        const getItems = () => {
+            // Reuse tracker's memo list as payment methods
+            try {
+                if (typeof tracker !== 'undefined' && tracker.memos) {
+                    return tracker.memos;
+                }
+            } catch (_) {}
+            return ['카드 자동결제', '계좌이체', '현금납부'];
+        };
+
+        const renderList = () => {
+            const items = getItems();
+            if (items.length === 0) {
+                listEl.innerHTML = '<div class="dropdown-empty">등록된 결제수단이 없습니다</div>';
+            } else {
+                listEl.innerHTML = items.map(item => {
+                    const escaped = this.escapeHtml(item);
+                    return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+                }).join('');
+            }
+            listEl.classList.add('show');
+        };
+
+        // Click to open (readonly input)
+        input.addEventListener('click', renderList);
+        input.addEventListener('focus', renderList);
+
+        // Select item
+        listEl.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                input.value = item.dataset.value;
+                listEl.classList.remove('show');
+            }
+        });
+
+        // Close on blur
+        input.addEventListener('blur', () => {
+            setTimeout(() => listEl.classList.remove('show'), 150);
+        });
+
+        // Close when clicking outside
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('.daily-method-wrapper')) {
+                listEl.classList.remove('show');
+            }
+        });
+    }
+
     handleAdd() {
         const dayInput = document.getElementById('dailyDay');
         const nameInput = document.getElementById('dailyName');
         const amountInput = document.getElementById('dailyAmount');
+        const methodInput = document.getElementById('dailyMethod');
 
         const day = parseInt(dayInput.value);
         const name = nameInput.value.trim();
         const amount = parseFloat(amountInput.value);
+        const method = methodInput ? methodInput.value.trim() : '';
 
         if (!day || day < 1 || day > 31) {
             dayInput.focus();
@@ -1112,11 +1177,12 @@ class DailyLedger {
             return;
         }
 
-        this.addItem(this.currentType, day, name, amount);
+        this.addItem(this.currentType, day, name, amount, method);
 
-        // Clear name and amount, keep day
+        // Clear name, amount, method — keep day
         nameInput.value = '';
         amountInput.value = '';
+        if (methodInput) methodInput.value = '';
         nameInput.focus();
     }
 }
