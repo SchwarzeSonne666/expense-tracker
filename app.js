@@ -2185,19 +2185,16 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
-        // 붙여넣기 입력 (paste 이벤트 — iOS 팝업 없음)
-        const pasteInput = document.getElementById('dailyPasteInput');
-        if (pasteInput) {
-            pasteInput.addEventListener('paste', (e) => {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text');
-                pasteInput.value = '';
-                pasteInput.blur();
-                this.processPastedText(text);
-            });
-            // 직접 타이핑 차단 (붙여넣기만 허용)
-            pasteInput.addEventListener('beforeinput', (e) => {
-                if (e.inputType !== 'insertFromPaste') e.preventDefault();
+        // 붙여넣기 버튼 (클립보드 읽기 → 자동 저장)
+        const pasteBtn = document.getElementById('dailyPasteBtn');
+        if (pasteBtn) {
+            pasteBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    this.processPastedText(text);
+                } catch (err) {
+                    Utils.showToast('클립보드를 읽을 수 없습니다.', 'error');
+                }
             });
         }
 
