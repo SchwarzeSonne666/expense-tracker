@@ -1346,6 +1346,135 @@ class DailyLedger {
         return { year: y, month: m };
     }
 
+    // 카드 알림 텍스트 파싱
+    parseCardNotification(text) {
+        if (!text || !text.trim()) return null;
+        const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+
+        // 삼성카드: [삼성카드] 포함
+        if (text.includes('[삼성카드]')) return this.parseSamsungCard(lines);
+        // 현대카드: 현대카드 승인 포함
+        if (text.includes('현대카드') && text.includes('승인')) return this.parseHyundaiCard(lines);
+
+        return null;
+    }
+
+    parseSamsungCard(lines) {
+        let amount = 0, installment = 1, day = 0, name = '';
+        const method = '삼성카드';
+
+        for (const line of lines) {
+            // 금액 + 할부: 5,000,000원 05개월 or 5,000원 일시불
+            const amountMatch = line.match(/([\d,]+)원\s*(일시불|(\d+)개월)?/);
+            if (amountMatch && !amount) {
+                amount = parseInt(amountMatch[1].replace(/,/g, ''));
+                if (amountMatch[3]) installment = parseInt(amountMatch[3]);
+            }
+            // 날짜 + 가맹점: 02/01 09:09 TeslaMotors
+            const dateMatch = line.match(/(\d{2})\/(\d{2})\s+\d{2}:\d{2}\s+(.+)/);
+            if (dateMatch) {
+                day = parseInt(dateMatch[2]);
+                name = dateMatch[3].trim();
+            }
+        }
+
+        if (!amount || !day || !name) return null;
+        return { method, amount, installment, day, name, type: 'expense' };
+    }
+
+    parseHyundaiCard(lines) {
+        let amount = 0, installment = 1, day = 0, name = '';
+        let method = '현대카드';
+
+        // 네이버 현대카드 여부 확인
+        for (const line of lines) {
+            if (line.match(/네이버\s*(현대카드|카드)/)) {
+                method = '네이버카드';
+                break;
+            }
+        }
+
+        for (const line of lines) {
+            // 금액 + 할부 (누적 행 제외)
+            const amountMatch = line.match(/([\d,]+)원\s*(일시불|(\d+)개월)?/);
+            if (amountMatch && !line.includes('누적') && !amount) {
+                amount = parseInt(amountMatch[1].replace(/,/g, ''));
+                if (amountMatch[3]) installment = parseInt(amountMatch[3]);
+            }
+            // 날짜
+            const dateMatch = line.match(/(\d{2})\/(\d{2})\s+\d{2}:\d{2}/);
+            if (dateMatch && !day) {
+                day = parseInt(dateMatch[2]);
+            }
+        }
+
+        // 가맹점명: 금액 행 다음, 누적 행 이전
+        let foundAmount = false;
+        for (const line of lines) {
+            if (foundAmount && !line.includes('누적') && !line.match(/^\d{2}\/\d{2}/) && line.length > 0) {
+                name = line.trim();
+                break;
+            }
+            if (line.match(/[\d,]+원/) && !line.includes('누적')) {
+                foundAmount = true;
+            }
+        }
+
+        if (!amount || !day || !name) return null;
+        return { method, amount, installment, day, name, type: 'expense' };
+    }
+
+    // 클립보드에서 카드 알림 읽어 폼 자동 채우기
+    async handlePaste() {
+        try {
+            const text = await navigator.clipboard.readText();
+            const parsed = this.parseCardNotification(text);
+            if (!parsed) {
+                Utils.showToast('카드 알림 형식을 인식할 수 없습니다.', 'error');
+                return;
+            }
+
+            // 지출 모드로 전환
+            this.currentType = 'expense';
+            const typeBtns = document.querySelectorAll('.daily-type-btn');
+            typeBtns.forEach(b => b.classList.remove('active'));
+            const expBtn = document.querySelector('.daily-type-btn[data-type="expense"]');
+            if (expBtn) expBtn.classList.add('active');
+            this.toggleMethodInstallment('expense');
+
+            // 날짜
+            this.selectedDay = parsed.day;
+            const dayBtn = document.getElementById('dailyDayBtn');
+            if (dayBtn) dayBtn.textContent = parsed.day + '일';
+
+            // 항목명
+            const nameInput = document.getElementById('dailyName');
+            if (nameInput) nameInput.value = parsed.name;
+
+            // 금액 (콤마 포맷)
+            const amountInput = document.getElementById('dailyAmount');
+            if (amountInput) {
+                amountInput.value = String(parsed.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+
+            // 결제수단
+            const methodInput = document.getElementById('dailyMethod');
+            if (methodInput) methodInput.value = parsed.method;
+
+            // 할부
+            this.selectedInstallment = parsed.installment;
+            const installmentBtn = document.getElementById('dailyInstallmentBtn');
+            if (installmentBtn) {
+                installmentBtn.textContent = parsed.installment > 1 ? parsed.installment + '개월' : '일시불';
+            }
+
+            Utils.showToast(parsed.method + ' 결제 정보가 입력되었습니다.', 'success');
+        } catch (err) {
+            // 클립보드 접근 거부 시 (HTTPS 필요, 사용자 제스처 필요)
+            Utils.showToast('클립보드를 읽을 수 없습니다. HTTPS 환경에서 시도해주세요.', 'error');
+        }
+    }
+
     addItem(type, day, name, category, amount, method, installment) {
         if (!this.firebaseReady) {
             console.error('DailyLedger: Firebase not ready');
@@ -2058,6 +2187,12 @@ class DailyLedger {
         const addBtn = document.getElementById('addDailyBtn');
         if (addBtn) {
             addBtn.addEventListener('click', () => this.handleAdd());
+        }
+
+        // 붙여넣기 버튼
+        const pasteBtn = document.getElementById('dailyPasteBtn');
+        if (pasteBtn) {
+            pasteBtn.addEventListener('click', () => this.handlePaste());
         }
 
         // Amount comma formatting
