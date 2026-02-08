@@ -44,10 +44,7 @@ body.sc-page .container {
 .sc-today-day {
   font-size: 1.6rem;
   font-weight: 800;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -167,7 +164,7 @@ body.sc-page .container {
   justify-content: center;
   border-radius: 50%;
   background: var(--accent-gradient);
-  color: white;
+  color: #dce0f0;
   font-size: 0.65rem;
   font-weight: 700;
   flex-shrink: 0;
