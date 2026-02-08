@@ -19,6 +19,9 @@
             <div style="
                 position:fixed;inset:0;z-index:99999;
                 background:#05060f;
+                background-image:
+                    radial-gradient(ellipse 600px 400px at 20% 30%, rgba(50,40,100,0.25) 0%, transparent 70%),
+                    radial-gradient(ellipse 500px 350px at 80% 70%, rgba(30,50,90,0.2) 0%, transparent 70%);
                 display:flex;align-items:center;justify-content:center;
                 font-family:'Inter',sans-serif;
             ">
