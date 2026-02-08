@@ -14,14 +14,14 @@ body.sc-page .container {
   min-height: auto;
 }
 
-/* ── Theme Color Variables ── */
+/* ── Space Theme Color Variables ── */
 :root {
-  --sc-cleanse: #4299e1;
-  --sc-tone: #48bb78;
-  --sc-serum: #ed64a6;
-  --sc-cream: #f6ad55;
-  --sc-sun: #f56565;
-  --sc-active: #9f7aea;
+  --sc-cleanse: #5a82b8;
+  --sc-tone: #4a9a6a;
+  --sc-serum: #a85580;
+  --sc-cream: #c49455;
+  --sc-sun: #c45454;
+  --sc-active: #7a62b0;
 }
 
 /* Today Summary */
@@ -69,27 +69,27 @@ body.sc-page .container {
 }
 
 .sc-active-tag.retinoid {
-  background: rgba(237, 100, 166, 0.15);
+  background: rgba(168, 85, 128, 0.12);
   color: var(--sc-serum);
-  border: 1px solid rgba(237, 100, 166, 0.25);
+  border: 1px solid rgba(168, 85, 128, 0.2);
 }
 
 .sc-active-tag.aha {
-  background: rgba(72, 187, 120, 0.15);
+  background: rgba(74, 154, 106, 0.12);
   color: var(--sc-tone);
-  border: 1px solid rgba(72, 187, 120, 0.25);
+  border: 1px solid rgba(74, 154, 106, 0.2);
 }
 
 .sc-active-tag.niacin {
-  background: rgba(246, 173, 85, 0.15);
+  background: rgba(196, 148, 85, 0.12);
   color: var(--sc-cream);
-  border: 1px solid rgba(246, 173, 85, 0.25);
+  border: 1px solid rgba(196, 148, 85, 0.2);
 }
 
 .sc-active-tag.rest {
-  background: rgba(102, 126, 234, 0.12);
+  background: rgba(91, 106, 191, 0.10);
   color: var(--accent-primary);
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(91, 106, 191, 0.14);
 }
 
 /* Time Row (toggle + copy/import buttons) */
@@ -129,7 +129,7 @@ body.sc-page .container {
 }
 
 .sc-time-btn.active {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(91, 106, 191, 0.14);
   color: var(--accent-primary);
 }
 
@@ -198,18 +198,18 @@ body.sc-page .container {
   font-weight: 600;
 }
 
-.sc-step-badge.cleanse { background: rgba(66, 153, 225, 0.12); color: var(--sc-cleanse); }
-.sc-step-badge.tone { background: rgba(72, 187, 120, 0.12); color: var(--sc-tone); }
-.sc-step-badge.serum { background: rgba(237, 100, 166, 0.12); color: var(--sc-serum); }
-.sc-step-badge.cream { background: rgba(246, 173, 85, 0.12); color: var(--sc-cream); }
-.sc-step-badge.sun { background: rgba(245, 101, 101, 0.12); color: var(--sc-sun); }
-.sc-step-badge.active { background: rgba(159, 122, 234, 0.12); color: var(--sc-active); }
+.sc-step-badge.cleanse { background: rgba(90, 130, 184, 0.10); color: var(--sc-cleanse); }
+.sc-step-badge.tone { background: rgba(74, 154, 106, 0.10); color: var(--sc-tone); }
+.sc-step-badge.serum { background: rgba(168, 85, 128, 0.10); color: var(--sc-serum); }
+.sc-step-badge.cream { background: rgba(196, 148, 85, 0.10); color: var(--sc-cream); }
+.sc-step-badge.sun { background: rgba(196, 84, 84, 0.10); color: var(--sc-sun); }
+.sc-step-badge.active { background: rgba(122, 98, 176, 0.10); color: var(--sc-active); }
 .sc-step-badge.wait { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); font-style: italic; }
 
 .sc-step-note {
   margin-top: 6px;
   padding: 0.5rem 0.75rem;
-  background: rgba(102, 126, 234, 0.06);
+  background: rgba(91, 106, 191, 0.06);
   border-left: 3px solid var(--accent-primary);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-size: 0.72rem;
@@ -268,7 +268,7 @@ body.sc-page .container {
 
 .sc-cal-day.today {
   border-color: var(--accent-primary);
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(91, 106, 191, 0.08);
   box-shadow: 0 0 0 1px var(--accent-primary);
 }
 
@@ -418,7 +418,7 @@ body.sc-page .container {
   font-weight: 600;
   padding: 0.1rem 0.45rem;
   border-radius: 20px;
-  background: rgba(102, 126, 234, 0.12);
+  background: rgba(91, 106, 191, 0.10);
   color: var(--accent-primary);
 }
 
@@ -468,7 +468,7 @@ body.sc-page .container {
   font-size: 0.58rem;
   padding: 0.12rem 0.4rem;
   border-radius: 20px;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(91, 106, 191, 0.08);
   color: var(--accent-primary);
   font-weight: 600;
   flex-shrink: 0;
@@ -503,20 +503,20 @@ body.sc-page .container {
   cursor: pointer;
   transition: all var(--transition-fast);
   border: 1px solid;
-  background: rgba(102, 126, 234, 0.1);
-  border-color: rgba(102, 126, 234, 0.2);
+  background: rgba(91, 106, 191, 0.08);
+  border-color: rgba(91, 106, 191, 0.14);
   color: var(--accent-primary);
 }
 
 .sc-copy-btn:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(91, 106, 191, 0.14);
   border-color: var(--accent-primary);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 2px 8px rgba(91, 106, 191, 0.14);
 }
 
 .sc-copy-btn.copied {
-  background: rgba(72, 187, 120, 0.12);
-  border-color: rgba(72, 187, 120, 0.3);
+  background: rgba(74, 154, 106, 0.10);
+  border-color: rgba(74, 154, 106, 0.2);
   color: var(--sc-tone);
 }
 
@@ -539,7 +539,7 @@ body.sc-page .container {
 
 .sc-import-desc code {
   padding: 0.1rem 0.35rem;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(91, 106, 191, 0.08);
   border-radius: 4px;
   font-size: 0.68rem;
   color: var(--accent-primary);
