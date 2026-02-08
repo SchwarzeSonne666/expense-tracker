@@ -219,7 +219,7 @@ body.sc-page .container {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: var(--spacing-sm);
-  align-items: start;
+  align-items: stretch;
   margin-bottom: 1.25rem;
 }
 
