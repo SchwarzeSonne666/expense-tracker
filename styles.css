@@ -893,9 +893,9 @@ h1 {
 }
 
 .daily-day-btn {
-  width: auto;
+  width: 52px;
   min-width: 52px;
-  padding: 0 0.65rem;
+  padding: 0;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
@@ -907,6 +907,7 @@ h1 {
   cursor: pointer;
   transition: all var(--transition-fast);
   align-self: stretch;
+  flex: 0 0 52px;
 }
 
 .daily-day-btn:hover {
@@ -1144,14 +1145,14 @@ h1 {
 
 .daily-add-btn {
   margin-top: 0;
-  min-width: 40px !important;
-  width: 40px !important;
-  max-width: 40px;
+  min-width: 52px !important;
+  width: 52px !important;
+  max-width: 52px;
   padding: 0 !important;
   font-size: 1.1rem !important;
   border-radius: var(--radius-sm) !important;
   letter-spacing: 0;
-  flex: 0 0 40px;
+  flex: 0 0 52px;
   display: flex;
   align-items: center;
   justify-content: center;
