@@ -44,11 +44,11 @@
 
 ### Current Versions
 ```
-styles.css   → v=82  (index.html, skincare.html 공통)
-app.js       → v=61  (index.html)
-auth.js      → v=5   (index.html, skincare.html 공통)
-skincare.js  → v=23  (skincare.html)
-skincare.css → v=30  (skincare.html)
+styles.css   → v=85  (index.html, skincare.html 공통)
+app.js       → v=62  (index.html)
+auth.js      → v=6   (index.html, skincare.html 공통)
+skincare.js  → v=24  (skincare.html)
+skincare.css → v=32  (skincare.html)
 ```
 
 ### Firebase

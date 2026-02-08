@@ -3,13 +3,13 @@
     const DAYS_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
     const CATEGORIES = [
-        { key: 'cleansing', label: '클렌징', icon: '🧴', color: '#4299e1' },
-        { key: 'toner', label: '토너/패드', icon: '💧', color: '#48bb78' },
-        { key: 'serum', label: '세럼/에센스', icon: '✨', color: '#ed64a6' },
-        { key: 'cream', label: '크림/보습', icon: '🧈', color: '#f6ad55' },
-        { key: 'suncare', label: '선케어', icon: '☀️', color: '#f56565' },
-        { key: 'active', label: '액티브', icon: '⚡', color: '#9f7aea' },
-        { key: 'spot', label: '스팟케어', icon: '🎯', color: '#fc8181' },
+        { key: 'cleansing', label: '클렌징', icon: '🧴', color: '#5a82b8' },
+        { key: 'toner', label: '토너/패드', icon: '💧', color: '#4a9a6a' },
+        { key: 'serum', label: '세럼/에센스', icon: '✨', color: '#a85580' },
+        { key: 'cream', label: '크림/보습', icon: '🧈', color: '#c49455' },
+        { key: 'suncare', label: '선케어', icon: '☀️', color: '#c45454' },
+        { key: 'active', label: '액티브', icon: '⚡', color: '#7a62b0' },
+        { key: 'spot', label: '스팟케어', icon: '🎯', color: '#b06262' },
     ];
 
     // Category → badge auto-match map

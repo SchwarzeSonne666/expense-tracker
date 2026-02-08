@@ -1,25 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Color Palette */
-  --bg-primary: #0a0e27;
-  --bg-secondary: #1a1f3a;
-  --bg-card: rgba(255, 255, 255, 0.05);
-  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  /* Space Theme Color Palette */
+  --bg-primary: #010104;
+  --bg-secondary: #060816;
+  --bg-card: rgba(8, 10, 28, 0.55);
+  --bg-card-hover: rgba(14, 18, 40, 0.65);
 
-  --text-primary: #ffffff;
-  --text-secondary: #a0aec0;
-  --text-muted: #718096;
+  --text-primary: #d0d6ea;
+  --text-secondary: #8690b0;
+  --text-muted: #4a5168;
 
-  --accent-primary: #667eea;
-  --accent-secondary: #764ba2;
-  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --accent-primary: #7b8ee8;
+  --accent-secondary: #6244b0;
+  --accent-gradient: linear-gradient(135deg, #5a6ac8 0%, #7b44d8 100%);
 
-  --success: #48bb78;
-  --warning: #ed8936;
-  --danger: #f56565;
-  --pink: #ed64a6;
-  --orange-light: #f6ad55;
+  --success: #3d8a5a;
+  --warning: #a87830;
+  --danger: #b04848;
+  --pink: #944a70;
+  --orange-light: #b08248;
+
+  /* 우주 글로우 */
+  --glow-blue: rgba(70, 100, 220, 0.25);
+  --glow-purple: rgba(120, 60, 200, 0.20);
+  --border-glow: rgba(100, 120, 255, 0.25);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -50,12 +55,36 @@
   box-sizing: border-box;
 }
 
+/* 별 반짝임 애니메이션 */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+@keyframes twinkle-slow {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes nebula-drift {
+  0%, 100% { opacity: 0.7; transform: scale(1) rotate(0deg); }
+  33% { opacity: 1; transform: scale(1.08) rotate(0.5deg); }
+  66% { opacity: 0.85; transform: scale(1.02) rotate(-0.3deg); }
+}
+
+@keyframes card-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes star-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg-primary);
-  background-image:
-    radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
   color: var(--text-primary);
   line-height: 1.4;
   height: 100vh;
@@ -65,6 +94,67 @@ body {
   display: flex;
   flex-direction: column;
   max-width: 100vw;
+  position: relative;
+}
+
+/* 성운 글로우 레이어 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(ellipse 900px 600px at 5% 10%, rgba(60, 30, 140, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 800px 500px at 95% 90%, rgba(20, 60, 150, 0.50) 0%, transparent 55%),
+    radial-gradient(ellipse 600px 500px at 50% 50%, rgba(90, 40, 160, 0.30) 0%, transparent 50%),
+    radial-gradient(ellipse 500px 300px at 80% 10%, rgba(100, 40, 180, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 450px 300px at 20% 80%, rgba(30, 70, 160, 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 300px 200px at 60% 20%, rgba(140, 60, 200, 0.20) 0%, transparent 50%);
+  animation: nebula-drift 25s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* 별 필드 레이어 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    /* 밝은 큰 별 */
+    radial-gradient(3px 3px at 3% 8%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 12% 75%, rgba(200, 220, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 30% 12%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 50% 5%, rgba(220, 200, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 65% 92%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 82% 15%, rgba(200, 220, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 97% 38%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 20% 40%, rgba(230, 210, 255, 1) 50%, transparent 50%),
+    /* 중간 별 */
+    radial-gradient(2px 2px at 8% 45%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 25% 60%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 35% 88%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 42% 35%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 48% 72%, rgba(220, 230, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(2px 2px at 55% 28%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 60% 50%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 72% 28%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 78% 65%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 88% 48%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 92% 82%, rgba(220, 230, 255, 0.9) 50%, transparent 50%),
+    /* 작은 별 */
+    radial-gradient(1px 1px at 5% 55%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 15% 95%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 55%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 58% 15%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 42%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 85% 8%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 70%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 33% 48%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 75% 55%, rgba(200, 210, 255, 0.4) 50%, transparent 50%);
+  animation: twinkle 4s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .container {
@@ -89,7 +179,8 @@ header {
   display: flex;
   gap: 4px;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(8, 10, 25, 0.7);
+  border: 1px solid rgba(120, 140, 255, 0.20);
   border-radius: 12px;
   padding: 4px;
   max-width: 280px;
@@ -115,8 +206,8 @@ header {
 
 .nav-tab.active {
   background: var(--accent-gradient);
-  color: white;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+  color: #d0d6ea;
+  box-shadow: 0 2px 20px rgba(80, 60, 200, 0.45), 0 0 30px rgba(100, 70, 220, 0.20);
 }
 
 h1 {
@@ -345,8 +436,8 @@ h1 {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: rgba(91, 106, 191, 0.1);
+  border: 1px solid rgba(91, 106, 191, 0.14);
   border-radius: 2rem;
   padding: 0.25rem 0.75rem;
 }
@@ -417,7 +508,7 @@ h1 {
 }
 
 .daily-nav-btn:hover {
-  background: rgba(102,126,234,0.15);
+  background: rgba(91,106,191,0.12);
   color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
@@ -442,8 +533,8 @@ h1 {
   text-align: center;
   padding: 0.4rem;
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(20, 25, 60, 0.4);
+  border: 1px solid rgba(100, 120, 255, 0.12);
 }
 
 .daily-summary-label {
@@ -477,15 +568,15 @@ h1 {
   font-size: 0.5rem;
   font-weight: 600;
   color: var(--warning);
-  background: rgba(237,137,54,0.1);
-  border: 1px solid rgba(237,137,54,0.3);
+  background: rgba(184,134,58,0.1);
+  border: 1px solid rgba(184,134,58,0.2);
   border-radius: 0.35rem;
   cursor: pointer;
   transition: all 0.15s;
   vertical-align: middle;
 }
 .daily-fixed-apply-btn:hover:not(:disabled) {
-  background: rgba(237,137,54,0.2);
+  background: rgba(184,134,58,0.15);
 }
 .daily-fixed-apply-btn:disabled,
 .daily-fixed-apply-btn.applied {
@@ -501,8 +592,8 @@ h1 {
   font-size: 0.58rem;
   font-weight: 600;
   color: var(--warning);
-  background: rgba(237,137,54,0.08);
-  border: 1px solid rgba(237,137,54,0.2);
+  background: rgba(184,134,58,0.08);
+  border: 1px solid rgba(184,134,58,0.15);
   border-radius: 0.75rem;
   padding: 0.08rem 0.3rem;
   white-space: nowrap;
@@ -512,9 +603,9 @@ h1 {
 /* Installment Section */
 .installment-section {
   margin-bottom: 0.5rem;
-  border: 1px solid rgba(237, 137, 54, 0.15);
+  border: 1px solid rgba(184, 134, 58, 0.12);
   border-radius: var(--radius-sm);
-  background: rgba(237, 137, 54, 0.03);
+  background: rgba(184, 134, 58, 0.03);
   padding: 0.4rem;
 }
 
@@ -588,9 +679,9 @@ h1 {
 /* Card Usage Section */
 .card-usage-section {
   margin-bottom: 0.5rem;
-  border: 1px solid rgba(237, 100, 166, 0.15);
+  border: 1px solid rgba(168, 85, 128, 0.12);
   border-radius: var(--radius-sm);
-  background: rgba(237, 100, 166, 0.03);
+  background: rgba(168, 85, 128, 0.03);
   padding: 0.4rem;
   overflow: hidden;
 }
@@ -668,7 +759,7 @@ h1 {
 
 .card-usage-bar-fill.achieved {
   opacity: 1;
-  box-shadow: 0 0 6px rgba(72, 187, 120, 0.4);
+  box-shadow: 0 0 6px rgba(74, 154, 106, 0.3);
   background: var(--success) !important;
 }
 
@@ -797,12 +888,12 @@ h1 {
 }
 
 .daily-type-btn.active[data-type="expense"] {
-  background: rgba(245,101,101,0.2);
+  background: rgba(196,84,84,0.15);
   color: var(--danger);
 }
 
 .daily-type-btn.active[data-type="income"] {
-  background: rgba(72,187,120,0.2);
+  background: rgba(74,154,106,0.15);
   color: var(--success);
 }
 
@@ -836,12 +927,12 @@ h1 {
   position: absolute;
   bottom: calc(100% + 4px);
   right: 0;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.15);
   border-radius: var(--radius-sm);
   padding: 0.5rem;
   z-index: 100;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px);
   width: 220px;
 }
@@ -875,7 +966,7 @@ h1 {
 }
 
 .daily-day-cell:hover {
-  background: rgba(102,126,234,0.15);
+  background: rgba(91,106,191,0.12);
   color: var(--accent-primary);
 }
 
@@ -983,8 +1074,8 @@ h1 {
   font-size: 0.58rem;
   font-weight: 600;
   color: var(--warning);
-  background: rgba(237,137,54,0.08);
-  border: 1px solid rgba(237,137,54,0.2);
+  background: rgba(184,134,58,0.08);
+  border: 1px solid rgba(184,134,58,0.15);
   border-radius: 0.75rem;
   padding: 0.08rem 0.3rem;
   white-space: nowrap;
@@ -995,8 +1086,8 @@ h1 {
   font-size: 0.58rem;
   font-weight: 600;
   color: var(--accent-primary);
-  background: rgba(102,126,234,0.08);
-  border: 1px solid rgba(102,126,234,0.2);
+  background: rgba(91,106,191,0.08);
+  border: 1px solid rgba(91,106,191,0.15);
   border-radius: 0.75rem;
   padding: 0.08rem 0.3rem;
   white-space: nowrap;
@@ -1005,8 +1096,8 @@ h1 {
 
 /* 전월 카드값 그룹 행 */
 .daily-item.prev-card-group {
-  background: rgba(102, 126, 234, 0.06);
-  border: 1px solid rgba(102, 126, 234, 0.12);
+  background: rgba(91, 106, 191, 0.06);
+  border: 1px solid rgba(91, 106, 191, 0.10);
   border-radius: var(--radius-sm);
 }
 
@@ -1019,8 +1110,8 @@ h1 {
   font-size: 0.58rem;
   font-weight: 600;
   color: var(--orange-light);
-  background: rgba(246, 173, 85, 0.10);
-  border: 1px solid rgba(246, 173, 85, 0.25);
+  background: rgba(196, 148, 85, 0.10);
+  border: 1px solid rgba(196, 148, 85, 0.2);
   border-radius: 0.75rem;
   padding: 0.08rem 0.3rem;
   white-space: nowrap;
@@ -1093,8 +1184,8 @@ h1 {
 }
 .fixed-header-btn.active {
   color: var(--accent-primary);
-  border-color: rgba(102,126,234,0.3);
-  background: rgba(102,126,234,0.1);
+  border-color: rgba(91,106,191,0.2);
+  background: rgba(91,106,191,0.1);
 }
 
 /* 드래그 정렬 */
@@ -1116,8 +1207,8 @@ h1 {
 }
 
 .expense-drag-placeholder {
-  background: rgba(102,126,234,0.08);
-  border: 2px dashed rgba(102,126,234,0.3);
+  background: rgba(91,106,191,0.08);
+  border: 2px dashed rgba(91,106,191,0.2);
   border-radius: var(--radius-sm);
   margin-bottom: 2px;
 }
@@ -1139,12 +1230,44 @@ h1 {
 
 /* Card Styles */
 .card {
-  background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  background:
+    radial-gradient(ellipse 300px 200px at 15% 0%, rgba(80, 60, 200, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 250px 200px at 85% 100%, rgba(40, 80, 200, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 200px 150px at 50% 50%, rgba(100, 60, 180, 0.08) 0%, transparent 70%),
+    var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glow);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
-  box-shadow: var(--shadow-md);
+  box-shadow:
+    0 4px 40px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(60, 50, 180, 0.10),
+    0 0 120px rgba(80, 40, 160, 0.05),
+    inset 0 1px 0 rgba(140, 160, 255, 0.15),
+    inset 0 -1px 0 rgba(100, 60, 200, 0.08);
+  overflow: hidden;
+}
+
+/* 카드 내부 우주 빛 효과 */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle 150px at 20% 20%, rgba(100, 80, 220, 0.12) 0%, transparent 60%),
+    radial-gradient(circle 100px at 80% 80%, rgba(60, 100, 220, 0.10) 0%, transparent 60%);
+  animation: card-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card-title {
@@ -1190,7 +1313,7 @@ textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(91, 106, 191, 0.1);
 }
 
 input::placeholder {
@@ -1225,12 +1348,12 @@ input::placeholder {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.15);
   border-radius: var(--radius-sm);
   padding: 0.4rem;
   z-index: 100;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px);
 }
 
@@ -1261,13 +1384,13 @@ input::placeholder {
 }
 
 .chip-item:hover {
-  background: rgba(102,126,234,0.15);
+  background: rgba(91,106,191,0.12);
   color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
 
 .chip-item.active {
-  background: rgba(102,126,234,0.2);
+  background: rgba(91,106,191,0.15);
   color: var(--accent-primary);
   border-color: var(--accent-primary);
 }
@@ -1288,12 +1411,12 @@ input::placeholder {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.15);
   border-radius: var(--radius-sm);
   padding: 0.4rem;
   z-index: 100;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(20px);
 }
 
@@ -1338,14 +1461,14 @@ input::placeholder {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: white;
+  color: #c8cee0;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 16px rgba(50, 60, 140, 0.3), 0 0 20px rgba(50, 60, 140, 0.1);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 24px rgba(50, 60, 140, 0.4), 0 0 30px rgba(50, 60, 140, 0.15);
 }
 
 .btn-primary:active {
@@ -1370,12 +1493,12 @@ input::placeholder {
 
 .btn-icon.delete:hover {
   color: var(--danger);
-  background: rgba(245, 101, 101, 0.1);
+  background: rgba(196, 84, 84, 0.1);
 }
 
 .btn-icon.edit:hover {
   color: var(--accent-primary);
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(91, 106, 191, 0.1);
 }
 
 .btn-icon.toggle {
@@ -1389,7 +1512,7 @@ input::placeholder {
 
 .btn-icon.toggle:hover {
   color: var(--accent-primary);
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(91, 106, 191, 0.1);
 }
 
 /* Paused (inactive) expense item */
@@ -1419,12 +1542,12 @@ input::placeholder {
   background: var(--accent-gradient);
   color: white;
   padding: 0.75rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(91, 106, 191, 0.2);
 }
 
 .btn-add-category:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(91, 106, 191, 0.3);
 }
 
 /* Modal Styles */
@@ -1444,12 +1567,15 @@ input::placeholder {
 }
 
 .modal-content {
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(ellipse 200px 150px at 10% 0%, rgba(80, 60, 200, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 200px 150px at 90% 100%, rgba(40, 80, 200, 0.12) 0%, transparent 70%),
+    rgba(8, 10, 24, 0.95);
+  border: 1px solid rgba(120, 140, 255, 0.20);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 500px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 50px rgba(0, 0, 0, 0.7), 0 0 80px rgba(80, 50, 160, 0.15);
   animation: slideInUp 0.3s ease;
 }
 
@@ -1572,8 +1698,8 @@ input::placeholder {
 }
 
 .expense-item {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 45, 0.5);
+  border: 1px solid rgba(100, 120, 255, 0.12);
   border-left: 3px solid var(--accent-primary);
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.4rem;
@@ -1715,12 +1841,12 @@ input::placeholder {
 }
 
 .chip-picker-content {
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.15);
   border-radius: var(--radius-md);
   padding: 1rem;
   width: 260px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
   animation: slideInUp 0.2s ease;
 }
 
@@ -1785,8 +1911,8 @@ input::placeholder {
 }
 
 .toast {
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.12);
   border-left: 4px solid var(--accent-primary);
   border-radius: var(--radius-sm);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -1822,12 +1948,12 @@ input::placeholder {
 
 /* Confirm Dialog */
 .confirm-dialog {
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 12, 28, 0.95);
+  border: 1px solid rgba(100, 120, 200, 0.15);
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   text-align: center;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
   animation: slideInUp 0.3s ease;
   max-width: 360px;
   width: 90%;
@@ -1861,21 +1987,21 @@ input::placeholder {
 }
 
 .btn-danger:hover {
-  background: #e53e3e;
+  background: #a84444;
   transform: translateY(-2px);
 }
 
 /* Edit Mode */
 .card--editing {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3), var(--shadow-md);
+  box-shadow: 0 0 0 2px rgba(91, 106, 191, 0.2), var(--shadow-md);
 }
 
 .edit-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(102, 126, 234, 0.15);
+  background: rgba(91, 106, 191, 0.12);
   border-radius: var(--radius-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   margin-bottom: var(--spacing-sm);
