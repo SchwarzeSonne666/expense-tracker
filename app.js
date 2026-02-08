@@ -1447,60 +1447,28 @@ class DailyLedger {
         return '';
     }
 
-    // 클립보드에서 카드 알림 읽어 폼 자동 채우기
-    async handlePaste() {
-        try {
-            const text = await navigator.clipboard.readText();
-            const parsed = this.parseCardNotification(text);
-            if (!parsed) {
-                Utils.showToast('카드 알림 형식을 인식할 수 없습니다.', 'error');
-                return;
-            }
-
-            // 지출 모드로 전환
-            this.currentType = 'expense';
-            const typeBtns = document.querySelectorAll('.daily-type-btn');
-            typeBtns.forEach(b => b.classList.remove('active'));
-            const expBtn = document.querySelector('.daily-type-btn[data-type="expense"]');
-            if (expBtn) expBtn.classList.add('active');
-            this.toggleMethodInstallment('expense');
-
-            // 날짜
-            this.selectedDay = parsed.day;
-            const dayBtn = document.getElementById('dailyDayBtn');
-            if (dayBtn) dayBtn.textContent = parsed.day + '일';
-
-            // 항목명
-            const nameInput = document.getElementById('dailyName');
-            if (nameInput) nameInput.value = parsed.name;
-
-            // 카테고리 자동 추론
-            const categoryInput = document.getElementById('dailyCategory');
-            const guessed = this.guessCategory(parsed.name);
-            if (categoryInput && guessed) categoryInput.value = guessed;
-
-            // 금액 (콤마 포맷)
-            const amountInput = document.getElementById('dailyAmount');
-            if (amountInput) {
-                amountInput.value = String(parsed.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            }
-
-            // 결제수단
-            const methodInput = document.getElementById('dailyMethod');
-            if (methodInput) methodInput.value = parsed.method;
-
-            // 할부
-            this.selectedInstallment = parsed.installment;
-            const installmentBtn = document.getElementById('dailyInstallmentBtn');
-            if (installmentBtn) {
-                installmentBtn.textContent = parsed.installment > 1 ? parsed.installment + '개월' : '일시불';
-            }
-
-            Utils.showToast(parsed.method + ' 결제 정보가 입력되었습니다.', 'success');
-        } catch (err) {
-            // 클립보드 접근 거부 시 (HTTPS 필요, 사용자 제스처 필요)
-            Utils.showToast('클립보드를 읽을 수 없습니다. HTTPS 환경에서 시도해주세요.', 'error');
+    // paste 이벤트로 받은 텍스트 파싱 → 자동 저장
+    processPastedText(text) {
+        const parsed = this.parseCardNotification(text);
+        if (!parsed) {
+            Utils.showToast('카드 알림 형식을 인식할 수 없습니다.', 'error');
+            return;
         }
+
+        const category = this.guessCategory(parsed.name);
+
+        // 바로 저장 (폼 채우기 없이 직접 addItem 호출)
+        this.addItem(
+            'expense',
+            parsed.day,
+            parsed.name,
+            category,
+            parsed.amount,
+            parsed.method,
+            parsed.installment
+        );
+
+        Utils.showToast(parsed.method + ' ' + parsed.name + ' ' + String(parsed.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원 저장됨', 'success');
     }
 
     addItem(type, day, name, category, amount, method, installment) {
@@ -2217,10 +2185,20 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
-        // 붙여넣기 버튼
-        const pasteBtn = document.getElementById('dailyPasteBtn');
-        if (pasteBtn) {
-            pasteBtn.addEventListener('click', () => this.handlePaste());
+        // 붙여넣기 입력 (paste 이벤트 — iOS 팝업 없음)
+        const pasteInput = document.getElementById('dailyPasteInput');
+        if (pasteInput) {
+            pasteInput.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                pasteInput.value = '';
+                pasteInput.blur();
+                this.processPastedText(text);
+            });
+            // 직접 타이핑 차단 (붙여넣기만 허용)
+            pasteInput.addEventListener('beforeinput', (e) => {
+                if (e.inputType !== 'insertFromPaste') e.preventDefault();
+            });
         }
 
         // Amount comma formatting
