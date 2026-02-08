@@ -44,11 +44,11 @@
 
 ### Current Versions
 ```
-styles.css   → v=85  (index.html, skincare.html 공통)
+styles.css   → v=88  (index.html, skincare.html 공통)
 app.js       → v=62  (index.html)
-auth.js      → v=6   (index.html, skincare.html 공통)
+auth.js      → v=7   (index.html, skincare.html 공통)
 skincare.js  → v=24  (skincare.html)
-skincare.css → v=32  (skincare.html)
+skincare.css → v=33  (skincare.html)
 ```
 
 ### Firebase
@@ -119,10 +119,16 @@ skincare.css → v=32  (skincare.html)
 
 ### User Preferences
 - 허락 안 구하고 바로 만들기
-- 변경 후 즉시 커밋+푸시
+- 변경 후 즉시 커밋+푸시+PR 머지 (자동 배포)
 - UI는 심플하게 유지 — 과도한 아코디언/접기 펼치기 지양
 - 버전 범프 필수 (CSS/JS 수정 시 양쪽 HTML 모두 확인)
 - 모바일 QA 중시 — 넘침/짤림 주의
+- 모든 대화/커밋/PR은 한국어로
+
+### Deployment
+- GitHub Pages: main 브랜치 push 시 자동 배포 (deploy.yml)
+- 작업 브랜치에서 개발 → PR 생성 → 머지 → 자동 배포
+- gh CLI 인증 완료 상태 — PR 생성/머지 자동 가능
 
 ### Prohibited
 - npm, 빌드 도구, 번들러 사용 금지 — 순수 정적 파일만
