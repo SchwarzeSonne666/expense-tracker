@@ -2323,7 +2323,7 @@ class DailyLedger {
         if (methodInput) methodInput.value = '';
         this.selectedInstallment = 1;
         if (installmentBtn) installmentBtn.textContent = '일시불';
-        addBtn.textContent = '+ 추가';
+        addBtn.textContent = '+';
         addBtn.classList.remove('editing');
     }
 
@@ -2416,7 +2416,7 @@ class DailyLedger {
         this.selectedInstallment = 1;
         if (installmentBtn) installmentBtn.textContent = '일시불';
         const addBtn = document.getElementById('addDailyBtn');
-        addBtn.textContent = '+ 추가';
+        addBtn.textContent = '+';
         addBtn.classList.remove('editing');
         nameInput.focus();
     }
