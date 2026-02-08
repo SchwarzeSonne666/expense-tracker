@@ -890,6 +890,7 @@ h1 {
 /* Day picker dropdown */
 .daily-day-wrapper {
   position: relative;
+  display: flex;
 }
 
 .daily-day-btn {
@@ -1143,17 +1144,20 @@ h1 {
   pointer-events: none;
 }
 
+.daily-add-wrapper {
+  flex: 0 0 52px;
+  display: flex;
+}
+
 .daily-add-btn {
+  flex: 1;
   margin-top: 0;
-  min-width: 52px !important;
-  width: 52px !important;
-  max-width: 52px;
+  width: auto !important;
+  min-width: auto !important;
   padding: 0 !important;
   font-size: 1.1rem !important;
   border-radius: var(--radius-sm) !important;
   letter-spacing: 0;
-  flex: 0 0 52px;
-  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1172,13 +1176,8 @@ h1 {
 .daily-add-btn.editing {
   background: var(--warning) !important;
   color: #1a1a2e !important;
-  width: auto !important;
-  max-width: none;
-  min-width: 40px !important;
   padding: 0 0.7rem !important;
-  border-radius: var(--radius-sm) !important;
   font-size: 0.78rem !important;
-  flex: 0 0 auto;
 }
 
 /* Fixed Expense Card */
