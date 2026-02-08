@@ -1143,14 +1143,15 @@ h1 {
 
 .daily-add-btn {
   margin-top: 0;
-  min-width: 40px;
-  width: 40px;
+  min-width: 40px !important;
+  width: 40px !important;
+  max-width: 40px;
   height: 40px;
   padding: 0 !important;
   font-size: 1.1rem !important;
   border-radius: 50% !important;
   letter-spacing: 0;
-  flex-shrink: 0;
+  flex: 0 0 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1160,11 +1161,13 @@ h1 {
 .daily-add-btn.editing {
   background: var(--warning) !important;
   color: #1a1a2e !important;
-  width: auto;
-  min-width: 40px;
+  width: auto !important;
+  max-width: none;
+  min-width: 40px !important;
   padding: 0 0.7rem !important;
   border-radius: var(--radius-sm) !important;
   font-size: 0.78rem !important;
+  flex: 0 0 auto;
 }
 
 /* Fixed Expense Card */
