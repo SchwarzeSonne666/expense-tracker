@@ -1153,6 +1153,7 @@ h1 {
   border-radius: var(--radius-sm) !important;
   letter-spacing: 0;
   flex: 0 0 52px;
+  align-self: stretch;
   display: flex;
   align-items: center;
   justify-content: center;
