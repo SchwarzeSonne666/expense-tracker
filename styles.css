@@ -7,24 +7,24 @@
   --bg-card: rgba(8, 10, 28, 0.55);
   --bg-card-hover: rgba(14, 18, 40, 0.65);
 
-  --text-primary: #d0d6ea;
-  --text-secondary: #8690b0;
-  --text-muted: #4a5168;
+  --text-primary: #c8d0e4;
+  --text-secondary: #8892b0;
+  --text-muted: #505878;
 
-  --accent-primary: #7b8ee8;
-  --accent-secondary: #6244b0;
-  --accent-gradient: linear-gradient(135deg, #5a6ac8 0%, #7b44d8 100%);
+  --accent-primary: #7088d4;
+  --accent-secondary: #5a4a9a;
+  --accent-gradient: #5c6cb8;
 
-  --success: #3d8a5a;
-  --warning: #a87830;
-  --danger: #b04848;
-  --pink: #944a70;
-  --orange-light: #b08248;
+  --success: #4a9a6a;
+  --warning: #b8923a;
+  --danger: #c05858;
+  --pink: #a05878;
+  --orange-light: #b89050;
 
-  /* 우주 글로우 */
-  --glow-blue: rgba(70, 100, 220, 0.25);
-  --glow-purple: rgba(120, 60, 200, 0.20);
-  --border-glow: rgba(100, 120, 255, 0.25);
+  /* 우주 글로우 (절제) */
+  --glow-blue: rgba(60, 80, 180, 0.10);
+  --glow-purple: rgba(90, 50, 160, 0.08);
+  --border-glow: rgba(80, 100, 200, 0.15);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -67,19 +67,8 @@
 }
 
 @keyframes nebula-drift {
-  0%, 100% { opacity: 0.7; transform: scale(1) rotate(0deg); }
-  33% { opacity: 1; transform: scale(1.08) rotate(0.5deg); }
-  66% { opacity: 0.85; transform: scale(1.02) rotate(-0.3deg); }
-}
-
-@keyframes card-shimmer {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-@keyframes star-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.03); }
 }
 
 body {
@@ -104,13 +93,11 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 900px 600px at 5% 10%, rgba(60, 30, 140, 0.55) 0%, transparent 55%),
-    radial-gradient(ellipse 800px 500px at 95% 90%, rgba(20, 60, 150, 0.50) 0%, transparent 55%),
-    radial-gradient(ellipse 600px 500px at 50% 50%, rgba(90, 40, 160, 0.30) 0%, transparent 50%),
-    radial-gradient(ellipse 500px 300px at 80% 10%, rgba(100, 40, 180, 0.35) 0%, transparent 55%),
-    radial-gradient(ellipse 450px 300px at 20% 80%, rgba(30, 70, 160, 0.30) 0%, transparent 55%),
-    radial-gradient(ellipse 300px 200px at 60% 20%, rgba(140, 60, 200, 0.20) 0%, transparent 50%);
-  animation: nebula-drift 25s ease-in-out infinite;
+    radial-gradient(ellipse 800px 500px at 5% 15%, rgba(40, 25, 100, 0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 450px at 92% 85%, rgba(20, 45, 110, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 500px 350px at 50% 45%, rgba(60, 30, 110, 0.15) 0%, transparent 55%),
+    radial-gradient(ellipse 400px 250px at 75% 10%, rgba(70, 30, 120, 0.18) 0%, transparent 55%);
+  animation: nebula-drift 30s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -179,8 +166,8 @@ header {
   display: flex;
   gap: 4px;
   justify-content: center;
-  background: rgba(8, 10, 25, 0.7);
-  border: 1px solid rgba(120, 140, 255, 0.20);
+  background: rgba(8, 10, 25, 0.6);
+  border: 1px solid rgba(80, 100, 180, 0.12);
   border-radius: 12px;
   padding: 4px;
   max-width: 280px;
@@ -206,17 +193,14 @@ header {
 
 .nav-tab.active {
   background: var(--accent-gradient);
-  color: #d0d6ea;
-  box-shadow: 0 2px 20px rgba(80, 60, 200, 0.45), 0 0 30px rgba(100, 70, 220, 0.20);
+  color: #dce0f0;
+  box-shadow: 0 2px 12px rgba(60, 70, 140, 0.25);
 }
 
 h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   margin-bottom: 0;
 }
 
@@ -453,10 +437,7 @@ h1 {
 .total-badge-value {
   font-size: 0.85rem;
   font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -972,7 +953,7 @@ h1 {
 
 .daily-day-cell.selected {
   background: var(--accent-gradient);
-  color: white;
+  color: #dce0f0;
   font-weight: 700;
 }
 
@@ -1230,44 +1211,14 @@ h1 {
 
 /* Card Styles */
 .card {
-  position: relative;
-  background:
-    radial-gradient(ellipse 300px 200px at 15% 0%, rgba(80, 60, 200, 0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 250px 200px at 85% 100%, rgba(40, 80, 200, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 200px 150px at 50% 50%, rgba(100, 60, 180, 0.08) 0%, transparent 70%),
-    var(--bg-card);
-  backdrop-filter: blur(12px);
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--border-glow);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
   box-shadow:
-    0 4px 40px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(60, 50, 180, 0.10),
-    0 0 120px rgba(80, 40, 160, 0.05),
-    inset 0 1px 0 rgba(140, 160, 255, 0.15),
-    inset 0 -1px 0 rgba(100, 60, 200, 0.08);
-  overflow: hidden;
-}
-
-/* 카드 내부 우주 빛 효과 */
-.card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background:
-    radial-gradient(circle 150px at 20% 20%, rgba(100, 80, 220, 0.12) 0%, transparent 60%),
-    radial-gradient(circle 100px at 80% 80%, rgba(60, 100, 220, 0.10) 0%, transparent 60%);
-  animation: card-shimmer 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.card > * {
-  position: relative;
-  z-index: 1;
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(120, 140, 220, 0.08);
 }
 
 .card-title {
@@ -1461,14 +1412,14 @@ input::placeholder {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: #c8cee0;
+  color: #dce0f0;
   width: 100%;
-  box-shadow: 0 4px 16px rgba(50, 60, 140, 0.3), 0 0 20px rgba(50, 60, 140, 0.1);
+  box-shadow: 0 2px 10px rgba(40, 50, 120, 0.20);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(50, 60, 140, 0.4), 0 0 30px rgba(50, 60, 140, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(40, 50, 120, 0.30);
 }
 
 .btn-primary:active {
@@ -1540,9 +1491,9 @@ input::placeholder {
 
 .btn-add-category {
   background: var(--accent-gradient);
-  color: white;
+  color: #dce0f0;
   padding: 0.75rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(91, 106, 191, 0.2);
+  box-shadow: 0 2px 8px rgba(60, 70, 140, 0.15);
 }
 
 .btn-add-category:hover {
@@ -1567,15 +1518,12 @@ input::placeholder {
 }
 
 .modal-content {
-  background:
-    radial-gradient(ellipse 200px 150px at 10% 0%, rgba(80, 60, 200, 0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 200px 150px at 90% 100%, rgba(40, 80, 200, 0.12) 0%, transparent 70%),
-    rgba(8, 10, 24, 0.95);
-  border: 1px solid rgba(120, 140, 255, 0.20);
+  background: rgba(10, 12, 28, 0.96);
+  border: 1px solid var(--border-glow);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 8px 50px rgba(0, 0, 0, 0.7), 0 0 80px rgba(80, 50, 160, 0.15);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
   animation: slideInUp 0.3s ease;
 }
 

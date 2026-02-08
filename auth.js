@@ -41,7 +41,7 @@
                     ">
                     <button id="authSubmitBtn" type="button" style="
                         width:100%;margin-top:0.75rem;padding:0.7rem 1rem;
-                        background:linear-gradient(135deg, #5b6abf 0%, #4a3a7a 100%);
+                        background:#5c6cb8;
                         border:none;border-radius:0.5rem;
                         color:#d8dce8;font-size:0.9rem;font-weight:700;
                         font-family:inherit;cursor:pointer;
