@@ -95,6 +95,7 @@ body.sc-page .container {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+  min-height: 42px;
 }
 
 /* Time Toggle */
@@ -229,6 +230,13 @@ body.sc-page .container {
 
 .sc-two-col-right .sc-section:last-child {
   margin-bottom: 0;
+}
+
+/* 오른쪽 첫 번째 섹션 타이틀 높이를 왼쪽 시간토글과 맞춤 */
+.sc-two-col-right > .sc-section:first-child .sc-section-title {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
 }
 
 /* Section */
