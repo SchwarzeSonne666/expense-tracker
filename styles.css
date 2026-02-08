@@ -834,48 +834,57 @@ h1 {
 
 /* Daily Add Form */
 .daily-add-form {
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.6rem;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .daily-add-row {
   display: flex;
   gap: 0.35rem;
-  margin-bottom: 0.35rem;
 }
 
 .daily-type-toggle {
   display: flex;
-  gap: 2px;
-  background: rgba(255,255,255,0.03);
+  gap: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
-  padding: 2px;
+  padding: 3px;
   flex: 1;
 }
 
 .daily-type-btn {
   flex: 1;
-  padding: 0.35rem 0;
+  padding: 0.4rem 0;
   background: transparent;
   border: none;
-  border-radius: calc(var(--radius-sm) - 2px);
+  border-radius: calc(var(--radius-sm) - 3px);
   font-family: inherit;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.daily-type-btn:hover {
+  color: var(--text-secondary);
+}
+
 .daily-type-btn.active[data-type="expense"] {
-  background: rgba(196,84,84,0.15);
+  background: rgba(192, 88, 88, 0.18);
   color: var(--danger);
+  box-shadow: 0 1px 4px rgba(192, 88, 88, 0.12);
 }
 
 .daily-type-btn.active[data-type="income"] {
-  background: rgba(74,154,106,0.15);
+  background: rgba(74, 154, 106, 0.18);
   color: var(--success);
+  box-shadow: 0 1px 4px rgba(74, 154, 106, 0.12);
 }
 
 /* Day picker dropdown */
@@ -884,15 +893,16 @@ h1 {
 }
 
 .daily-day-btn {
-  width: 60px;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  width: auto;
+  min-width: 52px;
+  padding: 0.4rem 0.65rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--accent-primary);
   font-family: inherit;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -900,7 +910,7 @@ h1 {
 
 .daily-day-btn:hover {
   border-color: var(--accent-primary);
-  background: rgba(255,255,255,0.08);
+  background: rgba(112, 136, 212, 0.10);
 }
 
 .daily-day-grid {
@@ -1017,10 +1027,10 @@ h1 {
 .daily-installment-btn {
   width: 100%;
   padding: 0.5rem 0.4rem;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--text-secondary);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 600;
@@ -1032,7 +1042,8 @@ h1 {
 
 .daily-installment-btn:hover {
   border-color: var(--accent-primary);
-  background: rgba(255,255,255,0.08);
+  color: var(--accent-primary);
+  background: rgba(112, 136, 212, 0.08);
 }
 
 .daily-method-input {
@@ -1113,14 +1124,16 @@ h1 {
 }
 
 .daily-add-btn {
-  margin-top: 0.25rem;
-  padding: 0.45rem !important;
-  font-size: 0.78rem !important;
+  margin-top: 0.1rem;
+  padding: 0.5rem !important;
+  font-size: 0.8rem !important;
+  border-radius: var(--radius-sm) !important;
+  letter-spacing: 0.02em;
 }
 
 .daily-add-btn.editing {
   background: var(--warning) !important;
-  color: #000 !important;
+  color: #1a1a2e !important;
 }
 
 /* Fixed Expense Card */
@@ -1248,8 +1261,8 @@ select,
 textarea {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: inherit;
@@ -1263,12 +1276,13 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(91, 106, 191, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 2px rgba(112, 136, 212, 0.12);
 }
 
 input::placeholder {
   color: var(--text-muted);
+  font-weight: 400;
 }
 
 /* Category Input Wrapper */
