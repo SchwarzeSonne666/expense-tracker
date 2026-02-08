@@ -2,18 +2,18 @@
 
 :root {
   /* Space Theme Color Palette */
-  --bg-primary: #020208;
-  --bg-secondary: #080a18;
-  --bg-card: rgba(15, 18, 40, 0.85);
-  --bg-card-hover: rgba(20, 24, 50, 0.90);
+  --bg-primary: #010104;
+  --bg-secondary: #060816;
+  --bg-card: rgba(8, 10, 28, 0.55);
+  --bg-card-hover: rgba(14, 18, 40, 0.65);
 
-  --text-primary: #c8cee0;
-  --text-secondary: #7a84a0;
+  --text-primary: #d0d6ea;
+  --text-secondary: #8690b0;
   --text-muted: #4a5168;
 
-  --accent-primary: #6a7bd4;
-  --accent-secondary: #4e3d80;
-  --accent-gradient: linear-gradient(135deg, #4a58a8 0%, #3a2870 100%);
+  --accent-primary: #7b8ee8;
+  --accent-secondary: #6244b0;
+  --accent-gradient: linear-gradient(135deg, #5a6ac8 0%, #7b44d8 100%);
 
   --success: #3d8a5a;
   --warning: #a87830;
@@ -22,9 +22,9 @@
   --orange-light: #b08248;
 
   /* 우주 글로우 */
-  --glow-blue: rgba(60, 80, 180, 0.15);
-  --glow-purple: rgba(80, 50, 140, 0.12);
-  --border-glow: rgba(80, 100, 200, 0.18);
+  --glow-blue: rgba(70, 100, 220, 0.25);
+  --glow-purple: rgba(120, 60, 200, 0.20);
+  --border-glow: rgba(100, 120, 255, 0.25);
 
   /* Spacing */
   --spacing-xs: 0.25rem;
@@ -67,8 +67,19 @@
 }
 
 @keyframes nebula-drift {
-  0%, 100% { opacity: 0.12; transform: scale(1); }
-  50% { opacity: 0.20; transform: scale(1.05); }
+  0%, 100% { opacity: 0.7; transform: scale(1) rotate(0deg); }
+  33% { opacity: 1; transform: scale(1.08) rotate(0.5deg); }
+  66% { opacity: 0.85; transform: scale(1.02) rotate(-0.3deg); }
+}
+
+@keyframes card-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes star-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 
 body {
@@ -93,12 +104,13 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(ellipse 800px 500px at 10% 15%, rgba(40, 30, 100, 0.35) 0%, transparent 60%),
-    radial-gradient(ellipse 700px 450px at 90% 85%, rgba(20, 40, 90, 0.30) 0%, transparent 60%),
-    radial-gradient(ellipse 500px 400px at 50% 40%, rgba(50, 30, 90, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse 400px 250px at 75% 15%, rgba(60, 30, 100, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 350px 250px at 25% 75%, rgba(30, 45, 100, 0.15) 0%, transparent 60%);
-  animation: nebula-drift 20s ease-in-out infinite;
+    radial-gradient(ellipse 900px 600px at 5% 10%, rgba(60, 30, 140, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 800px 500px at 95% 90%, rgba(20, 60, 150, 0.50) 0%, transparent 55%),
+    radial-gradient(ellipse 600px 500px at 50% 50%, rgba(90, 40, 160, 0.30) 0%, transparent 50%),
+    radial-gradient(ellipse 500px 300px at 80% 10%, rgba(100, 40, 180, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 450px 300px at 20% 80%, rgba(30, 70, 160, 0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 300px 200px at 60% 20%, rgba(140, 60, 200, 0.20) 0%, transparent 50%);
+  animation: nebula-drift 25s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -107,34 +119,41 @@ body::after {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background-image:
-    radial-gradient(1.5px 1.5px at 3% 10%, rgba(220, 225, 255, 0.9) 50%, transparent 50%),
-    radial-gradient(1px 1px at 8% 45%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
-    radial-gradient(2px 2px at 12% 78%, rgba(180, 190, 255, 1) 50%, transparent 50%),
-    radial-gradient(1px 1px at 18% 22%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 25% 60%, rgba(210, 215, 255, 0.8) 50%, transparent 50%),
-    radial-gradient(2px 2px at 30% 12%, rgba(200, 210, 255, 1) 50%, transparent 50%),
-    radial-gradient(1px 1px at 35% 88%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
-    radial-gradient(1px 1px at 42% 35%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
-    radial-gradient(1.8px 1.8px at 48% 72%, rgba(190, 200, 255, 0.9) 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 55% 8%, rgba(210, 215, 255, 0.8) 50%, transparent 50%),
-    radial-gradient(1px 1px at 60% 50%, rgba(200, 210, 255, 0.4) 50%, transparent 50%),
-    radial-gradient(1.8px 1.8px at 65% 92%, rgba(190, 200, 255, 1) 50%, transparent 50%),
-    radial-gradient(1.2px 1.2px at 72% 28%, rgba(200, 210, 255, 0.7) 50%, transparent 50%),
-    radial-gradient(1px 1px at 78% 65%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
-    radial-gradient(2px 2px at 82% 15%, rgba(200, 210, 255, 1) 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 88% 48%, rgba(210, 215, 255, 0.8) 50%, transparent 50%),
-    radial-gradient(1px 1px at 92% 82%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
-    radial-gradient(1.8px 1.8px at 97% 38%, rgba(190, 200, 255, 0.9) 50%, transparent 50%),
-    radial-gradient(1px 1px at 5% 55%, rgba(200, 210, 255, 0.4) 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 15% 95%, rgba(210, 215, 255, 0.7) 50%, transparent 50%),
-    radial-gradient(2.5px 2.5px at 50% 5%, rgba(200, 210, 255, 1) 50%, transparent 50%),
-    radial-gradient(1px 1px at 40% 55%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
-    radial-gradient(1.5px 1.5px at 70% 42%, rgba(210, 215, 255, 0.7) 50%, transparent 50%),
-    radial-gradient(2px 2px at 20% 40%, rgba(190, 200, 255, 0.9) 50%, transparent 50%),
-    radial-gradient(1.2px 1.2px at 90% 70%, rgba(200, 210, 255, 0.6) 50%, transparent 50%);
-  animation: twinkle 6s ease-in-out infinite;
+    /* 밝은 큰 별 */
+    radial-gradient(3px 3px at 3% 8%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 12% 75%, rgba(200, 220, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 30% 12%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 50% 5%, rgba(220, 200, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 65% 92%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 82% 15%, rgba(200, 220, 255, 1) 50%, transparent 50%),
+    radial-gradient(3px 3px at 97% 38%, rgba(255, 255, 255, 1) 50%, transparent 50%),
+    radial-gradient(2.5px 2.5px at 20% 40%, rgba(230, 210, 255, 1) 50%, transparent 50%),
+    /* 중간 별 */
+    radial-gradient(2px 2px at 8% 45%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 18% 22%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 25% 60%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 35% 88%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 42% 35%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 48% 72%, rgba(220, 230, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(2px 2px at 55% 28%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 60% 50%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 72% 28%, rgba(200, 210, 255, 0.9) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 78% 65%, rgba(220, 230, 255, 0.8) 50%, transparent 50%),
+    radial-gradient(2px 2px at 88% 48%, rgba(200, 210, 255, 0.85) 50%, transparent 50%),
+    radial-gradient(1.5px 1.5px at 92% 82%, rgba(220, 230, 255, 0.9) 50%, transparent 50%),
+    /* 작은 별 */
+    radial-gradient(1px 1px at 5% 55%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 15% 95%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 40% 55%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 58% 15%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 70% 42%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 85% 8%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 90% 70%, rgba(200, 210, 255, 0.6) 50%, transparent 50%),
+    radial-gradient(1px 1px at 33% 48%, rgba(200, 210, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(1px 1px at 75% 55%, rgba(200, 210, 255, 0.4) 50%, transparent 50%);
+  animation: twinkle 4s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -160,8 +179,8 @@ header {
   display: flex;
   gap: 4px;
   justify-content: center;
-  background: rgba(8, 10, 25, 0.6);
-  border: 1px solid rgba(100, 120, 200, 0.1);
+  background: rgba(8, 10, 25, 0.7);
+  border: 1px solid rgba(120, 140, 255, 0.20);
   border-radius: 12px;
   padding: 4px;
   max-width: 280px;
@@ -187,8 +206,8 @@ header {
 
 .nav-tab.active {
   background: var(--accent-gradient);
-  color: #c8cee0;
-  box-shadow: 0 2px 16px rgba(60, 70, 150, 0.35), 0 0 20px rgba(60, 70, 150, 0.15);
+  color: #d0d6ea;
+  box-shadow: 0 2px 20px rgba(80, 60, 200, 0.45), 0 0 30px rgba(100, 70, 220, 0.20);
 }
 
 h1 {
@@ -514,8 +533,8 @@ h1 {
   text-align: center;
   padding: 0.4rem;
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(20, 25, 60, 0.4);
+  border: 1px solid rgba(100, 120, 255, 0.12);
 }
 
 .daily-summary-label {
@@ -1211,18 +1230,44 @@ h1 {
 
 /* Card Styles */
 .card {
+  position: relative;
   background:
-    radial-gradient(ellipse at 20% 0%, var(--glow-blue) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, var(--glow-purple) 0%, transparent 50%),
+    radial-gradient(ellipse 300px 200px at 15% 0%, rgba(80, 60, 200, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 250px 200px at 85% 100%, rgba(40, 80, 200, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 200px 150px at 50% 50%, rgba(100, 60, 180, 0.08) 0%, transparent 70%),
     var(--bg-card);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-glow);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
   box-shadow:
-    0 4px 30px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(40, 50, 120, 0.06),
-    inset 0 1px 0 rgba(120, 140, 220, 0.1);
+    0 4px 40px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(60, 50, 180, 0.10),
+    0 0 120px rgba(80, 40, 160, 0.05),
+    inset 0 1px 0 rgba(140, 160, 255, 0.15),
+    inset 0 -1px 0 rgba(100, 60, 200, 0.08);
+  overflow: hidden;
+}
+
+/* 카드 내부 우주 빛 효과 */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(circle 150px at 20% 20%, rgba(100, 80, 220, 0.12) 0%, transparent 60%),
+    radial-gradient(circle 100px at 80% 80%, rgba(60, 100, 220, 0.10) 0%, transparent 60%);
+  animation: card-shimmer 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card-title {
@@ -1522,12 +1567,15 @@ input::placeholder {
 }
 
 .modal-content {
-  background: rgba(10, 12, 28, 0.95);
-  border: 1px solid rgba(100, 120, 200, 0.15);
+  background:
+    radial-gradient(ellipse 200px 150px at 10% 0%, rgba(80, 60, 200, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 200px 150px at 90% 100%, rgba(40, 80, 200, 0.12) 0%, transparent 70%),
+    rgba(8, 10, 24, 0.95);
+  border: 1px solid rgba(120, 140, 255, 0.20);
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 60px rgba(50, 40, 100, 0.1);
+  box-shadow: 0 8px 50px rgba(0, 0, 0, 0.7), 0 0 80px rgba(80, 50, 160, 0.15);
   animation: slideInUp 0.3s ease;
 }
 
@@ -1650,8 +1698,8 @@ input::placeholder {
 }
 
 .expense-item {
-  background: rgba(15, 18, 40, 0.5);
-  border: 1px solid rgba(80, 100, 200, 0.10);
+  background: rgba(12, 16, 45, 0.5);
+  border: 1px solid rgba(100, 120, 255, 0.12);
   border-left: 3px solid var(--accent-primary);
   border-radius: var(--radius-sm);
   padding: 0.2rem 0.4rem;
