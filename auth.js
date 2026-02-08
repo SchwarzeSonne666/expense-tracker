@@ -116,8 +116,6 @@
 
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                // 보안 규칙 설정용 UID 확인 (설정 후 제거 가능)
-                console.log('[Auth] UID:', user.uid);
                 removeOverlay();
             } else {
                 createOverlay();

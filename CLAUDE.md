@@ -46,7 +46,7 @@
 ```
 styles.css   → v=88  (index.html, skincare.html 공통)
 app.js       → v=62  (index.html)
-auth.js      → v=7   (index.html, skincare.html 공통)
+auth.js      → v=9   (index.html, skincare.html 공통)
 skincare.js  → v=24  (skincare.html)
 skincare.css → v=33  (skincare.html)
 ```
