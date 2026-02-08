@@ -38,7 +38,7 @@ const Utils = {
 
 // ===== Constants =====
 const CARD_GOALS = { '현대카드': 1000000, '네이버카드': 300000 };
-const CARD_COLORS = { '현대카드': '#4299e1', '네이버카드': '#48bb78' };
+const CARD_COLORS = { '현대카드': '#5a82b8', '네이버카드': '#4a9a6a' };
 const DAY_BOUNDARY_HOUR = 6;
 
 // ===== Shared Chip Picker Modal =====
@@ -662,12 +662,12 @@ class ExpenseTracker {
     // Get category color
     getCategoryColor(category) {
         const colors = {
-            '주거비': '#667eea',
-            '통신비': '#38b2ac',
-            '구독료': '#ed64a6',
-            '보험료': '#f6ad55',
-            '교통비': '#4299e1',
-            '기타': '#9f7aea'
+            '주거비': '#5b6abf',
+            '통신비': '#4a7a8a',
+            '구독료': '#a85580',
+            '보험료': '#c49455',
+            '교통비': '#5a82b8',
+            '기타': '#7a62b0'
         };
 
         // Generate a consistent color for custom categories
@@ -1587,7 +1587,7 @@ class DailyLedger {
         // 이름별 그룹핑 (같은 할부 건은 installmentStart+name으로 묶기)
         let html = '';
         for (const inst of installments) {
-            const catColor = (inst.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(inst.category) : '#667eea';
+            const catColor = (inst.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(inst.category) : '#5b6abf';
             const catHtml = inst.category
                 ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(inst.category)}</span>`
                 : '';
@@ -1640,7 +1640,7 @@ class DailyLedger {
 
         section.style.display = 'block';
         const cardColors = CARD_COLORS;
-        const defaultColors = ['#f6ad55', '#ed64a6', '#667eea', '#38b2ac'];
+        const defaultColors = ['#c49455', '#a85580', '#5b6abf', '#4a7a8a'];
         let colorIdx = 0;
 
         let html = '';
