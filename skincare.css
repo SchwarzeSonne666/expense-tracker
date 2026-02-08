@@ -232,11 +232,18 @@ body.sc-page .container {
   margin-bottom: 0;
 }
 
-/* 오른쪽 첫 번째 섹션 타이틀 높이를 왼쪽 시간토글과 맞춤 */
+/* 오른쪽 첫 번째 섹션 타이틀을 박스 스타일로 */
 .sc-two-col-right > .sc-section:first-child .sc-section-title {
   min-height: 42px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 /* Section */
