@@ -887,10 +887,11 @@ h1 {
   box-shadow: 0 1px 4px rgba(74, 154, 106, 0.12);
 }
 
-/* 붙여넣기 버튼 */
+/* 붙여넣기 입력 */
 .daily-paste-btn {
   flex: 0 0 auto;
-  padding: 0 0.55rem;
+  width: 60px;
+  padding: 0 0.4rem;
   background: rgba(91, 106, 191, 0.07);
   border: 1px solid rgba(91, 106, 191, 0.12);
   border-radius: var(--radius-sm);
@@ -900,16 +901,19 @@ h1 {
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
-  white-space: nowrap;
+  text-align: center;
+  caret-color: transparent;
 }
 
-.daily-paste-btn:hover {
+.daily-paste-btn::placeholder {
+  color: var(--accent-primary);
+  opacity: 0.8;
+}
+
+.daily-paste-btn:focus {
   background: rgba(91, 106, 191, 0.15);
   border-color: rgba(91, 106, 191, 0.25);
-}
-
-.daily-paste-btn:active {
-  background: rgba(91, 106, 191, 0.22);
+  outline: none;
 }
 
 /* Day picker dropdown */
