@@ -1156,6 +1156,15 @@ h1 {
   align-items: center;
   justify-content: center;
   text-transform: none;
+  background: rgba(91, 106, 191, 0.10) !important;
+  border: 1px solid rgba(91, 106, 191, 0.18) !important;
+  color: var(--accent-primary) !important;
+  box-shadow: none !important;
+}
+
+.daily-add-btn:hover {
+  background: rgba(91, 106, 191, 0.18) !important;
+  border-color: var(--accent-primary) !important;
 }
 
 .daily-add-btn.editing {
