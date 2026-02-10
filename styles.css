@@ -533,6 +533,7 @@ h1 {
   font-weight: 700;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .daily-summary-row.carryover .daily-summary-value { color: var(--text-muted); }
