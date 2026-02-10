@@ -1557,7 +1557,57 @@ class DailyLedger {
     deleteItem(day, itemId) {
         if (!this.firebaseReady) return;
         const dd = String(day).padStart(2, '0');
+        const item = this.items[dd] && this.items[dd][itemId];
+
+        // cardRef 삭제 → 다음 달 cardDeferred도 삭제
+        if (item && item.cardRef && item.createdAt) {
+            const months = (item.installment && item.installment > 1) ? item.installment : 1;
+            for (let i = 0; i < months; i++) {
+                const t = this.getNextMonth(this.year, this.month, 1 + i);
+                this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred');
+            }
+        }
+
+        // cardDeferred 삭제 → 원래 달 cardRef도 삭제
+        if (item && item.cardDeferred && item.createdAt) {
+            if (item.installmentStart) {
+                const [y, m] = item.installmentStart.split('-').map(Number);
+                this._deleteLinked(y, m, item.createdAt, 'cardRef');
+            } else {
+                const prev = this.getNextMonth(this.year, this.month, -1);
+                this._deleteLinked(prev.year, prev.month, item.createdAt, 'cardRef');
+            }
+            // 할부면 다른 달의 deferred도 전부 삭제
+            if (item.installment && item.installment > 1 && item.installmentStart) {
+                const [sy, sm] = item.installmentStart.split('-').map(Number);
+                for (let i = 0; i < item.installment; i++) {
+                    const t = this.getNextMonth(sy, sm, 1 + i);
+                    if (t.year === this.year && t.month === this.month) continue; // 현재 항목은 아래서 삭제
+                    this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred');
+                }
+            }
+        }
+
         this.getMonthRef().child(dd).child(itemId).remove();
+    }
+
+    // createdAt 기준으로 연결된 항목 삭제 (cardRef 또는 cardDeferred)
+    _deleteLinked(year, month, createdAt, type) {
+        const mm = String(month).padStart(2, '0');
+        const ref = window.db.ref(`daily/${year}/${mm}`);
+        ref.once('value', (snap) => {
+            const data = snap.val();
+            if (!data) return;
+            for (const dd of Object.keys(data)) {
+                const dayItems = data[dd];
+                if (!dayItems) continue;
+                for (const id of Object.keys(dayItems)) {
+                    if (dayItems[id][type] && dayItems[id].createdAt === createdAt) {
+                        window.db.ref(`daily/${year}/${mm}/${dd}/${id}`).remove();
+                    }
+                }
+            }
+        });
     }
 
     // Get day of week (한글)
