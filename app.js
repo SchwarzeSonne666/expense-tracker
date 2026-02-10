@@ -1192,7 +1192,13 @@ class DailyLedger {
         this.currentType = 'expense';
         this.firebaseReady = false;
         this.listener = null;
+        this._prevMonthListener = null;
+        this._loadEpoch = 0;
+        this._currentMonthLoaded = false;
         this.items = {};
+        this.prevCardItems = [];
+        this.prevCardTotal = 0;
+        this._carryover = 0;
         this.init();
     }
 
@@ -1210,8 +1216,6 @@ class DailyLedger {
             return;
         }
         this.firebaseReady = true;
-        // 1회성: corrupted balances 데이터 삭제
-        this.cleanupBalances();
         this.loadMonth();
     }
 
@@ -1263,6 +1267,7 @@ class DailyLedger {
             if (this._currentMonthLoaded) {
                 this.render();
                 this.updateSummary();
+                this.renderChart();
             }
         });
 
@@ -1660,6 +1665,14 @@ class DailyLedger {
     formatCurrency(amount) { return Utils.formatCurrency(amount); }
     escapeHtml(str) { return Utils.escapeHtml(str); }
 
+    // 일반 지출 항목인지 판별 (cardRef, fixedExpense, cardDeferred 일시불 제외)
+    isNormalExpenseItem(item) {
+        if (!item || item.cardRef) return false;
+        if (item.fixedExpense) return false;
+        if (item.cardDeferred && !(item.installment && item.installment > 1)) return false;
+        return true;
+    }
+
     render() {
         const listEl = document.getElementById('dailyList');
         if (!listEl) return;
@@ -1691,13 +1704,11 @@ class DailyLedger {
                 return (b[1].createdAt || '').localeCompare(a[1].createdAt || '');
             }) : [];
 
-            // 할부/고정지출/기존 cardDeferred 일시불 필터 — 목록에서 제외
+            // 할부(cardRef 없는)/고정지출/기존 cardDeferred 일시불 필터 — 목록에서 제외
             const filtered = itemEntries.filter(([, item]) => {
                 if (!item.cardRef && item.installment && item.installment > 1) return false;
-                if (item.fixedExpense) return false;
-                // 기존 cardDeferred 일시불은 무시 (이전 달 데이터에서 동적 계산으로 대체)
-                if (item.cardDeferred && !(item.installment && item.installment > 1)) return false;
-                return true;
+                if (item.cardRef) return true; // cardRef는 목록에 표시 (다음달 태그)
+                return this.isNormalExpenseItem(item) || item.type === 'income';
             });
 
             // 표시할 항목이 없는 날은 건너뛰기
@@ -1899,17 +1910,23 @@ class DailyLedger {
             if (!dayItems || typeof dayItems !== 'object') continue;
             for (const id of Object.keys(dayItems)) {
                 const item = dayItems[id];
-                if (!item || item.type === 'income' || item.cardRef) continue;
+                if (!item || item.type === 'income') continue;
+                if (!this.isNormalExpenseItem(item)) continue;
                 const cat = item.category || '미분류';
                 catMap[cat] = (catMap[cat] || 0) + (item.amount || 0);
             }
         }
+        // 고정지출 (ExpenseTracker 데이터에서 1회만 집계)
         if (typeof tracker !== 'undefined' && tracker.expenses) {
             for (const e of tracker.expenses) {
                 if (e.active === false) continue;
                 const cat = e.category || '미분류';
                 catMap[cat] = (catMap[cat] || 0) + (e.amount || 0);
             }
+        }
+        // 전월 카드값
+        if (this.prevCardTotal > 0) {
+            catMap['전월 카드값'] = (catMap['전월 카드값'] || 0) + this.prevCardTotal;
         }
         const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
         const total = sorted.reduce((s, [, v]) => s + v, 0);
@@ -2000,9 +2017,11 @@ class DailyLedger {
         const itemCount = Object.keys(this.items).reduce((cnt, dd) => {
             const d = this.items[dd];
             if (!d || typeof d !== 'object') return cnt;
-            return cnt + Object.values(d).filter(i => i && i.type !== 'income' && !i.cardRef).length;
+            return cnt + Object.values(d).filter(i => i && i.type !== 'income' && this.isNormalExpenseItem(i)).length;
         }, 0);
-        const daysElapsed = Math.max(1, new Date().getDate());
+        const now = new Date();
+        const isViewing = this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
+        const daysElapsed = isViewing ? Math.max(1, now.getDate()) : this.getDaysInMonth();
         const dailyAvg = Math.round(total / daysElapsed);
         const maxCat = sorted.length > 0 ? sorted[0] : ['—', 0];
 
@@ -2026,39 +2045,6 @@ class DailyLedger {
                     </div>
                 </div>
             </div>`;
-    }
-
-    getFixedTotal() {
-        try {
-            return (typeof tracker !== 'undefined' && tracker.expenses)
-                ? tracker.expenses.filter(e => e.active !== false).reduce((sum, e) => sum + (e.amount || 0), 0)
-                : 0;
-        } catch (_) { return 0; }
-    }
-
-    // 특정 월의 수입/지출 합계 계산 (Promise)
-    calcMonthTotals(year, month) {
-        return new Promise((resolve) => {
-            if (!this.firebaseReady) return resolve({ income: 0, expense: 0 });
-            const mm = String(month).padStart(2, '0');
-            window.db.ref(`daily/${year}/${mm}`).once('value', (snapshot) => {
-                const data = snapshot.val();
-                let income = 0, expense = 0;
-                if (data) {
-                    for (const dd of Object.keys(data)) {
-                        const dayItems = data[dd];
-                        if (!dayItems || typeof dayItems !== 'object') continue;
-                        for (const itemId of Object.keys(dayItems)) {
-                            const item = dayItems[itemId];
-                            if (!item || item.cardRef) continue;
-                            if (item.type === 'income') income += (item.amount || 0);
-                            else expense += (item.amount || 0);
-                        }
-                    }
-                }
-                resolve({ income, expense });
-            }, () => resolve({ income: 0, expense: 0 }));
-        });
     }
 
     // 전월 이월 잔액 로드 (과거 모든 달의 수입-지출 누적으로 계산)
@@ -2089,19 +2075,20 @@ class DailyLedger {
                         for (const itemId of Object.keys(dayItems)) {
                             const item = dayItems[itemId];
                             if (!item) continue;
+                            // cardRef 일시불 → 다음 달 지출로 별도 집계
                             if (item.cardRef) {
-                                // 카드 일시불 → 다음 달 지출로 집계
                                 if (!(item.installment && item.installment > 1)) {
                                     const key = `${y}-${m}`;
                                     cardRefByMonth[key] = (cardRefByMonth[key] || 0) + (item.amount || 0);
                                 }
                                 continue;
                             }
-                            // 기존 cardDeferred 일시불은 무시 (동적 계산으로 대체)
-                            if (item.cardDeferred && !(item.installment && item.installment > 1)) continue;
                             if (item.fixedExpense) {
                                 cumulative -= (item.amount || 0);
-                            } else if (item.type === 'income') {
+                                continue;
+                            }
+                            if (!this.isNormalExpenseItem(item)) continue;
+                            if (item.type === 'income') {
                                 cumulative += (item.amount || 0);
                             } else {
                                 cumulative -= (item.amount || 0);
@@ -2129,23 +2116,6 @@ class DailyLedger {
         } catch (err) {
             console.error('loadCarryover error:', err);
             this._carryover = 0;
-        }
-    }
-
-    // 현재 보고 있는 월이 실제 오늘의 월인지 확인
-    isCurrentMonth() {
-        const now = new Date();
-        return this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
-    }
-
-    // Firebase에서 corrupted balances 데이터 삭제 (1회성)
-    async cleanupBalances() {
-        if (!this.firebaseReady) return;
-        try {
-            await window.db.ref('balances').remove();
-            console.log('Corrupted balances data cleaned up');
-        } catch (err) {
-            console.error('Failed to cleanup balances:', err);
         }
     }
 
@@ -2237,12 +2207,12 @@ class DailyLedger {
             for (const itemId of Object.keys(dayItems)) {
                 const item = dayItems[itemId];
                 if (!item) continue;
-                if (item.cardRef) continue;
-                // 기존 cardDeferred 일시불은 무시 (동적 계산으로 대체)
-                if (item.cardDeferred && !(item.installment && item.installment > 1)) continue;
                 if (item.fixedExpense) {
                     fixedTotal += (item.amount || 0);
-                } else if (item.type === 'income') {
+                    continue;
+                }
+                if (!this.isNormalExpenseItem(item)) continue;
+                if (item.type === 'income') {
                     totalIncome += (item.amount || 0);
                 } else {
                     totalExpense += (item.amount || 0);
