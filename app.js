@@ -1477,7 +1477,7 @@ class DailyLedger {
         const rules = [
             { category: '카페', pattern: /스타벅스|투썸|이디야|할리스|커피|카페|cafe|coffee|빽다방|메가커피|컴포즈|폴바셋|블루보틀|앤젤리너스|파스쿠찌|드롭탑|달콤/ },
             { category: '식비', pattern: /배달의민족|요기요|배민|치킨|피자|버거|맥도날드|롯데리아|bbq|bhc|교촌|굽네|네네|도미노|파파존스|김밥|떡볶이|분식|식당|레스토랑|밥|국수|찌개|고기|초밥|회|중국집|짬뽕|짜장|편의점|cu\b|gs25|세븐일레븐|이마트24|미니스톱|마트|이마트|홈플러스|코스트코|롯데마트|하나로|트레이더스/ },
-            { category: '쇼핑', pattern: /쿠팡|네이버쇼핑|11번가|지마켓|옥션|ssg|무신사|올리브영|다이소|아울렛|백화점|롯데온|위메프|티몬|amazon|아마존|애플|apple/ },
+            { category: '쇼핑', pattern: /쿠팡|네이버쇼핑|11번가|지마켓|옥션|ssg|무신사|올리브영|다이소|아울렛|백화점|롯데온|위메프|티몬|amazon|아마존|애플|apple|ps5|playstation|닌텐도|nintendo|xbox|갤럭시|삼성전자|lg전자|하이마트/ },
             { category: '교통', pattern: /택시|카카오t|주유소|sk에너지|gs칼텍스|s-oil|에쓰오일|현대오일|고속도로|톨게이트|코레일|ktx|srt|지하철|버스|대리운전|타다|우버|uber|tesla|테슬라/ },
             { category: '의료', pattern: /약국|병원|의원|치과|안과|피부과|한의원|정형외과|내과|외과|소아과|산부인과|비뇨기과|이비인후과|메디|pharmacy/ },
             { category: '여가', pattern: /cgv|메가박스|롯데시네마|영화|넷플릭스|netflix|유튜브|youtube|스포츠|헬스|gym|노래방|pc방|게임|디즈니|왓챠|웨이브|티빙|쿠팡플레이|놀이공원|에버랜드|롯데월드/ },
@@ -1808,10 +1808,9 @@ class DailyLedger {
         // 이름별 그룹핑 (같은 할부 건은 installmentStart+name으로 묶기)
         let html = '';
         for (const inst of installments) {
-            const catColor = (inst.category && typeof tracker !== 'undefined') ? tracker.getCategoryColor(inst.category) : '#5b6abf';
-            const catHtml = inst.category
-                ? `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(inst.category)}</span>`
-                : '';
+            const catName = inst.category || '미분류';
+            const catColor = (typeof tracker !== 'undefined') ? tracker.getCategoryColor(catName) : '#5b6abf';
+            const catHtml = `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(catName)}</span>`;
             const progress = inst.installment > 0 ? Math.round((inst.installmentMonth / inst.installment) * 100) : 0;
             html += `
                 <div class="installment-item">
