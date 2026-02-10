@@ -7,6 +7,11 @@ const Utils = {
         return div.innerHTML;
     },
 
+    /** HTML 속성값 이스케이프 (" 포함) */
+    escapeAttr(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    },
+
     /** 통화 포맷 (₩1,234) */
     formatCurrency(amount) {
         return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(amount);
@@ -95,7 +100,7 @@ const ChipPicker = {
                 const activeClass = (opts.activeValue !== undefined && String(opts.activeValue) === String(value)) ? ' active' : '';
                 const fullWidth = (isObj && item.fullWidth) ? ' full-width' : '';
                 const escaped = label.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                return `<div class="chip-item${activeClass}${fullWidth}" data-value="${value}">${escaped}</div>`;
+                return `<div class="chip-item${activeClass}${fullWidth}" data-value="${Utils.escapeAttr(value)}">${escaped}</div>`;
             }).join('');
         }
 
@@ -335,7 +340,7 @@ class ExpenseTracker {
         }
         list.innerHTML = this.categories.map(cat => {
             const escaped = this.escapeHtml(cat);
-            return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+            return `<div class="dropdown-item" data-value="${Utils.escapeAttr(cat)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
         }).join('');
     }
 
@@ -508,7 +513,7 @@ class ExpenseTracker {
         }
         list.innerHTML = this.memos.map(memo => {
             const escaped = this.escapeHtml(memo);
-            return `<div class="dropdown-item" data-value="${escaped}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+            return `<div class="dropdown-item" data-value="${Utils.escapeAttr(memo)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
         }).join('');
     }
 
@@ -1126,6 +1131,8 @@ class ExpenseTracker {
                 if (confirmDialog.style.display === 'flex') {
                     this._pendingDeleteId = null;
                     confirmDialog.style.display = 'none';
+                } else if (fixedAddModal && fixedAddModal.style.display === 'flex') {
+                    this.closeFixedModal();
                 } else if (dailyCategoryModal && dailyCategoryModal.style.display === 'flex') {
                     dailyCategoryModal.style.display = 'none';
                     const dcInput = document.getElementById('newDailyCategoryInput');
@@ -1970,12 +1977,27 @@ class DailyLedger {
                 catMap[cat] = (catMap[cat] || 0) + (item.amount || 0);
             }
         }
-        // 고정지출 (ExpenseTracker 데이터에서 1회만 집계)
-        if (typeof tracker !== 'undefined' && tracker.expenses) {
+        // 고정지출: 현재 월은 tracker.expenses 미리보기, 과거 월은 실제 반영된 항목만
+        const now = new Date();
+        const isCurrent = this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
+        if (isCurrent && typeof tracker !== 'undefined' && tracker.expenses) {
             for (const e of tracker.expenses) {
                 if (e.active === false) continue;
                 const cat = e.category || '미분류';
                 catMap[cat] = (catMap[cat] || 0) + (e.amount || 0);
+            }
+        } else {
+            // 과거 월: fixedExpense 항목에서 집계
+            for (const dd of Object.keys(this.items)) {
+                const dayItems = this.items[dd];
+                if (!dayItems || typeof dayItems !== 'object') continue;
+                for (const id of Object.keys(dayItems)) {
+                    const item = dayItems[id];
+                    if (item && item.fixedExpense) {
+                        const cat = item.category || '미분류';
+                        catMap[cat] = (catMap[cat] || 0) + (item.amount || 0);
+                    }
+                }
             }
         }
         // 전월 카드값
@@ -2638,12 +2660,13 @@ class DailyLedger {
             const dd = this._editingDay;
             const id = this._editingId;
             const existing = this.items[dd] && this.items[dd][id];
+            const newDD = String(day).padStart(2, '0');
 
             // 기존 항목 삭제
             const mm = String(this.month).padStart(2, '0');
             window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).remove();
 
-            // cardRef 항목 수정 시 → cardRef는 조회용이므로 단순 업데이트
+            // cardRef 항목 수정 시 → cardRef는 조회용이므로 단순 업데이트 (날짜 변경 반영)
             if (existing && existing.cardRef) {
                 const updateData = {
                     type: this.currentType,
@@ -2656,9 +2679,9 @@ class DailyLedger {
                 };
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
-                window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
+                window.db.ref(`daily/${this.year}/${mm}/${newDD}`).push().set(updateData);
             }
-            // cardDeferred 항목 수정 시 → 할부 속성 보존하며 업데이트
+            // cardDeferred 항목 수정 시 → 할부 속성 보존, 날짜(01)는 고정
             else if (existing && existing.cardDeferred) {
                 const updateData = {
                     type: this.currentType,
@@ -2675,9 +2698,9 @@ class DailyLedger {
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
                 window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
             }
-            // 일반 항목 수정 → 새로 addItem (카드면 이월 처리됨)
+            // 일반 항목 수정 → 변경된 날짜로 addItem (카드면 이월 처리됨)
             else {
-                this.addItem(this.currentType, parseInt(dd), name, category, amount, method, installment);
+                this.addItem(this.currentType, day, name, category, amount, method, installment);
             }
 
             this.cancelEdit();
