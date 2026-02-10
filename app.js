@@ -1674,12 +1674,14 @@ class DailyLedger {
             if (hasPrevCard) {
                 const prevCardTotal = prevCardItems.reduce((sum, [, it]) => sum + (it.amount || 0), 0);
                 const countLabel = prevCardItems.length > 1 ? `${prevCardItems.length}건` : '1건';
+                const prevCardIds = prevCardItems.map(([id]) => id).join(',');
                 html += `
                     <div class="daily-item prev-card-group">
                         <span class="daily-item-category" style="background:rgba(102,126,234,0.15);color:var(--accent-primary)">카드</span>
                         <span class="daily-item-name">전월 카드값</span>
                         <span class="daily-item-method">${countLabel}</span>
                         <span class="daily-item-amount expense">-${this.formatCurrency(prevCardTotal)}</span>
+                        <button class="daily-item-delete" data-prev-card-day="${dd}" data-prev-card-ids="${prevCardIds}" title="전월 카드값 삭제">&times;</button>
                     </div>`;
             }
 
@@ -2291,6 +2293,16 @@ class DailyLedger {
         const listEl = document.getElementById('dailyList');
         if (listEl) {
             listEl.addEventListener('click', (e) => {
+                // 전월 카드값 일괄 삭제
+                const prevCardBtn = e.target.closest('[data-prev-card-day]');
+                if (prevCardBtn) {
+                    const dd = prevCardBtn.dataset.prevCardDay;
+                    const ids = prevCardBtn.dataset.prevCardIds.split(',');
+                    ids.forEach(id => this.deleteItem(parseInt(dd), id));
+                    Utils.showToast('전월 카드값이 삭제되었습니다.', 'success');
+                    return;
+                }
+
                 const editBtn = e.target.closest('[data-edit-day]');
                 const deleteBtn = e.target.closest('[data-day][data-id]:not([data-edit-day])');
                 if (editBtn) {
