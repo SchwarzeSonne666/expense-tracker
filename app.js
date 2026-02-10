@@ -1216,7 +1216,62 @@ class DailyLedger {
             return;
         }
         this.firebaseReady = true;
+        this.repairInstallmentData();
         this.loadMonth();
+    }
+
+    // 할부 항목 데이터 일관성 복구 (같은 createdAt인데 카테고리/method 누락된 형제 항목 보정)
+    async repairInstallmentData() {
+        if (!this.firebaseReady) return;
+        try {
+            const snap = await window.db.ref('daily').once('value');
+            const allData = snap.val();
+            if (!allData) return;
+
+            // createdAt 기준으로 할부 항목 그룹핑
+            const groups = {};
+            for (const yr of Object.keys(allData)) {
+                const yearData = allData[yr];
+                if (!yearData || typeof yearData !== 'object') continue;
+                for (const mm of Object.keys(yearData)) {
+                    const monthData = yearData[mm];
+                    if (!monthData || typeof monthData !== 'object') continue;
+                    for (const dd of Object.keys(monthData)) {
+                        const dayItems = monthData[dd];
+                        if (!dayItems || typeof dayItems !== 'object') continue;
+                        for (const id of Object.keys(dayItems)) {
+                            const item = dayItems[id];
+                            if (!item || !item.createdAt || !item.installment || item.installment <= 1) continue;
+                            if (!groups[item.createdAt]) groups[item.createdAt] = [];
+                            groups[item.createdAt].push({ path: `daily/${yr}/${mm}/${dd}/${id}`, item });
+                        }
+                    }
+                }
+            }
+
+            // 누락된 카테고리/method 채우기
+            const updates = {};
+            for (const entries of Object.values(groups)) {
+                if (entries.length <= 1) continue;
+                const ref = entries.find(e => e.item.category);
+                const methodRef = entries.find(e => e.item.method);
+                for (const entry of entries) {
+                    if (!entry.item.category && ref) {
+                        updates[`${entry.path}/category`] = ref.item.category;
+                    }
+                    if (!entry.item.method && methodRef) {
+                        updates[`${entry.path}/method`] = methodRef.item.method;
+                    }
+                }
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await window.db.ref().update(updates);
+                console.log('할부 데이터 복구:', Object.keys(updates).length, '건');
+            }
+        } catch (err) {
+            console.error('repairInstallmentData error:', err);
+        }
     }
 
     getMonthRef() {
@@ -2594,11 +2649,11 @@ class DailyLedger {
                     type: this.currentType,
                     name: name,
                     amount: amount,
+                    category: category || existing.category || '',
+                    method: method || existing.method || '',
                     cardRef: true,
                     createdAt: existing.createdAt || new Date().toISOString()
                 };
-                if (category) updateData.category = category;
-                if (method) updateData.method = method;
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
                 window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
@@ -2609,11 +2664,11 @@ class DailyLedger {
                     type: this.currentType,
                     name: name,
                     amount: amount,
+                    category: category || existing.category || '',
+                    method: method || existing.method || '',
                     cardDeferred: true,
                     createdAt: existing.createdAt || new Date().toISOString()
                 };
-                if (category) updateData.category = category;
-                if (method) updateData.method = method;
                 if (existing.installmentStart) updateData.installmentStart = existing.installmentStart;
                 if (existing.installmentMonth) updateData.installmentMonth = existing.installmentMonth;
                 if (existing.installment) updateData.installment = existing.installment;
