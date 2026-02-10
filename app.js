@@ -1,15 +1,8 @@
 // ===== Shared Utilities =====
 const Utils = {
-    /** HTML 이스케이프 (XSS 방지) */
+    /** HTML 이스케이프 (XSS 방지, 속성값 안전) */
     escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    },
-
-    /** HTML 속성값 이스케이프 (" 포함) */
-    escapeAttr(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     },
 
     /** 통화 포맷 (₩1,234) */
@@ -99,8 +92,8 @@ const ChipPicker = {
                 const value = isObj ? item.value : item;
                 const activeClass = (opts.activeValue !== undefined && String(opts.activeValue) === String(value)) ? ' active' : '';
                 const fullWidth = (isObj && item.fullWidth) ? ' full-width' : '';
-                const escaped = label.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                return `<div class="chip-item${activeClass}${fullWidth}" data-value="${Utils.escapeAttr(value)}">${escaped}</div>`;
+                const escaped = Utils.escapeHtml(label);
+                return `<div class="chip-item${activeClass}${fullWidth}" data-value="${Utils.escapeHtml(value)}">${escaped}</div>`;
             }).join('');
         }
 
@@ -340,7 +333,7 @@ class ExpenseTracker {
         }
         list.innerHTML = this.categories.map(cat => {
             const escaped = this.escapeHtml(cat);
-            return `<div class="dropdown-item" data-value="${Utils.escapeAttr(cat)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+            return `<div class="dropdown-item" data-value="${Utils.escapeHtml(cat)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
         }).join('');
     }
 
@@ -513,7 +506,7 @@ class ExpenseTracker {
         }
         list.innerHTML = this.memos.map(memo => {
             const escaped = this.escapeHtml(memo);
-            return `<div class="dropdown-item" data-value="${Utils.escapeAttr(memo)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
+            return `<div class="dropdown-item" data-value="${Utils.escapeHtml(memo)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
         }).join('');
     }
 
@@ -1105,21 +1098,31 @@ class ExpenseTracker {
 
         // Confirm delete dialog
         const confirmDialog = document.getElementById('confirmDialog');
+        const clearPending = () => {
+            this._pendingDeleteId = null;
+            if (typeof dailyLedger !== 'undefined') dailyLedger._pendingDailyDelete = null;
+        };
         document.getElementById('confirmOk').addEventListener('click', () => {
             if (this._pendingDeleteId !== null && this._pendingDeleteId !== undefined) {
                 this.deleteExpense(this._pendingDeleteId);
                 this.showToast('지출이 삭제되었습니다.', 'success');
-                this._pendingDeleteId = null;
             }
+            // 가계부 항목 삭제
+            if (typeof dailyLedger !== 'undefined' && dailyLedger._pendingDailyDelete) {
+                const { day, itemId } = dailyLedger._pendingDailyDelete;
+                dailyLedger.deleteItem(day, itemId);
+                this.showToast('항목이 삭제되었습니다.', 'success');
+            }
+            clearPending();
             confirmDialog.style.display = 'none';
         });
         document.getElementById('confirmCancel').addEventListener('click', () => {
-            this._pendingDeleteId = null;
+            clearPending();
             confirmDialog.style.display = 'none';
         });
         confirmDialog.addEventListener('click', (e) => {
             if (e.target === confirmDialog) {
-                this._pendingDeleteId = null;
+                clearPending();
                 confirmDialog.style.display = 'none';
             }
         });
@@ -1227,15 +1230,16 @@ class DailyLedger {
         this.loadMonth();
     }
 
-    // 할부 항목 데이터 일관성 복구 (같은 createdAt인데 카테고리/method 누락된 형제 항목 보정)
+    // 할부 항목 데이터 일관성 복구 (1회 실행 후 스킵)
     async repairInstallmentData() {
         if (!this.firebaseReady) return;
+        const FLAG = 'installmentRepairDone';
+        if (localStorage.getItem(FLAG)) return;
         try {
             const snap = await window.db.ref('daily').once('value');
             const allData = snap.val();
-            if (!allData) return;
+            if (!allData) { localStorage.setItem(FLAG, '1'); return; }
 
-            // createdAt 기준으로 할부 항목 그룹핑
             const groups = {};
             for (const yr of Object.keys(allData)) {
                 const yearData = allData[yr];
@@ -1256,7 +1260,6 @@ class DailyLedger {
                 }
             }
 
-            // 누락된 카테고리/method 채우기
             const updates = {};
             for (const entries of Object.values(groups)) {
                 if (entries.length <= 1) continue;
@@ -1276,6 +1279,7 @@ class DailyLedger {
                 await window.db.ref().update(updates);
                 console.log('할부 데이터 복구:', Object.keys(updates).length, '건');
             }
+            localStorage.setItem(FLAG, '1');
         } catch (err) {
             console.error('repairInstallmentData error:', err);
         }
@@ -1662,59 +1666,95 @@ class DailyLedger {
         }
     }
 
-    deleteItem(day, itemId) {
+    async deleteItem(day, itemId) {
         if (!this.firebaseReady) return;
         const dd = String(day).padStart(2, '0');
         const item = this.items[dd] && this.items[dd][itemId];
 
         // cardRef 할부 삭제 → 다음 달들의 cardDeferred도 삭제
         if (item && item.cardRef && item.createdAt && item.installment && item.installment > 1) {
+            const promises = [];
             for (let i = 0; i < item.installment; i++) {
                 const t = this.getNextMonth(this.year, this.month, 1 + i);
-                this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred');
+                promises.push(this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred'));
             }
+            await Promise.all(promises);
         }
 
         // cardDeferred 삭제 → 원래 달 cardRef도 삭제
         if (item && item.cardDeferred && item.createdAt) {
             if (item.installmentStart) {
                 const [y, m] = item.installmentStart.split('-').map(Number);
-                this._deleteLinked(y, m, item.createdAt, 'cardRef');
+                await this._deleteLinked(y, m, item.createdAt, 'cardRef');
             } else {
                 const prev = this.getNextMonth(this.year, this.month, -1);
-                this._deleteLinked(prev.year, prev.month, item.createdAt, 'cardRef');
+                await this._deleteLinked(prev.year, prev.month, item.createdAt, 'cardRef');
             }
             // 할부면 다른 달의 deferred도 전부 삭제
             if (item.installment && item.installment > 1 && item.installmentStart) {
                 const [sy, sm] = item.installmentStart.split('-').map(Number);
+                const promises = [];
                 for (let i = 0; i < item.installment; i++) {
                     const t = this.getNextMonth(sy, sm, 1 + i);
                     if (t.year === this.year && t.month === this.month) continue; // 현재 항목은 아래서 삭제
-                    this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred');
+                    promises.push(this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred'));
                 }
+                await Promise.all(promises);
             }
         }
 
-        this.getMonthRef().child(dd).child(itemId).remove();
+        await this.getMonthRef().child(dd).child(itemId).remove();
     }
 
     // createdAt 기준으로 연결된 항목 삭제 (cardRef 또는 cardDeferred)
-    _deleteLinked(year, month, createdAt, type) {
+    async _deleteLinked(year, month, createdAt, type) {
         const mm = String(month).padStart(2, '0');
-        const ref = window.db.ref(`daily/${year}/${mm}`);
-        ref.once('value', (snap) => {
-            const data = snap.val();
-            if (!data) return;
-            for (const dd of Object.keys(data)) {
-                const dayItems = data[dd];
-                if (!dayItems) continue;
-                for (const id of Object.keys(dayItems)) {
-                    if (dayItems[id][type] && dayItems[id].createdAt === createdAt) {
-                        window.db.ref(`daily/${year}/${mm}/${dd}/${id}`).remove();
+        const snap = await window.db.ref(`daily/${year}/${mm}`).once('value');
+        const data = snap.val();
+        if (!data) return;
+        const promises = [];
+        for (const dd of Object.keys(data)) {
+            const dayItems = data[dd];
+            if (!dayItems) continue;
+            for (const id of Object.keys(dayItems)) {
+                if (dayItems[id][type] && dayItems[id].createdAt === createdAt) {
+                    promises.push(window.db.ref(`daily/${year}/${mm}/${dd}/${id}`).remove());
+                }
+            }
+        }
+        await Promise.all(promises);
+    }
+
+    // createdAt 기준으로 연결된 항목의 이름/카테고리/method 업데이트
+    async _updateLinked(createdAt, fields) {
+        const snap = await window.db.ref('daily').once('value');
+        const allData = snap.val();
+        if (!allData) return;
+        const updates = {};
+        for (const yr of Object.keys(allData)) {
+            const yearData = allData[yr];
+            if (!yearData || typeof yearData !== 'object') continue;
+            for (const mm of Object.keys(yearData)) {
+                const monthData = yearData[mm];
+                if (!monthData || typeof monthData !== 'object') continue;
+                for (const dd of Object.keys(monthData)) {
+                    const dayItems = monthData[dd];
+                    if (!dayItems || typeof dayItems !== 'object') continue;
+                    for (const id of Object.keys(dayItems)) {
+                        const item = dayItems[id];
+                        if (!item || item.createdAt !== createdAt) continue;
+                        for (const [key, val] of Object.entries(fields)) {
+                            if (item[key] !== val) {
+                                updates[`daily/${yr}/${mm}/${dd}/${id}/${key}`] = val;
+                            }
+                        }
                     }
                 }
             }
-        });
+        }
+        if (Object.keys(updates).length > 0) {
+            await window.db.ref().update(updates);
+        }
     }
 
     // Get day of week (한글)
@@ -1874,6 +1914,7 @@ class DailyLedger {
             const catColor = (typeof tracker !== 'undefined') ? tracker.getCategoryColor(catName) : '#5b6abf';
             const catHtml = `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(catName)}</span>`;
             const progress = inst.installment > 0 ? Math.round((inst.installmentMonth / inst.installment) * 100) : 0;
+            const remaining = inst.installment > 0 ? inst.amount * (inst.installment - inst.installmentMonth) : 0;
             html += `
                 <div class="installment-item">
                     ${catHtml}
@@ -1881,6 +1922,7 @@ class DailyLedger {
                     <span class="installment-progress">${inst.installmentMonth}/${inst.installment}</span>
                     <div class="installment-bar"><div class="installment-bar-fill" style="width:${progress}%"></div></div>
                     <span class="installment-amount">${this.formatCurrency(inst.amount)}</span>
+                    <span class="installment-remaining">잔여 ${this.formatCurrency(remaining)}</span>
                 </div>`;
         }
         listEl.innerHTML = html;
@@ -2348,6 +2390,12 @@ class DailyLedger {
             addBtn.addEventListener('click', () => this.handleAdd());
         }
 
+        // 수정 취소 버튼
+        const cancelEditBtn = document.getElementById('cancelDailyEditBtn');
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', () => this.cancelEdit());
+        }
+
         // 붙여넣기 버튼 (클립보드 읽기 → 자동 저장)
         const pasteBtn = document.getElementById('dailyPasteBtn');
         if (pasteBtn) {
@@ -2411,9 +2459,9 @@ class DailyLedger {
                     const id = editBtn.dataset.editId;
                     this.startEdit(day, id);
                 } else if (deleteBtn) {
-                    const day = deleteBtn.dataset.day;
+                    const day = parseInt(deleteBtn.dataset.day);
                     const id = deleteBtn.dataset.id;
-                    this.deleteItem(parseInt(day), id);
+                    this.confirmDailyDelete(day, id);
                 }
             });
         }
@@ -2603,8 +2651,18 @@ class DailyLedger {
         // 버튼 텍스트 변경
         addBtn.textContent = '수정';
         addBtn.classList.add('editing');
+        const cancelBtn = document.getElementById('cancelDailyEditBtn');
+        if (cancelBtn) cancelBtn.style.display = '';
 
         nameInput.focus();
+    }
+
+    // 가계부 항목 삭제 확인 (기존 confirmDialog 재활용)
+    confirmDailyDelete(day, itemId) {
+        const dialog = document.getElementById('confirmDialog');
+        if (!dialog) { this.deleteItem(day, itemId); return; }
+        this._pendingDailyDelete = { day, itemId };
+        dialog.style.display = 'flex';
     }
 
     cancelEdit() {
@@ -2626,6 +2684,8 @@ class DailyLedger {
         if (installmentBtn) installmentBtn.textContent = '일시불';
         addBtn.textContent = '+';
         addBtn.classList.remove('editing');
+        const cancelBtn = document.getElementById('cancelDailyEditBtn');
+        if (cancelBtn) cancelBtn.style.display = 'none';
     }
 
     handleAdd() {
@@ -2666,20 +2726,26 @@ class DailyLedger {
             const mm = String(this.month).padStart(2, '0');
             window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).remove();
 
-            // cardRef 항목 수정 시 → cardRef는 조회용이므로 단순 업데이트 (날짜 변경 반영)
+            // cardRef 항목 수정 시 → cardRef 업데이트 + 연결된 cardDeferred도 동기화
             if (existing && existing.cardRef) {
+                const resolvedCat = category || existing.category || '';
+                const resolvedMethod = method || existing.method || '';
                 const updateData = {
                     type: this.currentType,
                     name: name,
                     amount: amount,
-                    category: category || existing.category || '',
-                    method: method || existing.method || '',
+                    category: resolvedCat,
+                    method: resolvedMethod,
                     cardRef: true,
                     createdAt: existing.createdAt || new Date().toISOString()
                 };
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
                 window.db.ref(`daily/${this.year}/${mm}/${newDD}`).push().set(updateData);
+                // 연결된 cardDeferred 항목도 이름/카테고리/결제수단 동기화
+                if (existing.createdAt) {
+                    this._updateLinked(existing.createdAt, { name, category: resolvedCat, method: resolvedMethod });
+                }
             }
             // cardDeferred 항목 수정 시 → 할부 속성 보존, 날짜(01)는 고정
             else if (existing && existing.cardDeferred) {
