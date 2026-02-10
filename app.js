@@ -1221,20 +1221,30 @@ class DailyLedger {
     }
 
     loadMonth() {
-        // Detach previous listeners
+        // 이전 리스너 해제
         if (this.listener) this.listener.off();
         if (this._prevMonthListener) this._prevMonthListener.off();
 
-        // 전월 이월 잔액 로드
-        this.loadCarryover();
+        // 에포크 번호로 stale 콜백 차단 (빠른 월 이동 시)
+        this._loadEpoch = (this._loadEpoch || 0) + 1;
+        const epoch = this._loadEpoch;
 
-        // 이전 달 카드 사용 데이터 실시간 로드
+        // 상태 초기화
+        this._currentMonthLoaded = false;
+        this.items = {};
         this.prevCardItems = [];
         this.prevCardTotal = 0;
+        this._carryover = 0;
+
+        // 전월 이월 잔액 로드 (async)
+        this.loadCarryover(epoch);
+
+        // 이전 달 카드 사용 데이터 실시간 로드
         const prev = this.getNextMonth(this.year, this.month, -1);
         const prevMM = String(prev.month).padStart(2, '0');
         this._prevMonthListener = window.db.ref(`daily/${prev.year}/${prevMM}`);
         this._prevMonthListener.on('value', (snap) => {
+            if (epoch !== this._loadEpoch) return; // stale
             const data = snap.val() || {};
             this.prevCardItems = [];
             for (const dd of Object.keys(data)) {
@@ -1250,7 +1260,7 @@ class DailyLedger {
             }
             this.prevCardTotal = this.prevCardItems.reduce((sum, it) => sum + (it.amount || 0), 0);
             // 현재 달 데이터가 로드된 후에만 재렌더링
-            if (this.items) {
+            if (this._currentMonthLoaded) {
                 this.render();
                 this.updateSummary();
             }
@@ -1259,8 +1269,10 @@ class DailyLedger {
         // 현재 달 데이터 로드
         this.listener = this.getMonthRef();
         this.listener.on('value', (snapshot) => {
+            if (epoch !== this._loadEpoch) return; // stale
             const data = snapshot.val();
             this.items = data || {};
+            this._currentMonthLoaded = true;
             this.render();
             this.renderInstallments();
             this.renderCardUsage();
@@ -2050,10 +2062,13 @@ class DailyLedger {
     }
 
     // 전월 이월 잔액 로드 (과거 모든 달의 수입-지출 누적으로 계산)
-    async loadCarryover() {
+    async loadCarryover(epoch) {
         if (!this.firebaseReady) { this._carryover = 0; return; }
         try {
             const snap = await window.db.ref('daily').once('value');
+            // 비동기 완료 후 에포크 확인 — 이미 다른 월로 넘어갔으면 무시
+            if (epoch !== undefined && epoch !== this._loadEpoch) return;
+
             const allData = snap.val() || {};
             let cumulative = 0;
             const cardRefByMonth = {}; // 월별 카드 일시불 합계 (다음 달 지출로 반영)
@@ -2107,6 +2122,10 @@ class DailyLedger {
             }
 
             this._carryover = cumulative;
+            // 이월 로드 완료 후 summary 갱신
+            if (this._currentMonthLoaded) {
+                this.updateSummary();
+            }
         } catch (err) {
             console.error('loadCarryover error:', err);
             this._carryover = 0;
