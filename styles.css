@@ -654,6 +654,13 @@ h1 {
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.installment-remaining {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -1166,8 +1173,21 @@ h1 {
 }
 
 .daily-add-wrapper {
-  flex: 0 0 52px;
+  flex: 0 0 auto;
   display: flex;
+  gap: 4px;
+}
+
+.daily-cancel-btn {
+  padding: 0 0.5rem !important;
+  font-size: 0.72rem !important;
+  border-radius: var(--radius-sm) !important;
+  background: rgba(255, 107, 107, 0.12) !important;
+  border: 1px solid rgba(255, 107, 107, 0.25) !important;
+  color: var(--danger) !important;
+  min-width: auto !important;
+  margin-top: 0;
+  cursor: pointer;
 }
 
 .daily-add-btn {
