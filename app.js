@@ -1221,12 +1221,42 @@ class DailyLedger {
     }
 
     loadMonth() {
-        // Detach previous listener
-        if (this.listener) {
-            this.listener.off();
-        }
+        // Detach previous listeners
+        if (this.listener) this.listener.off();
+        if (this._prevMonthListener) this._prevMonthListener.off();
+
         // 전월 이월 잔액 로드
         this.loadCarryover();
+
+        // 이전 달 카드 사용 데이터 실시간 로드
+        this.prevCardItems = [];
+        this.prevCardTotal = 0;
+        const prev = this.getNextMonth(this.year, this.month, -1);
+        const prevMM = String(prev.month).padStart(2, '0');
+        this._prevMonthListener = window.db.ref(`daily/${prev.year}/${prevMM}`);
+        this._prevMonthListener.on('value', (snap) => {
+            const data = snap.val() || {};
+            this.prevCardItems = [];
+            for (const dd of Object.keys(data)) {
+                const dayItems = data[dd];
+                if (!dayItems || typeof dayItems !== 'object') continue;
+                for (const id of Object.keys(dayItems)) {
+                    const item = dayItems[id];
+                    // 이전 달의 cardRef 중 일시불만 (할부 제외)
+                    if (item && item.cardRef && !(item.installment && item.installment > 1)) {
+                        this.prevCardItems.push(item);
+                    }
+                }
+            }
+            this.prevCardTotal = this.prevCardItems.reduce((sum, it) => sum + (it.amount || 0), 0);
+            // 현재 달 데이터가 로드된 후에만 재렌더링
+            if (this.items) {
+                this.render();
+                this.updateSummary();
+            }
+        });
+
+        // 현재 달 데이터 로드
         this.listener = this.getMonthRef();
         this.listener.on('value', (snapshot) => {
             const data = snapshot.val();
@@ -1537,20 +1567,19 @@ class DailyLedger {
             writeCardRef();
         } else {
             // 일시불
-            const target = this.getNextMonth(this.year, this.month, baseOffset);
-            const targetMM = String(target.month).padStart(2, '0');
-            const ref = window.db.ref(`daily/${target.year}/${targetMM}/${baseDay}`).push();
-            const data = {
-                type: type,
-                name: name,
-                amount: totalAmount,
-                createdAt: createdAt
-            };
-            if (category) data.category = category;
-            if (method) data.method = method;
-            if (isCard) data.cardDeferred = true;
-            ref.set(data).catch(onError);
-            writeCardRef();
+            if (isCard) {
+                // 카드 일시불: cardRef만 생성 (전월 카드값은 이전 달 데이터에서 동적 계산)
+                writeCardRef();
+            } else {
+                // 일반 결제: 현재 달 해당일에 기록
+                const mm = String(this.month).padStart(2, '0');
+                const dd = String(day).padStart(2, '0');
+                const ref = window.db.ref(`daily/${this.year}/${mm}/${dd}`).push();
+                const data = { type, name, amount: totalAmount, createdAt };
+                if (category) data.category = category;
+                if (method) data.method = method;
+                ref.set(data).catch(onError);
+            }
         }
     }
 
@@ -1559,10 +1588,9 @@ class DailyLedger {
         const dd = String(day).padStart(2, '0');
         const item = this.items[dd] && this.items[dd][itemId];
 
-        // cardRef 삭제 → 다음 달 cardDeferred도 삭제
-        if (item && item.cardRef && item.createdAt) {
-            const months = (item.installment && item.installment > 1) ? item.installment : 1;
-            for (let i = 0; i < months; i++) {
+        // cardRef 할부 삭제 → 다음 달들의 cardDeferred도 삭제
+        if (item && item.cardRef && item.createdAt && item.installment && item.installment > 1) {
+            for (let i = 0; i < item.installment; i++) {
                 const t = this.getNextMonth(this.year, this.month, 1 + i);
                 this._deleteLinked(t.year, t.month, item.createdAt, 'cardDeferred');
             }
@@ -1626,8 +1654,14 @@ class DailyLedger {
 
         // Collect all days, sort descending
         const dayKeys = Object.keys(this.items).sort((a, b) => parseInt(b) - parseInt(a));
+        // 1일 데이터가 없어도 전월 카드값이 있으면 1일 추가
+        const hasPrevCards = this.prevCardItems && this.prevCardItems.length > 0;
+        if (hasPrevCards && !dayKeys.includes('01')) {
+            dayKeys.push('01');
+            dayKeys.sort((a, b) => parseInt(b) - parseInt(a));
+        }
 
-        if (dayKeys.length === 0) {
+        if (dayKeys.length === 0 && !hasPrevCards) {
             listEl.innerHTML = '<div class="daily-empty">이번 달 기록이 없습니다</div>';
             return;
         }
@@ -1637,55 +1671,42 @@ class DailyLedger {
             const dayNum = parseInt(dd);
             const dow = this.getDayOfWeek(dayNum);
             const dayItems = this.items[dd];
-            if (!dayItems || typeof dayItems !== 'object') continue;
+            const showPrevCardHere = dayNum === 1 && hasPrevCards;
+            if ((!dayItems || typeof dayItems !== 'object') && !showPrevCardHere) continue;
 
             // Sort items within day by createdAt descending
-            const itemEntries = Object.entries(dayItems).sort((a, b) => {
+            const itemEntries = dayItems ? Object.entries(dayItems).sort((a, b) => {
                 return (b[1].createdAt || '').localeCompare(a[1].createdAt || '');
-            });
+            }) : [];
 
-            // 할부/고정지출 항목 필터 — 별도 섹션에 표시되므로 목록에서 제외
+            // 할부/고정지출/기존 cardDeferred 일시불 필터 — 목록에서 제외
             const filtered = itemEntries.filter(([, item]) => {
                 if (!item.cardRef && item.installment && item.installment > 1) return false;
                 if (item.fixedExpense) return false;
+                // 기존 cardDeferred 일시불은 무시 (이전 달 데이터에서 동적 계산으로 대체)
+                if (item.cardDeferred && !(item.installment && item.installment > 1)) return false;
                 return true;
             });
 
-            // 전월 카드값 일시불 항목 그룹핑 (cardDeferred + 일시불)
-            const prevCardItems = [];
-            const normalItems = [];
-            for (const entry of filtered) {
-                const item = entry[1];
-                if (item.cardDeferred && !(item.installment && item.installment > 1)) {
-                    prevCardItems.push(entry);
-                } else {
-                    normalItems.push(entry);
-                }
-            }
-
-            const hasPrevCard = prevCardItems.length > 0;
             // 표시할 항목이 없는 날은 건너뛰기
-            if (normalItems.length === 0 && !hasPrevCard) continue;
+            if (filtered.length === 0 && !showPrevCardHere) continue;
 
             html += `<div class="daily-day-group">`;
             html += `<div class="daily-day-header">${dayNum}일 (${dow})</div>`;
 
-            // 전월 카드값 요약 행
-            if (hasPrevCard) {
-                const prevCardTotal = prevCardItems.reduce((sum, [, it]) => sum + (it.amount || 0), 0);
-                const countLabel = prevCardItems.length > 1 ? `${prevCardItems.length}건` : '1건';
-                const prevCardIds = prevCardItems.map(([id]) => id).join(',');
+            // 전월 카드값 요약 행 (이전 달 cardRef에서 동적 계산)
+            if (showPrevCardHere) {
+                const countLabel = this.prevCardItems.length > 1 ? `${this.prevCardItems.length}건` : '1건';
                 html += `
                     <div class="daily-item prev-card-group">
                         <span class="daily-item-category" style="background:rgba(102,126,234,0.15);color:var(--accent-primary)">카드</span>
                         <span class="daily-item-name">전월 카드값</span>
                         <span class="daily-item-method">${countLabel}</span>
-                        <span class="daily-item-amount expense">-${this.formatCurrency(prevCardTotal)}</span>
-                        <button class="daily-item-delete" data-prev-card-day="${dd}" data-prev-card-ids="${prevCardIds}" title="전월 카드값 삭제">&times;</button>
+                        <span class="daily-item-amount expense">-${this.formatCurrency(this.prevCardTotal)}</span>
                     </div>`;
             }
 
-            for (const [itemId, item] of normalItems) {
+            for (const [itemId, item] of filtered) {
                 const isIncome = item.type === 'income';
                 const isCardRef = item.cardRef === true;
                 const isFixed = item.fixedExpense === true;
@@ -2032,10 +2053,10 @@ class DailyLedger {
     async loadCarryover() {
         if (!this.firebaseReady) { this._carryover = 0; return; }
         try {
-            // daily 전체 데이터를 한 번에 읽어서 현재 달 이전까지 누적
             const snap = await window.db.ref('daily').once('value');
             const allData = snap.val() || {};
             let cumulative = 0;
+            const cardRefByMonth = {}; // 월별 카드 일시불 합계 (다음 달 지출로 반영)
 
             for (const yr of Object.keys(allData)) {
                 const yearData = allData[yr];
@@ -2043,7 +2064,6 @@ class DailyLedger {
                 for (const mm of Object.keys(yearData)) {
                     const y = parseInt(yr);
                     const m = parseInt(mm);
-                    // 현재 보고 있는 달 이상이면 skip
                     if (y > this.year || (y === this.year && m >= this.month)) continue;
 
                     const monthData = yearData[mm];
@@ -2053,7 +2073,17 @@ class DailyLedger {
                         if (!dayItems || typeof dayItems !== 'object') continue;
                         for (const itemId of Object.keys(dayItems)) {
                             const item = dayItems[itemId];
-                            if (!item || item.cardRef) continue;
+                            if (!item) continue;
+                            if (item.cardRef) {
+                                // 카드 일시불 → 다음 달 지출로 집계
+                                if (!(item.installment && item.installment > 1)) {
+                                    const key = `${y}-${m}`;
+                                    cardRefByMonth[key] = (cardRefByMonth[key] || 0) + (item.amount || 0);
+                                }
+                                continue;
+                            }
+                            // 기존 cardDeferred 일시불은 무시 (동적 계산으로 대체)
+                            if (item.cardDeferred && !(item.installment && item.installment > 1)) continue;
                             if (item.fixedExpense) {
                                 cumulative -= (item.amount || 0);
                             } else if (item.type === 'income') {
@@ -2065,6 +2095,17 @@ class DailyLedger {
                     }
                 }
             }
+
+            // cardRef 일시불을 다음 달 지출로 반영
+            for (const key of Object.keys(cardRefByMonth)) {
+                const [y, m] = key.split('-').map(Number);
+                const next = this.getNextMonth(y, m, 1);
+                // 다음 달이 현재 보는 달 이전이면 이월에 반영
+                if (next.year < this.year || (next.year === this.year && next.month < this.month)) {
+                    cumulative -= cardRefByMonth[key];
+                }
+            }
+
             this._carryover = cumulative;
         } catch (err) {
             console.error('loadCarryover error:', err);
@@ -2178,6 +2219,8 @@ class DailyLedger {
                 const item = dayItems[itemId];
                 if (!item) continue;
                 if (item.cardRef) continue;
+                // 기존 cardDeferred 일시불은 무시 (동적 계산으로 대체)
+                if (item.cardDeferred && !(item.installment && item.installment > 1)) continue;
                 if (item.fixedExpense) {
                     fixedTotal += (item.amount || 0);
                 } else if (item.type === 'income') {
@@ -2187,6 +2230,9 @@ class DailyLedger {
                 }
             }
         }
+
+        // 이전 달 카드 일시불 합계 반영
+        totalExpense += (this.prevCardTotal || 0);
 
         const carryover = this._carryover || 0;
         const balance = carryover + totalIncome - totalExpense - fixedTotal;
@@ -2293,16 +2339,6 @@ class DailyLedger {
         const listEl = document.getElementById('dailyList');
         if (listEl) {
             listEl.addEventListener('click', (e) => {
-                // 전월 카드값 일괄 삭제
-                const prevCardBtn = e.target.closest('[data-prev-card-day]');
-                if (prevCardBtn) {
-                    const dd = prevCardBtn.dataset.prevCardDay;
-                    const ids = prevCardBtn.dataset.prevCardIds.split(',');
-                    ids.forEach(id => this.deleteItem(parseInt(dd), id));
-                    Utils.showToast('전월 카드값이 삭제되었습니다.', 'success');
-                    return;
-                }
-
                 const editBtn = e.target.closest('[data-edit-day]');
                 const deleteBtn = e.target.closest('[data-day][data-id]:not([data-edit-day])');
                 if (editBtn) {
