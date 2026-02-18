@@ -882,6 +882,7 @@ class ExpenseTracker {
         try {
             if (typeof dailyLedger !== 'undefined' && dailyLedger) {
                 dailyLedger.updateSummary();
+                dailyLedger.renderChart();
             }
         } catch (_) {}
     }
