@@ -31,6 +31,21 @@ const Utils = {
     /** 06:00 기준 오늘 일자 (day number) */
     getEffectiveDay() {
         return this.getEffectiveDate().getDate();
+    },
+
+    /** 숫자 문자열에 천단위 콤마 삽입 */
+    formatComma(str) {
+        return String(str).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    },
+
+    /** HSL → #RRGGBB (hex 알파 접미 `33` 사용을 위해 hex로 통일) */
+    hslToHex(h, s, l) {
+        s /= 100; l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        const toHex = x => Math.round(255 * x).toString(16).padStart(2, '0');
+        return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
     }
 };
 
@@ -60,9 +75,10 @@ const ChipPicker = {
             if (e.target === this._modal) this.close();
         });
 
-        // Close on ESC
+        // Close on ESC — 뒤에 등록된 ESC 핸들러가 배경 모달까지 닫지 않도록 전파 차단
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this._modal.style.display === 'flex') {
+                e.stopImmediatePropagation();
                 this.close();
             }
         });
@@ -139,8 +155,6 @@ class ExpenseTracker {
     init() {
         this.renderExpenses();
         this.updateStats();
-        this.renderCategoryOptions();
-        this.renderMemoOptions();
         this.attachEventListeners();
     }
 
@@ -168,7 +182,8 @@ class ExpenseTracker {
             this.expensesRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    this.expenses = Object.values(data);
+                    // order 필드 기준 정렬 (드래그 정렬 순서 보존, 없으면 키 순서 유지)
+                    this.expenses = Object.values(data).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
                 } else {
                     this.expenses = [];
                 }
@@ -188,7 +203,6 @@ class ExpenseTracker {
                     this.categories = ['주거비', '통신비', '구독료', '보험료', '교통비', '기타'];
                 }
                 localStorage.setItem('expenseCategories', JSON.stringify(this.categories));
-                this.renderCategoryOptions();
             }, (error) => {
                 console.error('Firebase categories listener error:', error);
             });
@@ -201,7 +215,6 @@ class ExpenseTracker {
                     this.memos = ['카드 자동결제', '계좌이체', '현금납부'];
                 }
                 localStorage.setItem('expenseMemos', JSON.stringify(this.memos));
-                this.renderMemoOptions();
             }, (error) => {
                 console.error('Firebase memos listener error:', error);
             });
@@ -271,6 +284,8 @@ class ExpenseTracker {
 
     // Save expenses to localStorage + Firebase
     saveExpenses() {
+        // order 필드로 배열 순서 보존 (Firebase는 키 순서로 내려주므로)
+        this.expenses.forEach((exp, idx) => { exp.order = idx; });
         localStorage.setItem('fixedExpenses', JSON.stringify(this.expenses));
         if (this.firebaseReady) {
             const expenseMap = {};
@@ -301,7 +316,6 @@ class ExpenseTracker {
         if (trimmedName && !this.categories.includes(trimmedName)) {
             this.categories.push(trimmedName);
             this.saveCategories();
-            this.renderCategoryOptions();
             this.renderCategoryManageList();
             return true;
         }
@@ -319,22 +333,8 @@ class ExpenseTracker {
 
         this.categories = this.categories.filter(cat => cat !== categoryName);
         this.saveCategories();
-        this.renderCategoryOptions();
         this.renderCategoryManageList();
         return true;
-    }
-
-    // Render category options in custom dropdown
-    renderCategoryOptions() {
-        const list = document.getElementById('categoryDropdownList');
-        if (this.categories.length === 0) {
-            list.innerHTML = '<div class="dropdown-empty">등록된 카테고리가 없습니다</div>';
-            return;
-        }
-        list.innerHTML = this.categories.map(cat => {
-            const escaped = this.escapeHtml(cat);
-            return `<div class="dropdown-item" data-value="${Utils.escapeHtml(cat)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
-        }).join('');
     }
 
     // Render category management list
@@ -389,18 +389,25 @@ class ExpenseTracker {
         return false;
     }
 
-    // Delete daily category
-    deleteDailyCategory(name) {
-        // 가계부 항목에서 사용 중인지 확인
+    // Delete daily category — 전체 기간 데이터에서 사용 여부 검사
+    async deleteDailyCategory(name) {
         try {
-            if (typeof dailyLedger !== 'undefined' && dailyLedger.items) {
-                for (const dd of Object.keys(dailyLedger.items)) {
-                    const dayItems = dailyLedger.items[dd];
-                    if (!dayItems) continue;
-                    for (const itemId of Object.keys(dayItems)) {
-                        if (dayItems[itemId] && dayItems[itemId].category === name) {
-                            this.showToast(`"${name}" 카테고리를 사용하는 항목이 있어 삭제할 수 없습니다.`, 'error');
-                            return false;
+            const snap = await window.db.ref('daily').once('value');
+            const all = snap.val() || {};
+            for (const y of Object.keys(all)) {
+                const yearData = all[y];
+                if (!yearData || typeof yearData !== 'object') continue;
+                for (const m of Object.keys(yearData)) {
+                    const monthData = yearData[m];
+                    if (!monthData || typeof monthData !== 'object') continue;
+                    for (const dd of Object.keys(monthData)) {
+                        const dayItems = monthData[dd];
+                        if (!dayItems || typeof dayItems !== 'object') continue;
+                        for (const itemId of Object.keys(dayItems)) {
+                            if (dayItems[itemId] && dayItems[itemId].category === name) {
+                                this.showToast(`"${name}" 카테고리를 사용하는 항목이 있어 삭제할 수 없습니다.`, 'error');
+                                return false;
+                            }
                         }
                     }
                 }
@@ -475,7 +482,6 @@ class ExpenseTracker {
         if (trimmedName && !this.memos.includes(trimmedName)) {
             this.memos.push(trimmedName);
             this.saveMemos();
-            this.renderMemoOptions();
             this.renderMemoManageList();
             return true;
         }
@@ -492,22 +498,8 @@ class ExpenseTracker {
 
         this.memos = this.memos.filter(m => m !== memoName);
         this.saveMemos();
-        this.renderMemoOptions();
         this.renderMemoManageList();
         return true;
-    }
-
-    // Render memo options in custom dropdown
-    renderMemoOptions() {
-        const list = document.getElementById('memoDropdownList');
-        if (this.memos.length === 0) {
-            list.innerHTML = '<div class="dropdown-empty">등록된 메모가 없습니다</div>';
-            return;
-        }
-        list.innerHTML = this.memos.map(memo => {
-            const escaped = this.escapeHtml(memo);
-            return `<div class="dropdown-item" data-value="${Utils.escapeHtml(memo)}"><span class="dropdown-item-dot"></span>${escaped}</div>`;
-        }).join('');
     }
 
     // Render memo management list
@@ -618,7 +610,7 @@ class ExpenseTracker {
         if (expense) {
             this.editingId = id;
             document.getElementById('expenseName').value = expense.name;
-            document.getElementById('expenseAmount').value = String(parseInt(expense.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            document.getElementById('expenseAmount').value = Utils.formatComma(parseInt(expense.amount));
             document.getElementById('expenseCategory').value = expense.category;
             document.getElementById('expenseMemo').value = expense.memo || '';
 
@@ -636,12 +628,6 @@ class ExpenseTracker {
         return this.expenses
             .filter(e => e.active !== false)
             .reduce((total, expense) => total + expense.amount, 0);
-    }
-
-    // Get unique categories count
-    getUniqueCategoriesCount() {
-        const categories = new Set(this.expenses.map(expense => expense.category));
-        return categories.size;
     }
 
     // Show toast notification
@@ -668,11 +654,10 @@ class ExpenseTracker {
             '기타': '#7a62b0'
         };
 
-        // Generate a consistent color for custom categories
+        // 커스텀 카테고리: 이름 해시 기반 고정 색 — `${color}33` 알파 접미가 유효하도록 hex 반환
         if (!colors[category]) {
             const hash = category.split('').reduce((acc, char) => char.charCodeAt(0) + acc, 0);
-            const hue = hash % 360;
-            return `hsl(${hue}, 65%, 60%)`;
+            return Utils.hslToHex(hash % 360, 65, 60);
         }
 
         return colors[category];
@@ -796,7 +781,6 @@ class ExpenseTracker {
             e.preventDefault();
             currentY = getY(e);
             const diff = currentY - startY;
-            const origTop = parseFloat(dragItem.style.top);
             dragItem.style.transform = `translateY(${diff}px)`;
 
             // 플레이스홀더 위치 갱신
@@ -820,13 +804,8 @@ class ExpenseTracker {
             document.removeEventListener('touchmove', onMove);
             document.removeEventListener('touchend', onEnd);
 
-            // 새 위치 계산
+            // 새 위치 계산 (dragging 아이템 제외한 placeholder 앞 항목 수)
             const items = list.querySelectorAll('.expense-item:not(.dragging), .expense-drag-placeholder');
-            let newIdx = 0;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i] === placeholder) { newIdx = i; break; }
-            }
-            // dragging 아이템이 placeholder 앞에 있으면 보정
             const allItems = [...items];
             let actualNewIdx = 0;
             for (let i = 0; i < allItems.length; i++) {
@@ -888,7 +867,7 @@ class ExpenseTracker {
     }
 
     // Setup custom dropdown behavior (chip picker modal)
-    setupCustomDropdown(input, listEl, getItems, title, opts = {}) {
+    setupCustomDropdown(input, getItems, title, opts = {}) {
         const openPicker = () => {
             ChipPicker.open(title || '선택', getItems(), (val) => {
                 input.value = val;
@@ -970,7 +949,7 @@ class ExpenseTracker {
             fixedAmountInput.addEventListener('input', () => {
                 const raw = fixedAmountInput.value.replace(/[^0-9]/g, '');
                 if (raw) {
-                    fixedAmountInput.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    fixedAmountInput.value = Utils.formatComma(raw);
                 } else {
                     fixedAmountInput.value = '';
                 }
@@ -1074,7 +1053,6 @@ class ExpenseTracker {
         // Custom dropdown logic for category
         this.setupCustomDropdown(
             document.getElementById('expenseCategory'),
-            document.getElementById('categoryDropdownList'),
             () => this.categories,
             '카테고리',
             { onEdit: () => this._openCategoryModal() }
@@ -1083,7 +1061,6 @@ class ExpenseTracker {
         // Custom dropdown logic for memo
         this.setupCustomDropdown(
             document.getElementById('expenseMemo'),
-            document.getElementById('memoDropdownList'),
             () => this.memos,
             '결제수단',
             { onEdit: () => this._openMemoModal() }
@@ -1132,8 +1109,11 @@ class ExpenseTracker {
         const dailyCategoryModal = document.getElementById('dailyCategoryModal');
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // ChipPicker가 열려있으면 ChipPicker만 닫음 (뒤 모달 유지)
+                const chipModal = document.getElementById('chipPickerModal');
+                if (chipModal && chipModal.style.display === 'flex') return;
                 if (confirmDialog.style.display === 'flex') {
-                    this._pendingDeleteId = null;
+                    clearPending();
                     confirmDialog.style.display = 'none';
                 } else if (fixedAddModal && fixedAddModal.style.display === 'flex') {
                     this.closeFixedModal();
@@ -1197,7 +1177,8 @@ class ExpenseTracker {
 // ===== Daily Ledger (가계부) =====
 class DailyLedger {
     constructor() {
-        const now = new Date();
+        // 06시 기준 날짜로 연/월 결정 (월초 새벽에 전월로 유지)
+        const now = Utils.getEffectiveDate();
         this.year = now.getFullYear();
         this.month = now.getMonth() + 1; // 1-based
         this.currentType = 'expense';
@@ -1381,7 +1362,10 @@ class DailyLedger {
         if (!grid) return;
 
         const daysInMonth = this.getDaysInMonth();
-        const today = this.getEffectiveDay();
+        // '오늘' 하이라이트는 현재 조회 중인 달일 때만
+        const effNow = Utils.getEffectiveDate();
+        const isCurrentMonth = this.year === effNow.getFullYear() && this.month === (effNow.getMonth() + 1);
+        const today = isCurrentMonth ? this.getEffectiveDay() : -1;
 
         let html = '';
         for (let d = 1; d <= daysInMonth; d++) {
@@ -1550,13 +1534,7 @@ class DailyLedger {
             { category: '여가', pattern: /cgv|메가박스|롯데시네마|영화|넷플릭스|netflix|유튜브|youtube|스포츠|헬스|gym|노래방|pc방|게임|디즈니|왓챠|웨이브|티빙|쿠팡플레이|놀이공원|에버랜드|롯데월드/ },
         ];
         for (const { category, pattern } of rules) {
-            if (pattern.test(n)) {
-                // 사용자 카테고리 목록에 있는지 확인
-                if (typeof tracker !== 'undefined' && tracker.dailyCategories && tracker.dailyCategories.includes(category)) {
-                    return category;
-                }
-                return category; // 목록에 없어도 일단 추론값 반환
-            }
+            if (pattern.test(n)) return category; // 목록에 없어도 추론값 반환
         }
         return '';
     }
@@ -1582,7 +1560,7 @@ class DailyLedger {
             parsed.installment
         );
 
-        Utils.showToast(parsed.method + ' ' + parsed.name + ' ' + String(parsed.amount).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원 저장됨', 'success');
+        Utils.showToast(parsed.method + ' ' + parsed.name + ' ' + Utils.formatComma(parsed.amount) + '원 저장됨', 'success');
     }
 
     addItem(type, day, name, category, amount, method, installment) {
@@ -1597,7 +1575,6 @@ class DailyLedger {
 
         // 카드 결제 → 다음달 1일에 기록, 일반 → 이번달 해당일에 기록
         const baseOffset = isCard ? 1 : 0;
-        const baseDay = isCard ? '01' : String(day).padStart(2, '0');
 
         const onError = (err) => {
             console.error('DailyLedger addItem error:', err);
@@ -1626,8 +1603,9 @@ class DailyLedger {
         };
 
         if (installment && installment > 1) {
-            // 할부: 각 회차를 순차적으로 등록
+            // 할부: 각 회차를 순차적으로 등록 (마지막 회차에서 반올림 오차 보정)
             const monthlyAmount = Math.round(totalAmount / installment);
+            const lastAmount = totalAmount - monthlyAmount * (installment - 1);
             for (let i = 1; i <= installment; i++) {
                 const target = this.getNextMonth(this.year, this.month, baseOffset + (i - 1));
                 const targetMM = String(target.month).padStart(2, '0');
@@ -1636,7 +1614,7 @@ class DailyLedger {
                 const itemData = {
                     type: type,
                     name: name,
-                    amount: monthlyAmount,
+                    amount: i === installment ? lastAmount : monthlyAmount,
                     createdAt: createdAt,
                     installment: installment,
                     installmentTotal: totalAmount,
@@ -1915,7 +1893,13 @@ class DailyLedger {
             const catColor = (typeof tracker !== 'undefined') ? tracker.getCategoryColor(catName) : '#5b6abf';
             const catHtml = `<span class="daily-item-category" style="background:${catColor}33;color:${catColor}">${this.escapeHtml(catName)}</span>`;
             const progress = inst.installment > 0 ? Math.round((inst.installmentMonth / inst.installment) * 100) : 0;
-            const remaining = inst.installment > 0 ? inst.amount * (inst.installment - inst.installmentMonth) : 0;
+            // 잔여금: 총액 − 현재 회차까지 납부액 (마지막 회차 보정액과 일관)
+            const total = inst.installmentTotal || inst.amount * inst.installment;
+            const monthly = Math.round(total / inst.installment);
+            const paid = inst.installmentMonth >= inst.installment
+                ? total
+                : monthly * inst.installmentMonth;
+            const remaining = Math.max(0, total - paid);
             html += `
                 <div class="installment-item">
                     ${catHtml}
@@ -2021,7 +2005,7 @@ class DailyLedger {
             }
         }
         // 고정지출: 현재 월은 tracker.expenses 미리보기, 과거 월은 실제 반영된 항목만
-        const now = new Date();
+        const now = Utils.getEffectiveDate();
         const isCurrent = this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
         if (isCurrent && typeof tracker !== 'undefined' && tracker.expenses) {
             for (const e of tracker.expenses) {
@@ -2056,7 +2040,7 @@ class DailyLedger {
     getChartColor(category) {
         if (typeof tracker !== 'undefined') return tracker.getCategoryColor(category);
         const hash = category.split('').reduce((acc, c) => c.charCodeAt(0) + acc, 0);
-        return `hsl(${hash % 360}, 65%, 60%)`;
+        return Utils.hslToHex(hash % 360, 65, 60);
     }
 
     // 차트 렌더링
@@ -2138,7 +2122,7 @@ class DailyLedger {
             if (!d || typeof d !== 'object') return cnt;
             return cnt + Object.values(d).filter(i => i && i.type !== 'income' && this.isNormalExpenseItem(i)).length;
         }, 0);
-        const now = new Date();
+        const now = Utils.getEffectiveDate();
         const isViewing = this.year === now.getFullYear() && this.month === (now.getMonth() + 1);
         const daysElapsed = isViewing ? Math.max(1, now.getDate()) : this.getDaysInMonth();
         const dailyAvg = Math.round(total / daysElapsed);
@@ -2299,20 +2283,23 @@ class DailyLedger {
         const mm = String(this.month).padStart(2, '0');
         const createdAt = new Date().toISOString();
 
-        for (const exp of expenses) {
-            const ref = window.db.ref(`daily/${this.year}/${mm}/01`).push();
-            ref.set({
-                type: 'expense',
-                name: exp.name,
-                amount: exp.amount,
-                category: exp.category || '',
-                method: exp.memo || '',
-                fixedExpense: true,
-                createdAt: createdAt
-            });
+        try {
+            await Promise.all(expenses.map(exp =>
+                window.db.ref(`daily/${this.year}/${mm}/01`).push().set({
+                    type: 'expense',
+                    name: exp.name,
+                    amount: exp.amount,
+                    category: exp.category || '',
+                    method: exp.memo || '',
+                    fixedExpense: true,
+                    createdAt: createdAt
+                })
+            ));
+            if (typeof tracker !== 'undefined') tracker.showToast('고정지출이 반영되었습니다.', 'success');
+        } catch (err) {
+            console.error('applyFixed error:', err);
+            if (typeof tracker !== 'undefined') tracker.showToast('고정지출 반영 실패: ' + err.message, 'error');
         }
-
-        if (typeof tracker !== 'undefined') tracker.showToast('고정지출이 반영되었습니다.', 'success');
     }
 
     updateSummary() {
@@ -2416,7 +2403,7 @@ class DailyLedger {
             amountInput.addEventListener('input', () => {
                 const raw = amountInput.value.replace(/[^0-9]/g, '');
                 if (raw) {
-                    amountInput.value = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    amountInput.value = Utils.formatComma(raw);
                 } else {
                     amountInput.value = '';
                 }
@@ -2545,8 +2532,7 @@ class DailyLedger {
                     const index = parseInt(btn.dataset.dailyCatIndex);
                     const name = tracker.dailyCategories[index];
                     if (name) {
-                        tracker.deleteDailyCategory(name);
-                        tracker.renderDailyCategoryManageList();
+                        tracker.deleteDailyCategory(name).then(() => tracker.renderDailyCategoryManageList());
                     }
                 }
             });
@@ -2646,7 +2632,7 @@ class DailyLedger {
         // 값 채우기
         nameInput.value = item.name || '';
         if (categoryInput) categoryInput.value = item.category || '';
-        amountInput.value = String(parseInt(item.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        amountInput.value = Utils.formatComma(parseInt(item.amount));
         if (methodInput) methodInput.value = item.method || '';
 
         // 버튼 텍스트 변경
@@ -2722,10 +2708,14 @@ class DailyLedger {
             const id = this._editingId;
             const existing = this.items[dd] && this.items[dd][id];
             const newDD = String(day).padStart(2, '0');
+            const onError = (err) => {
+                console.error('DailyLedger edit error:', err);
+                if (typeof tracker !== 'undefined') tracker.showToast('수정 실패: ' + err.message, 'error');
+            };
 
             // 기존 항목 삭제
             const mm = String(this.month).padStart(2, '0');
-            window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).remove();
+            window.db.ref(`daily/${this.year}/${mm}/${dd}/${id}`).remove().catch(onError);
 
             // cardRef 항목 수정 시 → cardRef 업데이트 + 연결된 cardDeferred도 동기화
             if (existing && existing.cardRef) {
@@ -2742,10 +2732,12 @@ class DailyLedger {
                 };
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
-                window.db.ref(`daily/${this.year}/${mm}/${newDD}`).push().set(updateData);
-                // 연결된 cardDeferred 항목도 이름/카테고리/결제수단 동기화
+                window.db.ref(`daily/${this.year}/${mm}/${newDD}`).push().set(updateData).catch(onError);
+                // 연결된 cardDeferred 항목도 동기화 (일시불은 금액까지, 할부는 회차 금액 유지)
                 if (existing.createdAt) {
-                    this._updateLinked(existing.createdAt, { name, category: resolvedCat, method: resolvedMethod });
+                    const syncFields = { name, category: resolvedCat, method: resolvedMethod };
+                    if (!(existing.installment && existing.installment > 1)) syncFields.amount = amount;
+                    this._updateLinked(existing.createdAt, syncFields);
                 }
             }
             // cardDeferred 항목 수정 시 → 할부 속성 보존, 날짜(01)는 고정
@@ -2763,7 +2755,7 @@ class DailyLedger {
                 if (existing.installmentMonth) updateData.installmentMonth = existing.installmentMonth;
                 if (existing.installment) updateData.installment = existing.installment;
                 if (existing.installmentTotal) updateData.installmentTotal = existing.installmentTotal;
-                window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData);
+                window.db.ref(`daily/${this.year}/${mm}/${dd}`).push().set(updateData).catch(onError);
             }
             // 일반 항목 수정 → 변경된 날짜로 addItem (카드면 이월 처리됨)
             else {

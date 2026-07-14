@@ -119,11 +119,9 @@
     let spotCare = [];
     let currentTime = 'morning';
 
-    // HTML 이스케이프 (XSS 방지)
+    // HTML 이스케이프 (XSS 방지) — 속성 컨텍스트용 따옴표 포함
     function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
     // Deep copy helper
@@ -305,12 +303,11 @@
     function renderCalendar() {
         const container = document.getElementById('weeklyCalendar');
         const todayIdx = getEffectiveDate().getDay();
-        const order = ['월','화','수','목','금','토','일'];
-        const orderIdx = [1,2,3,4,5,6,0];
+        const orderIdx = [1, 2, 3, 4, 5, 6, 0];
         const amKeywords = getMorningKeyProducts();
         const amText = amKeywords.length > 0 ? amKeywords.join('<br>') : '아침';
 
-        container.innerHTML = order.map((day, i) => {
+        container.innerHTML = DAY_ORDER.map((day, i) => {
             const info = getEveningInfo(day);
             const isToday = orderIdx[i] === todayIdx;
             return `<div class="sc-cal-day${isToday ? ' today' : ''}">
@@ -342,17 +339,22 @@
         }).join('');
     }
 
-    function renderProducts() {
-        const container = document.getElementById('productList');
+    // 제품을 카테고리별로 그룹핑 (CATEGORIES 순서 + etc)
+    function groupProductsByCategory(items) {
         const grouped = {};
         CATEGORIES.forEach(c => { grouped[c.key] = []; });
         grouped['etc'] = [];
-
-        products.forEach(p => {
+        items.forEach(p => {
             const cat = p.category || 'etc';
             if (!grouped[cat]) grouped[cat] = [];
             grouped[cat].push(p);
         });
+        return grouped;
+    }
+
+    function renderProducts() {
+        const container = document.getElementById('productList');
+        const grouped = groupProductsByCategory(products);
 
         let html = '';
         const renderGroup = (cat, items) => {
@@ -379,13 +381,18 @@
     }
 
     // ===== Import Preview Helpers =====
+    // 파싱 에러 목록 HTML (사용자 입력 포함 → 이스케이프 필수)
+    function renderErrors(errors) {
+        return `<div class="sc-preview-errors">${errors.map(e => `<div class="sc-preview-error">⚠ ${escapeHtml(e)}</div>`).join('')}</div>`;
+    }
+
     function renderPreviewRoutine(sections) {
         let html = '<div class="sc-preview-content">';
         Object.entries(sections).forEach(([name, steps]) => {
             html += `<div class="sc-preview-section">`;
-            html += `<div class="sc-preview-section-title">[${name}] — ${steps.length}개 스텝</div>`;
+            html += `<div class="sc-preview-section-title">[${escapeHtml(name)}] — ${steps.length}개 스텝</div>`;
             steps.forEach((s, i) => {
-                html += `<div class="sc-preview-step">${i + 1}. ${s.product}${s.usage ? ' | ' + s.usage : ''}${s.wait ? ' ⏱' + s.wait : ''}</div>`;
+                html += `<div class="sc-preview-step">${i + 1}. ${escapeHtml(s.product)}${s.usage ? ' | ' + escapeHtml(s.usage) : ''}${s.wait ? ' ⏱' + escapeHtml(s.wait) : ''}</div>`;
             });
             html += `</div>`;
         });
@@ -394,20 +401,16 @@
     }
 
     function renderPreviewProducts(items) {
-        const grouped = {};
-        items.forEach(p => {
-            const cat = p.category || 'etc';
-            if (!grouped[cat]) grouped[cat] = [];
-            grouped[cat].push(p);
-        });
+        const grouped = groupProductsByCategory(items);
         let html = '<div class="sc-preview-content">';
         Object.entries(grouped).forEach(([catKey, list]) => {
+            if (list.length === 0) return;
             const cat = CATEGORIES.find(c => c.key === catKey);
             const label = cat ? `${cat.icon} ${cat.label}` : '📦 기타';
             html += `<div class="sc-preview-section">`;
             html += `<div class="sc-preview-section-title">${label} (${list.length})</div>`;
             list.forEach(p => {
-                html += `<div class="sc-preview-step">${p.name} | ${p.role} | ${p.when}</div>`;
+                html += `<div class="sc-preview-step">${escapeHtml(p.name)} | ${escapeHtml(p.role)} | ${escapeHtml(p.when)}</div>`;
             });
             html += `</div>`;
         });
@@ -419,7 +422,7 @@
         let html = '<div class="sc-preview-content">';
         items.forEach(s => {
             const stepsText = s.steps ? s.steps.join(' → ') : s.product || '';
-            html += `<div class="sc-preview-step">${s.icon} ${s.label} — ${stepsText} (${s.how})</div>`;
+            html += `<div class="sc-preview-step">${escapeHtml(s.icon)} ${escapeHtml(s.label)} — ${escapeHtml(stepsText)} (${escapeHtml(s.how)})</div>`;
         });
         html += '</div>';
         return html;
@@ -465,6 +468,8 @@
                     btn.classList.remove('copied');
                     btn.innerHTML = `${COPY_SVG} 복사`;
                 }, 1500);
+            }).catch(() => {
+                showToast('클립보드 복사에 실패했습니다', 'error');
             });
         }
 
@@ -495,14 +500,7 @@
         // ===== Copy Products =====
         document.getElementById('copyProductsBtn').addEventListener('click', () => {
             if (products.length === 0) { showToast('복사할 제품이 없습니다', 'error'); return; }
-            const grouped = {};
-            CATEGORIES.forEach(c => { grouped[c.key] = []; });
-            grouped['etc'] = [];
-            products.forEach(p => {
-                const cat = p.category || 'etc';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(p);
-            });
+            const grouped = groupProductsByCategory(products);
             let text = '';
             CATEGORIES.forEach(cat => {
                 const items = grouped[cat.key];
@@ -616,10 +614,9 @@
                 matchedCount++;
             }
 
-            const dayMap = { '월': '월', '화': '화', '수': '수', '목': '목', '금': '금', '토': '토', '일': '일' };
             Object.keys(sections).forEach(key => {
                 const dayMatch = key.match(/저녁\s*(\S)요일(?:\s*[—\-]\s*(.+))?/);
-                if (dayMatch && dayMap[dayMatch[1]]) {
+                if (dayMatch && DAY_ORDER.includes(dayMatch[1])) {
                     const day = dayMatch[1];
                     const label = dayMatch[2] ? dayMatch[2].trim() : (routines['evening_' + day]?.label || '기본');
                     const existing = routines['evening_' + day] || {};
@@ -648,14 +645,14 @@
             const result = parseRoutineText(raw);
 
             if (result.errors.length > 0 && !result.sections) {
-                previewRoutineArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewRoutineArea.innerHTML = renderErrors(result.errors);
                 previewRoutineArea.style.display = 'block';
                 return;
             }
 
             let html = '';
             if (result.errors.length > 0) {
-                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                html += renderErrors(result.errors);
             }
             html += `<div class="sc-preview-title">✅ ${result.matchedCount}개 섹션 미리보기</div>`;
             html += renderPreviewRoutine(result.sections);
@@ -766,14 +763,14 @@
             const result = parseProductsText(raw);
 
             if (result.errors.length > 0 && !result.products) {
-                previewProductsArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewProductsArea.innerHTML = renderErrors(result.errors);
                 previewProductsArea.style.display = 'block';
                 return;
             }
 
             let html = '';
             if (result.errors.length > 0) {
-                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                html += renderErrors(result.errors);
             }
             html += `<div class="sc-preview-title">✅ ${result.products.length}개 제품 미리보기</div>`;
             html += renderPreviewProducts(result.products);
@@ -835,7 +832,7 @@
                         steps: steps.length > 0 ? steps : [''],
                         how: parts[3] || '',
                     });
-                } else if (parts.length > 0 && parts.length < 3) {
+                } else {
                     errors.push(`${lineNum}번째 줄: | 구분자가 부족합니다 (최소 3개 필요: 아이콘 | 증상 | 제품명)`);
                 }
             });
@@ -853,14 +850,14 @@
             const result = parseSpotText(raw);
 
             if (result.errors.length > 0 && !result.spots) {
-                previewSpotArea.innerHTML = `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                previewSpotArea.innerHTML = renderErrors(result.errors);
                 previewSpotArea.style.display = 'block';
                 return;
             }
 
             let html = '';
             if (result.errors.length > 0) {
-                html += `<div class="sc-preview-errors">${result.errors.map(e => `<div class="sc-preview-error">⚠ ${e}</div>`).join('')}</div>`;
+                html += renderErrors(result.errors);
             }
             html += `<div class="sc-preview-title">✅ ${result.spots.length}개 항목 미리보기</div>`;
             html += renderPreviewSpot(result.spots);
